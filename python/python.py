@@ -30,8 +30,7 @@ def list_operation():
     # 输出两次列表
     print(list2 * 2)    # [123, 'python', 123, 'python']
     # 连接列表
-    # ['abcd', 786, 2.23, 'python', 70.2, 123, 'python']
-    print(list + list2)
+    print(list + list2)     # ['abcd', 786, 2.23, 'python', 70.2, 123, 'python']
     # 改变列表第一个到第三个元素
     a[1:4] = [13, 14, 15]
     print(a)        # [1, 13, 14, 15, 5, 6]
