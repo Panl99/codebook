@@ -87,6 +87,27 @@ def dictionary_operation():
 
     print({x: x**2 for x in (2, 4, 6)}) # {2: 4, 4: 16, 6: 36}
 
+# 数据类型转换
+def datatype_transform():
+    # int(x [,base])    # 将x转换为一个整数,base表示进制
+    # float(x)  # 将x转换到一个浮点数
+    # str(x)   # 将对象 x 转换为字符串
+    # repr(x)   # 将对象 x 转换为表达式字符串，返回string字符串
+    # eval(str)用来执行一个字符串表达式，并返回表达式的值
+    x = 2
+    print(eval( '3 * x' ))  # 6
+    # tuple(s)  # 将列表s转换为一个元组
+    # list(s)   # 将元组或字符串转换为列表
+    # set(s)    # 转换为可变集合
+    # dict(d)   # 创建一个字典。d 必须是一个 (key, value)元组序列。
+    # frozenset(s)  # 转换为不可变集合,不能再添加或删除任何元素。
+    # chr(x)    # 将一个整数转换为一个对应的 ASCII 字符，x为10进制或16进制的数字
+    # ord(x)    # 将一个字符转换为十进制整数
+    # hex(x)    # 将10进制整数转换成16进制，以字符串形式表示
+    # oct(x)    # 将一个整数转换成8进制字符串
+
+# 运算符
+    
 # 1、判断是否是一个目录
 def isDir():
     path = ".\\"
@@ -102,7 +123,8 @@ def main():
     # print("**********分割符***********")
     # list_operation()
     # set_operation()
-    dictionary_operation()
+    # dictionary_operation()
+    datatype_transform()
 
 
 if __name__ == '__main__':
