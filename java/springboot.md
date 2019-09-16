@@ -78,8 +78,7 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 @ConditionalOnMissingClass | Classpath里缺少指定的类
 @ConditionalOnExpression | 给定的Spring Expression Language（SpEL）表达式计算结果为true
 @ConditionalOnJava | Java的版本匹配特定值或者一个范围值
-@ConditionalOnJndi | 参数中给定的JNDI位置必须存在一个，如果没有给参数，则要有JNDI
-InitialContext
+@ConditionalOnJndi | 参数中给定的JNDI位置必须存在一个，如果没有给参数，则要有JNDI InitialContext
 @ConditionalOnProperty | 指定的配置属性要有一个明确的值
 @ConditionalOnResource | Classpath里有指定的资源
 @ConditionalOnWebApplication | 这是一个Web应用程序
