@@ -69,7 +69,7 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 @Configuration | 类上 |  | 从其他配置类里导入了一些额外配置
 @Conditional | | |
   
-SpringBoot提供的自动配置中使用的条件化注解：  
+#### SpringBoot提供的自动配置中使用的条件化注解：  
 条件化注解 | 配置生效条件  
 -|-  
 @ConditionalOnBean | 配置了某个特定Bean
