@@ -59,9 +59,9 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 
 ## 注解
 注解 | 位置 | 使用 | 作用  
--|-|-  
-@SpringBootApplication | 类上 | | 开启Spring的组件扫描和SpringBoot的自动配置功能
-@Entity | 类上 | | 表明它是一个JPA（java持久化接口）实体
+-|-|-|-  
+@SpringBootApplication | 类上 |  | 开启Spring的组件扫描和SpringBoot的自动配置功能
+@Entity | 类上 |  | 表明它是一个JPA（java持久化接口）实体
 @Id | 字段上 |  | 说明这个字段是实体的唯一标识
 @GeneratedValue | 字段上 | @GeneratedValue(strategy=GenerationType.AUTO) | 这个字段的值是自动生成的
 @Controller | 类上 |  | 这样组件扫描会自动将其注册为Spring应用程序上下文里的一个Bean
@@ -69,18 +69,18 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 @Configuration | 类上 |  | 从其他配置类里导入了一些额外配置
 @Conditional 
 
-Spring Boot提供的自动配置中使用的条件化注解
-:-|:-
-条件化注解|配置生效条件
-@ConditionalOnBean|配置了某个特定Bean
-@ConditionalOnMissingBean|没有配置特定的Bean
-@ConditionalOnClass|Classpath里有指定的类，@ConditionalOnClass({ TestA.class, TestB.class })
-@ConditionalOnMissingClass|Classpath里缺少指定的类
-@ConditionalOnExpression|给定的Spring Expression Language（SpEL）表达式计算结果为true
-@ConditionalOnJava|Java的版本匹配特定值或者一个范围值
-@ConditionalOnJndi|参数中给定的JNDI位置必须存在一个，如果没有给参数，则要有JNDI
+Spring Boot提供的自动配置中使用的条件化注解 |
+-|-  
+条件化注解 | 配置生效条件
+@ConditionalOnBean | 配置了某个特定Bean
+@ConditionalOnMissingBean | 没有配置特定的Bean
+@ConditionalOnClass | Classpath里有指定的类，@ConditionalOnClass({ TestA.class, TestB.class })
+@ConditionalOnMissingClass | Classpath里缺少指定的类
+@ConditionalOnExpression | 给定的Spring Expression Language（SpEL）表达式计算结果为true
+@ConditionalOnJava | Java的版本匹配特定值或者一个范围值
+@ConditionalOnJndi | 参数中给定的JNDI位置必须存在一个，如果没有给参数，则要有JNDI
 InitialContext
-@ConditionalOnProperty|指定的配置属性要有一个明确的值
-@ConditionalOnResource|Classpath里有指定的资源
-@ConditionalOnWebApplication|这是一个Web应用程序
-@ConditionalOnNotWebApplication|这不是一个Web应用程序
+@ConditionalOnProperty | 指定的配置属性要有一个明确的值
+@ConditionalOnResource | Classpath里有指定的资源
+@ConditionalOnWebApplication | 这是一个Web应用程序
+@ConditionalOnNotWebApplication | 这不是一个Web应用程序
