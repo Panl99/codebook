@@ -52,6 +52,58 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 ```
 
 ## 二、自动配置
+**Spring Boot能从多种属性源获得属性（优先级高到低），包括：**  
+(1) 命令行参数
+(2) java:comp/env里的JNDI属性
+(3) JVM系统属性
+(4) 操作系统环境变量
+(5) 随机生成的带random.*前缀的属性（在设置其他属性时，可以引用它们，比如${random.long}）
+(6) 应用程序以外的application.properties或者appliaction.yml文件
+(7) 打包在应用程序内的application.properties或者appliaction.yml文件
+(8) 通过@PropertySource标注的属性源
+(9) 默认属性
+**application.properties和application.yml文件能放在以下四个位置（优先级高到低）：**  
+(1) 外置，在相对于应用程序运行目录的/config子目录里。
+(2) 外置，在应用程序运行的目录里。
+(3) 内置，在config包内。
+(4) 内置，在Classpath根目录。
+**同一优先级位置同时有application.properties和application.yml，那么application.yml里的属性会覆盖application.properties里的属性。**  
+#### 使用Profile配置：  
+- 向application.yml里添加spring.profiles.active属性：
+```
+spring:
+  profiles:
+    active: prod
+```
+- 命令行：  
+```
+java -jar xxx.jar --spring.profiles.active=prod
+```
+**使用特定Profile文件**  
+命名格式：application-{profile}.properties 或 application-{profile}.yml
+如：application-dev.yml、application-prod.yml、application-test.yml
+**使用多Profile YAML文件进行配置**  
+```
+logging:
+  level:
+    root: INFO
+---
+spring:
+  profiles: dev
+  
+logging:
+  level:
+    root: DEBUG
+---
+spring:
+  profiles: prod
+  
+logging:
+  path: /tmp/
+  file: BookWorm.log
+  level:
+    root: WARN
+```
 
 ## 三、Actuator
 
@@ -68,6 +120,8 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 @RequestMapping | 类上 | @RequestMapping(value="/{reader}", method=RequestMethod.GET) | 将其中所有的处理器方法都映射到了“/”这个URL路径上
 @Configuration | 类上 |  | 从其他配置类里导入了一些额外配置
 @Conditional | | |
+@ConfigurationProperties | 类上 | @ConfigurationProperties(prefix="amazon") | 说明该Bean的属性应该是（通过setter方法）从配置属性值注入的
+@Profile | 类上 | @Profile("prod") | @Profile注解要求运行时激活prod Profile，从而应用该配置
   
 #### SpringBoot提供的自动配置中使用的条件化注解：  
 条件化注解 | 配置生效条件  
