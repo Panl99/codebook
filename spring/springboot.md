@@ -116,6 +116,7 @@ logging:
 </dependency>
 ```
 **Actuator提供13个端点**  
+
 HTTP方法 | 路径 | 描述  
 -|-|-  
 GET | /autoconfig | 提供了一份自动配置报告，记录哪些自动配置条件通过了，哪些没通过
@@ -132,7 +133,7 @@ GET | /metrics/{name} | 报告指定名称的应用程序度量值
 GET | /trace | 提供基本的HTTP请求跟踪信息（时间戳、HTTP头等）
 POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置为true  
 **查看配置明细**  
-向/beans（在本地运行时是http://localhost:8080/beans）发起GET请求后，返回一个描述每个Bean信息的JSON文档。  
+向/beans（在本地运行时是`http://localhost:8080/beans`）发起GET请求后，返回一个描述每个Bean信息的JSON文档。  
 返回的JSON包含信息：
 - bean：Spring应用程序上下文中的Bean名称或ID。
 - resource：.class文件的具体路径。
