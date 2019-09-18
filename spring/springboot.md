@@ -132,6 +132,7 @@ GET | /metrics | 报告各种应用程序度量信息，比如内存用量和HTT
 GET | /metrics/{name} | 报告指定名称的应用程序度量值
 GET | /trace | 提供基本的HTTP请求跟踪信息（时间戳、HTTP头等）
 POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置为true  
+
 **查看配置明细**  
 向/beans（在本地运行时是`http://localhost:8080/beans`）发起GET请求后，返回一个描述每个Bean信息的JSON文档。  
 返回的JSON包含信息：
