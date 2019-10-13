@@ -2,7 +2,7 @@
 ## 1、提交
 #### 初始化git仓库
     git init
-#### 将远程仓库中的项目下载到本地仓库：
+#### 克隆远程仓库项目：
     git clone 'github项目地址'
 #### 把文件添加到缓存区中：
     git add <file>
@@ -33,9 +33,9 @@
 #### 删除缓存区文件
     git rm --cached <file>
 #### 删除git版本库文件
-    git rm 文件名
+    git rm <file>
 #### 放弃工作区中的修改(工作区内容add后有，又修改了工作区，放弃修改的内容)
-    git checkout -- <file>
+    git checkout --<file>
 #### 清空缓存区
     git reset HEAD <file>
 
