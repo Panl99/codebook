@@ -1,7 +1,7 @@
 # Python
 ## 一、基本
 #### 1、数据类型（6个）：
-- **不可变：**Number（数字）、String（字符串）、Tuple（元组）；
+- ** 不可变： **Number（数字）、String（字符串）、Tuple（元组）；
 - **可变：**List（列表）、Dictionary（字典）、Set（集合）
 
 #### 2、分支、循环
@@ -32,7 +32,7 @@
 ## 四、Web解析
 #### 1、Beautiful Soup：HTML/XML解析库
 
-#### 2、Re：正则(标准库，不需要安装)
+#### 2、Re：正则（标准库，不需要安装）
 
 #### 3、Python-Goose：提取文章类型的web页面
 
