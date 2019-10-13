@@ -1,8 +1,8 @@
 # Python
 ## 一、基本
 #### 1、数据类型（6个）：
-**- 不可变：**Number（数字）、String（字符串）、Tuple（元组）；
-- **可变：**List（列表）、Dictionary（字典）、Set（集合）
+- **不可变：** Number（数字）、String（字符串）、Tuple（元组）；
+- **可变：** List（列表）、Dictionary（字典）、Set（集合）
 
 #### 2、分支、循环
 
