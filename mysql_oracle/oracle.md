@@ -1,16 +1,16 @@
 # Oracle常用函数
 
 - **字符首字母大写[initcap]、转换为小写[lower]、转换为大写[upper]：**  
-	select initcap('abc'), lower('ABC'), upper('abc') from dual; => Abc,abc,ABC
+`select initcap('abc'), lower('ABC'), upper('abc') from dual; => Abc,abc,ABC`
 - **返回字符串长度[length]：**  
-	select length('abc') from dual; => 3
+	`select length('abc') from dual; => 3`
 - **左填充[lpad]，右填充[rpad]：**  
-	SELECT RPAD(LPAD('abc',5,'*'),8,'*') FROM DUAL; => **abc***
+	`SELECT RPAD(LPAD('abc',5,'*'),8,'*') FROM DUAL; => **abc***`
 - **去除字符串两端空格[trim]，去除左边[ltrim]，去除右边[rtim]：**  
-	SELECT TRIM(' ABC ') FROM DUAL; => 'ABC' ; 
-	SELECT TRIM('s' FROM 'strings') FROM DUAL; => tring
-	SELECT LTRIM(' ABC ') FROM DUAL; => 'ABC ' ; 
-	SELECT RTRIM(' ABC ') FROM DUAL; => ' ABC' ; 
+	`SELECT TRIM(' ABC ') FROM DUAL; => 'ABC' ; `
+	`SELECT TRIM('s' FROM 'strings') FROM DUAL; => tring`
+	`SELECT LTRIM(' ABC ') FROM DUAL; => 'ABC ' ; `
+	`SELECT RTRIM(' ABC ') FROM DUAL; => ' ABC' ; `
 - **获取子字符串[substr]：**  
 	SELECT SUBSTR('ABCDEF',2,3) FROM DUAL; => BCD  --从第2个位置开始取3个
 - **字符串替换[replace]：**  
