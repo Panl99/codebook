@@ -61,13 +61,13 @@
 - **返回指定字符的位置[instr（被搜索字符串、希望搜索的字符串、搜索开始位置、字符出现位置）]：**  
 	`SELECT instr('abcdefgd','d',1,2) from dual; =>8 (第二个 d 的位置)`
 ----------------------------------------
-- **decode:**
+- **decode:**  
 	`SELECT decode(5,1,'!',2,'#',3,'*','other') from dual; => other`
-- **case when:**
+- **case when:**  
 	`SELECT CASE WHEN sex = '1' THEN '男' WHEN sex = '2' THEN '女' ELSE '其他' END from tableName;`
-- **nvl:**
+- **nvl:**  
 	`SELECT nvl(a,b) from dual; => a不为null返回a,a为null返回b`
-- **连接:**
+- **连接:**  
 	`SELECT concat('a','b') from dual; => ab  只能连两个`
 	`SELECT 'a' || 'b' || 'c' from dual; => abc  可以连多个`
 
