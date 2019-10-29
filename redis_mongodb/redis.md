@@ -3,17 +3,20 @@
 
 #### 1. Window 下安装 Redis：
 [下载地址：https://github.com/MSOpenTech/redis/releases](https://github.com/MSOpenTech/redis/releases。)
+
 Redis 支持 32 位和 64 位。这个需要根据你系统平台的实际情况选择，这里我们下载 Redis-x64-xxx.zip压缩包到 C 盘，解压后，将文件夹重新命名为 redis。
 ![](https://img-blog.csdnimg.cn/20190414150417449.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
 打开一个 cmd 窗口 使用cd命令切换目录到 C:\redis 运行 redis-server.exeredis.windows.conf 。
 
 如果想方便的话，可以把 redis 的路径加到系统的环境变量里，这样就省得再输路径了，后面的那个 redis.windows.conf 可以省略，如果省略，会启用默认的。输入之后，会显示如下界面：
 ![](https://img-blog.csdnimg.cn/20190414150511399.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
-这时候另启一个cmd窗口，原来的不要关闭，不然就无法访问服务端了。
-切换到redis目录下运行 redis-cli.exe -h 127.0.0.1 -p 6379 。
-设置键值对 set myKey abc
-取出键值对 get myKey
+
+这时候另启一个cmd窗口，原来的不要关闭，不然就无法访问服务端了。  
+切换到redis目录下运行 redis-cli.exe -h 127.0.0.1 -p 6379 。  
+设置键值对 set myKey abc  
+取出键值对 get myKey  
 ![](https://img-blog.csdnimg.cn/20190414150550348.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
+
 #### 2. Java redis 驱动的安装：
 [首先你需要下载最新驱动包：https://mvnrepository.com/artifact/redis.clients/jedis](https://mvnrepository.com/artifact/redis.clients/jedis)
 - 在你的 classpath 中包含该驱动包。
