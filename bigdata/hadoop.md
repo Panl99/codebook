@@ -1,76 +1,29 @@
-代码、示例、练习：https://github.com/tomwhite/hadoop-book/
+[代码、示例、练习：https://github.com/tomwhite/hadoop-book/](https://github.com/tomwhite/hadoop-book/)
 
-Hadoop是什么？
+## 一、Hadoop基础概念
 高性能海量数据存储和分析平台。
 
-Hadoop可以干什么？（应用场景）
-对配有大量硬盘的数据库进行大规模的数据分析。预测2020年全球数据总量将达到44ZB（1ZB=1000EB=1000000PB=10亿TB）。
+Hadoop可以对配有大量硬盘的数据库进行大规模的数据分析。预测2020年全球数据总量将达到44ZB（1ZB=1000EB=1000000PB=10亿TB）。
 
-为什么要使用Hadoop？
+为什么要使用Hadoop
 计算机硬盘的发展趋势：寻址时间的提升远远不如传输速率的提升。如果数据访问模式中包含大量的硬盘寻址，那么读取大量数据集就要花费更长的时间。MapReduce更适合解决需要以批处理方式分析整个数据集的问题，适合一次写入，多次读取数据的应用。
 
 Hadoop尽量在计算节点上存储数据，以实现数据的本地快速访问
 
 Hadoop通过显式的网络拓扑结构保留网络带宽
 
-怎样使用Hadoop？
-Hadoop相关性	项目	描述
-数据格式	Avro	Hadoop的一种跨语言数据序列化库
+**Hadoop相关性描述**
+- Avro	Hadoop的一种跨语言数据序列化库
+- Parquet	一种有效的用于嵌套式数据的列式存储格式
+- Flume	支持流数据大批量摄入
+- Sqoop	支持在结构化数据存储和HDFS之间高效批量传输数据
+- Hive	是一种数据仓库，用于管理HDFS中存储的数据并提供基于SQL的查询语言
+- Spark	一个面向大规模数据处理的集群计算框架，提供一个有向无环图引擎，以及支持Scala、Java、Python语言的API
+- Pig	一种用于开发大数据集的数据流语言
+- Crunch	一套高层次的Java API，用于写可以运行在MapReduce或Spark上的数据处理管线程序	
+- HBase	一种使用HDFS作为底层存储的、分布式的、面向列的实时数据库
+- ZooKeeper	一种分布式高可用的协调服务，提供用于构建分布式应用的原语集
 
-Parquet	一种有效的用于嵌套式数据的列式存储格式
-数据摄入（将自己数据传入Hadoop系统中）	Flume	支持流数据大批量摄入
-
-Sqoop	支持在结构化数据存储和HDFS之间高效批量传输数据
-数据处理	Hive	是一种数据仓库，用于管理HDFS中存储的数据并提供基于SQL的查询语言
-
-Spark	一个面向大规模数据处理的集群计算框架，提供一个有向无环图引擎，以及支持Scala、Java、Python语言的API
-
-Pig	一种用于开发大数据集的数据流语言
-
-Crunch	一套高层次的Java API，用于写可以运行在MapReduce或Spark上的数据处理管线程序
-数据库	HBase	一种使用HDFS作为底层存储的、分布式的、面向列的实时数据库
-分布式协调服务	ZooKeeper	一种分布式高可用的协调服务，提供用于构建分布式应用的原语集
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-一个集群多个框架
-MapReduce实现离线批处理
-Impala实现实时交互式查询分析
-Storm实现流式数据实时分析
-Spark实现迭代计算
-
-
-一、MapReduce：
-https://blog.csdn.net/A_lex_/article/details/90416551
-
-二、HDFS（Hadoop分布式文件系统）
-https://blog.csdn.net/A_lex_/article/details/91058440
-
-三、YARN（Hadoop集群资源管理系统）
-https://blog.csdn.net/A_lex_/article/details/91474264
 
 四、Hadoop的I/O操作
 Hadoop自带一套原子操作用于数据I/O操作。
@@ -137,7 +90,7 @@ YARN通过两类长期运行的守护进程提供核心服务：
 
 **容量调度器和公平调度器配置**：待补充
 
-# HDFS #
+## HDFS
 
 ## HDFS的概念和特性 ##
 ### HDFS：Hadoop分布式文件系统 ###
