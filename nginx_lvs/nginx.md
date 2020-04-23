@@ -67,3 +67,49 @@
     8. 帮助：usr/local/nginx/sbin/nginx -h
 
 ## 2、Nginx配置
+#### 2.1、Nginx进程间关系
+- 1个master进程管理多个worker进程
+- worker进程数量=服务器cpu核心数（默认情况，可配置）
+- 真正提供互联网服务的是worker进程，master进程只负责监控管理worker进程
+    1. master只专注于管理工作，如启动、停止、重新加载配置文件、平滑升级等服务，需要较大权限
+    2. 多个worker进程处理请求可以提高服务健壮性
+    3. 1个worker进程同时处理的请求数只受限于内存大小，多个worker进程处理并发请求时几乎没有同步锁的限制，worker进程一般不会睡眠，因此worker进程数等于cpu核心数时，进程间切换代价最小
+    
+#### 2.2、配置语法
+- 块配置项用大括号包括，配置项名后用空格分隔
+- 块配置项可以嵌套，内层块会继承外层块，当内外层块配置冲突时-取决于解析这个配置项的模块
+- 每行配置结尾需要加分号;
+- 配置项中的语法符号，使用单引号''或者双引号""括住
+- \# 注释符
+- 参数值单位：
+    1. 空间：K/k(KB)，M/m(MB)
+    2. 时间：ms（毫秒），s（秒），m（分钟），h（小时），d（天），w（周，包含7天），M（月，包含30天），y（年，包含365天）
+- $ 引用变量符
+- 大部分模块都必须在nginx.conf中读取某个配置项后才会在Nginx启用
+
+#### 2.3、Nginx基本配置
+**按使用功能分为四类：**  
+- **用于调试、定位问题的配置**
+
+|配置项|语法|默认值|描述|
+|---|---|---|---|
+|是否以守护进程方式运行Nginx|daemon on/off;|on|守护进程（daemon）是脱离终端并且在后台运行的进程。它脱离终端是为了避免进程执行过程中的信息在任何终端上显示，这样一来，进程也不会被任何终端所产生的信息所打断|
+|是否以master/worker方式工作|master_process on/off;|on|Nginx以一个master进程管理多个worker进程的方式运行，如果关闭，则不会fork出worker进程处理请求，会使用master进程自身处理请求|
+|error日志设置|error_log "path file" "level";|error_log logs/error.log error;|"path file"可以是一个具体的文件，也可以是/dev/null(不输出日志)，也可以是stderr会输出到标准错误文件中；日志级别依次增大：debug、info、notice、warn、error、crit、alert、emerg（debug，必须在configure时加入--with-debug配置项）|
+|仅对指定的客户端输出debug级别的日志|debug_connection "IP/CIDR";|无|这个配置项实际上属于事件类配置，因此，它必须放在events{...}中才有效。它的值可以是IP地址或CIDR地址，可用于定位高并发请求。（使用debug_connection前，需在执行configure时已经加入了--with-debug参数，否则不会生效）|
+|限制coredump核心转储文件的大小|worker_rlimit_core "size";|无|当Nginx进程出现一些非法操作（如内存越界）导致进程直接被操作系统强制结束时，会生成核心转储core文件，可以从core文件获取当时的堆栈、寄存器等信息。|
+|指定coredump文件生成目录|working_directory "path";|无|worker进程的工作目录。唯一用途就是设置coredump文件所放置的目录|
+- **正常运行必备配置**
+
+|配置项|语法|默认值|描述|
+|---|---|---|---|
+|||||
+- **优化性能配置**
+- **事件类配置**  
+
+
+## HTTP模块
+
+## event模块
+
+## 负载均衡机制
