@@ -28,8 +28,9 @@
 - [docker.md](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/docker.md)
 - [kubernetes.md](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/kubernetes.md)
 
-## Nginx,Lvs
-- [nginx.md](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.md)
+## Nginx,Lvs ✔
+- [nginx.md ✔](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.md)
+- [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
 - [lvs.md](https://github.com/Panl99/codebook/blob/master/nginx_lvs/lvs.md)
 
 ## ElasticSearch
