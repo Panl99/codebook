@@ -95,7 +95,7 @@
 |---|---|---|---|
 |是否以守护进程方式运行Nginx|daemon on/off;|on|守护进程（daemon）是脱离终端并且在后台运行的进程。它脱离终端是为了避免进程执行过程中的信息在任何终端上显示，这样一来，进程也不会被任何终端所产生的信息所打断|
 |是否以master/worker方式工作|master_process on/off;|on|Nginx以一个master进程管理多个worker进程的方式运行，如果关闭，则不会fork出worker进程处理请求，会使用master进程自身处理请求|
-|error日志设置|error_log "path file" "level";|error_log logs/error.log error;|"path file"可以是一个具体的文件，也可以是/dev/null(不输出日志)，也可以是stderr会输出到标准错误文件中；日志级别依次增大：debug、info、notice、warn、error、crit、alert、emerg（debug，必须在configure时加入--with-debug配置项）|
+|error日志设置|***error_log "path file" "level";***|error_log logs/error.log error;|"path file"可以是一个具体的文件，也可以是/dev/null(不输出日志)，也可以是stderr会输出到标准错误文件中；日志级别依次增大：debug、info、notice、warn、error、crit、alert、emerg（debug，必须在configure时加入--with-debug配置项）|
 |仅对指定的客户端输出debug级别的日志|debug_connection "IP/CIDR";|无|这个配置项实际上属于事件类配置，因此，它必须放在events{...}中才有效。它的值可以是IP地址或CIDR地址，可用于定位高并发请求。（使用debug_connection前，需在执行configure时已经加入了--with-debug参数，否则不会生效）|
 |限制coredump核心转储文件的大小|worker_rlimit_core "size";|无|当Nginx进程出现一些非法操作（如内存越界）导致进程直接被操作系统强制结束时，会生成核心转储core文件，可以从core文件获取当时的堆栈、寄存器等信息。|
 |指定coredump文件生成目录|working_directory "path";|无|worker进程的工作目录。唯一用途就是设置coredump文件所放置的目录|
@@ -104,16 +104,16 @@
 |配置项|语法|默认值|描述|
 |---|---|---|---|
 |定义环境变量|env "VAR/VAR=VALUE"|如：env TESTPATH=/tmp/;|这个配置项可以让用户直接设置操作系统上的环境变量|
-|嵌入其他配置文件|include "path file"|如：include mime.types; include vhost/*.conf;|将其他配置文件嵌入到当前的nginx.conf文件中|
+|嵌入其他配置文件|***include "path file"***|如：include mime.types; include vhost/*.conf;|将其他配置文件嵌入到当前的nginx.conf文件中|
 |pid文件的路径|pid "path/file";|pid logs/nginx.pid;|保存master进程ID的pid文件存放路径。默认与configure执行时的参数“--pid-path”所指定的路径是相同的|
 |Nginx worker进程运行的用户及用户组|user "username" "groupname";|user nobody nobody;|user用于设置master进程启动后，fork出的worker进程运行在哪个用户和用户组下。若用户在configure命令执行时使用了参数--user=username和--group=groupname，此时nginx.conf将使用参数中指定的用户和用户组。|
-|指定Nginx worker进程可以打开的最大句柄描述符个数|worker_rlimit_nofile limit;|无|设置一个worker进程可以打开的最大文件句柄数。|
+|指定Nginx worker进程可以打开的最大文件个数|***worker_rlimit_nofile limit;***|无|设置一个worker进程可以打开的最大文件个数。|
 |限制信号队列|worker_rlimit_sigpending limit;|无|设置每个用户发往Nginx的信号队列的大小。也就是说，当某个用户的信号队列满了，这个用户再发送的信号量会被丢掉。|
 - **优化性能配置**
 
 |配置项|语法|默认值|描述|
 |---|---|---|---|
-|Nginx worker进程个数|worker_processes number;|worker_processes 1;|在master/worker运行方式下，定义worker进程的个数。每个worker单线程调用各模块功能，如果模块间不阻塞调用，则配置CPU内核个数个worker进程，否则多配点worker进程|
+|Nginx worker进程个数|***worker_processes number;***|worker_processes 1;|在master/worker运行方式下，定义worker进程的个数。每个worker单线程调用各模块功能，如果模块间不阻塞调用，则配置CPU内核个数个worker进程，否则多配点worker进程|
 |绑定Nginx worker进程到指定的CPU内核|worker_cpu_affinity cpumask"cpumask..."|如：worker_processes 4; worker_cpu_affinity 1000 0100 0010 0001;|worker进程绑定指定的cpu内核，可以独享一个cpu，防止多个worker抢同一个cpu，以实现内核调度上完全的并发。（仅对Linux系统有效）|
 |Nginx worker进程优先级设置|worker_priority nice;|worker_priority 0;|该配置项用于设置Nginx worker进程的nice优先级。|
 |SSL硬件加速|ssl_engine "device";|无|如果服务器上有SSL硬件加速设备，那么就可以进行配置以加快SSL协议的处理速度。查看是否有SSL硬件加速设备：openssl engine -t|
@@ -126,13 +126,26 @@
 |是否打开accept锁|accept_mutex "on/off"|on|accept_mutex是Nginx的负载均衡锁，这把锁可以让多个worker进程轮流地、序列化地与新的客户端建立TCP连接。当某一个worker进程建立的连接数量达到worker_connections配置的最大连接数的7/8时，会大大地减小该worker进程试图建立新TCP连接的机会，以此实现所有worker进程之上处理的客户端请求数尽量接近。如果关闭它，那么建立TCP连接的耗时会更短，但worker进程之间的负载会非常不均衡。|
 |lock文件的路径|lock_file "path/file";|lock_file logs/nginx.lock;|accept锁可能需要这个lock文件，如果accept锁关闭，lock_file配置完全不生效。如果打开了accept锁，并且由于编译程序、操作系统架构等因素导致Nginx不支持原子锁，这时才会用文件锁实现accept锁，这样lock_file指定的lock文件才会生效。|
 |使用accept锁后到真正建立连接之间的延迟时间|accept_mutex_delay "Nms";|accept_mutex_delay 500ms;|在使用accept锁后，同一时间只有一个worker进程能够取到accept锁。这个accept锁不是阻塞锁，如果取不到会立刻返回。如果有一个worker进程试图取accept锁而没有取到，它至少要等accept_mutex_delay定义的时间间隔后才能再次试图取锁。|
-|批量建立新连接|multi_accept "on/off";|multi_accept off;|当事件模型通知有新连接时，尽可能地对本次调度中客户端发起的所有TCP请求都建立连接。|
-|选择事件模型|use "kqueue/rtsig/epoll/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
-|每个worker的最大连接数|worker_connections "number";|无|定义每个worker进程可以同时处理的最大连接数。|
+|批量建立新连接|***multi_accept "on/off";***|multi_accept off;|当事件模型通知有新连接时，尽可能地对本次调度中客户端发起的所有TCP请求都建立连接。|
+|选择事件模型|***use*** "kqueue/rtsig/***epoll***/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
+|每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。|
 
+## 3、HTTP模块
+#### 3.1、用HTTP核心模块配置一个静态web服务器 
+- [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)  
 
-## HTTP模块
+**主要介绍：ngx_http_core_module模块**  
+- 所有的HTTP配置项都必须直属于http块、server块、location块、upstream块或if块等  
 
+**按功能划分：**  
+- **虚拟主机与请求的分发**
+- **文件路径的定义**
+- **内存及磁盘资源的分配**
+- **网络连接的设置**
+- **MIME类型的设置**
+- **对客户端请求的限制**
+- **文件操作的优化**
+- **对客户端请求的特殊处理**
 ## event模块
 
 ## 负载均衡机制
