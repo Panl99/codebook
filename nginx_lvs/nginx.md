@@ -1,5 +1,5 @@
 > [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
-> [深入理解Nginx：模块开发与架构解析（第2版）]
+> [深入理解Nginx：模块开发与架构解析（第2版）](https://github.com/Panl99/codebook/blob/master/nginx_lvs/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
 # 一、Nginx
 ## 1、关于Nginx
 #### 1.1、Nginx特点
@@ -139,13 +139,87 @@
 
 **按功能划分：**  
 - **虚拟主机与请求的分发**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+|监听端口|listen address:port "default(deprecated in 0.8.21)/default_server/'backlog=num/rcvbuf=size/sndbuf=size/accept_filter=filter/deferred/bind/ipv6only=<on/off>/ssl'";|listen 80;|server|在listen后可以只加IP地址、端口或主机名|
+|主机名称|server_name name[...];|server_name "";|server|server_name后可以跟多个主机名称，在开始处理一个HTTP请求时，Nginx会取出header头中的Host，与每个server中的server_name进行匹配，以此决定到底由哪一个server块来处理这个请求。\n 如果host与多个server_name都匹配，选择server块处理优先级按照：全匹配>通配符\*在首位>通配符\*在末位>正则匹配；\n 如果都不匹配，按照：优先选择在listen配置项后加入"default/default_server"的server块 > 找到匹配listen端口的第一个server块。|
+|存储server name的散列表的每个桶占用内存大小|server_names_hash_bucket_size "size";|32/64/128;|http、server、location|为了提高快速寻找到相应server name的能力，Nginx使用散列表来存储server name。server_names_hash_bucket_size设置了每个散列桶占用的内存大小。|
+|server_names_hash_max_size|server_names_hash_max_size "size";|512|http、server、location|server_names_hash_max_size越大，消耗的内存就越多，但散列key的冲突率则会降低，检索速度也更快。|
+|重定向主机名称的处理|server_name_in_redirect on/off;|on|http、server、location|该配置需要配合server_name使用，在使用on打开时，表示在重定向请求时会使用server_name里配置的第一个主机名代替原先请求中的Host头部，而使用off关闭时，表示在重定向请求时使用请求本身的Host头部。|
+|location|location"=/~/~*/^~/@"/uri/{...}|无|server|location会尝试根据用户请求中的URI来匹配上面的/uri表达式，如果可以匹配，就选择location{}块中的配置来处理用户请求，多个location匹配时选第一个处理。匹配规则：=表示把URI作为字符串与参数中的uri做完全匹配，~表示匹配URI时是字母大小写敏感的，~*表示匹配URI时忽略字母大小写问题，^~表示匹配URI时只需要其前半部分与uri参数匹配即可，@表示仅用于Nginx服务内部请求之间的重定向，带有@的location不直接处理用户请求|
 - **文件路径的定义**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
 - **内存及磁盘资源的分配**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
 - **网络连接的设置**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
 - **MIME类型的设置**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
 - **对客户端请求的限制**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
 - **文件操作的优化**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
 - **对客户端请求的特殊处理**
+
+|配置项|语法|默认值|配置块|描述|
+|---|---|---|---|---|
+||||||
+||||||
+||||||
+||||||
+||||||
+||||||
+
+
 ## event模块
 
 ## 负载均衡机制
