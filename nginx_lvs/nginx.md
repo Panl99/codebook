@@ -147,7 +147,7 @@
 |存储server name的散列表的每个桶占用内存大小|server_names_hash_bucket_size "size";|32/64/128;|http、server、location|为了提高快速寻找到相应server name的能力，Nginx使用散列表来存储server name。server_names_hash_bucket_size设置了每个散列桶占用的内存大小。|
 |server_names_hash_max_size|server_names_hash_max_size "size";|512|http、server、location|server_names_hash_max_size越大，消耗的内存就越多，但散列key的冲突率则会降低，检索速度也更快。|
 |重定向主机名称的处理|server_name_in_redirect on/off;|on|http、server、location|该配置需要配合server_name使用，在使用on打开时，表示在重定向请求时会使用server_name里配置的第一个主机名代替原先请求中的Host头部，而使用off关闭时，表示在重定向请求时使用请求本身的Host头部。|
-|location|location"=/~/~*/^~/@"/uri/{...}|无|server|location会尝试根据用户请求中的URI来匹配上面的/uri表达式，如果可以匹配，就选择location{}块中的配置来处理用户请求，多个location匹配时选第一个处理。匹配规则：=表示把URI作为字符串与参数中的uri做完全匹配，~表示匹配URI时是字母大小写敏感的，~*表示匹配URI时忽略字母大小写问题，^~表示匹配URI时只需要其前半部分与uri参数匹配即可，@表示仅用于Nginx服务内部请求之间的重定向，带有@的location不直接处理用户请求|
+|location|location"=/~/~*/^~/@"/uri/{...}|无|server|location会尝试根据用户请求中的URI来匹配上面的/uri表达式，如果可以匹配，就选择location{}块中的配置来处理用户请求，多个location匹配时选第一个处理。匹配规则：=表示把URI作为字符串与参数中的uri做完全匹配，\~表示匹配URI时是字母大小写敏感的，\~*表示匹配URI时忽略字母大小写问题，^~表示匹配URI时只需要其前半部分与uri参数匹配即可，@表示仅用于Nginx服务内部请求之间的重定向，带有@的location不直接处理用户请求|
 - **文件路径的定义**
 
 |配置项|语法|默认值|配置块|描述|
@@ -218,6 +218,29 @@
 ||||||
 ||||||
 ||||||
+
+#### 3.2、反向代理配置
+
+#### 3.3、将HTTP模块编译到Nginx中
+1. 将源码文件放在一个目录下（如：/nginx/），并在此目录下创建一个文件命名为config；
+2. 在configure脚本执行时添加参数：--add-module=/nginx/；
+3. config文件编写：（仅开发HTTP模块，包含下3个变量即可）
+    - ngx_addon_name：仅在configure执行时使用，一般设置为模块名称。
+    - HTTP_MODULES：保存所有的HTTP模块名称，每个HTTP模块间使用空格符连接。重设此变量时不要进行覆盖，可以引用。
+    - NGX_ADDON_SRCS：用于指定新增模块的源代码，多个待编译的源代码间使用空格符连接。可以使用$ngx_addon_dir变量，等价于configure执行时--add-module=/nginx/参数。  
+    例：
+    ```
+    ngx_addon_name=ngx_http_mytest_module
+    HTTP_MODULES="$HTTP_MODULES ngx_http_mytest_module"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_mytest_module.c"
+    ```
+4. 使用configure脚本将第三方模块加入到Nginx中：
+    ```
+    执行： 
+    . auto/modules
+    . auto/make
+    ```
+#### 3.4、定义一个HTTP模块
 
 
 ## event模块
