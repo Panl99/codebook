@@ -1,7 +1,7 @@
 - [csdn:https://mp.csdn.net/postlist](https://mp.csdn.net/postlist)
 
 ## Java
-- [java.md](https://github.com/Panl99/codebook/blob/master/java/java.md)
+- [java.md ✔](https://github.com/Panl99/codebook/blob/master/java/java.md)
 
 ## Python ✔
 - [python.md ✔](https://github.com/Panl99/codebook/blob/master/python/python.md)
