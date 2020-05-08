@@ -149,6 +149,17 @@
     可通过-XX：MaxDirectMemorySize参数来指定，如果不去指定，则默认与Java堆最大值（由-Xmx指定）一致
 ```
 
+- **JVM性能监控、故障处理工具**
+
+|工具|功能|命令|参数|
+|---|---|---|---|
+|jps|JVM Process Status Tool：可以列出正在运行的虚拟机进程，并显示虚拟机执行主类（Main Class，main()函数所在的类）名称以及这些进程的本地虚拟机唯一ID|jps [options] [hostid]|-q，-m，-l，-v|
+|jstat|JVM Statistics Monitoring Tool：用于监视虚拟机各种运行状态信息的命令行工具，可以显示本地或者远程虚拟机进程中的类加载、内存、垃圾收集、即时编译等运行时数据|jstat [ option vmid [interval[s/ms] [count]] ]|-class，-gc，-gcnew，-gcold，-gcpermcapacity，-compiler，...|
+|jinfo|Configuration Info for Java：实时查看和调整虚拟机各项参数|jinfo [ option ] pid|-flag|
+|jmap|Memory Map for Java：用于生成堆转储快照（一般称为heapdump或dump文件），还可以查询finalize执行队列、Java堆和方法区的详细信息，如空间使用率、当前用的是哪种收集器等。|jmap [ option ] vmid|-dump，-finalizerinfo，-heap，-histo，-permstat，-F|
+|jhat|JVM Heap Analysis Tool：与jmap搭配使用，来分析jmap生成的堆转储快照。|||
+|jstack|Stack Trace for Java：用于生成虚拟机当前时刻的线程快照（一般称为threaddump或者javacore文件）|jstack [ option ] vmid|-F，-l，-m|
+
 #### 8.3、垃圾回收
 - **垃圾回收**
 ```
@@ -180,9 +191,8 @@
                 加载该类的类加载器已经被回收，这个条件除非是经过精心设计的可替换类加载器的场景，如OSGi、JSP的重加载等，否则通常是很难达成的。
                 该类对应的java.lang.Class对象没有在任何地方被引用，无法在任何地方通过反射访问该类的方法。
             关于是否要对类型进行回收，HotSpot虚拟机提供了-Xnoclassgc参数进行控制，还可以使用-verbose：class以及-XX：+TraceClass-Loading、-XX：+TraceClassUnLoading查看类加载和卸载信息
-2、什么时候回收？
 
-3、怎么回收？
+2、什么时候、怎么回收？
     垃圾收集算法：追踪式垃圾收集(Tracing GC)
     分代收集理论：收集器应该将Java堆划分出不同的区域，然后将回收对象依据其年龄（年龄即对象熬过垃圾收集过程的次数）分配到不同的区域之中存储。
         一般把java堆分为新生代、老年代，在新生代中，每次垃圾收集时都发现有大批对象死去，而每次回收后存活的少量对象，将会逐步晋升到老年代中存放
@@ -219,12 +229,33 @@
 ```
 - **内存分配**
 ```
+1、多数情况下，对象优先在新生代Eden区分配，当Eden区空间不足时，虚拟机将进行一次Minor GC
+    -XX：+PrintGCDetails，该HotSpot虚拟机参数在JVM进行垃圾回收时打印内存回收日志，在进程退出时输出当前内存各区域分配情况。
+    -XX：Survivor-Ratio=8，决定了新生代中Eden区与一个Survivor区的空间比例是8∶1
+2、大对象直接进入老年代
+    大对象：指需要大量连续内存空间的Java对象，如很长的字符串、元素数量巨多的数组。
+    避免大对象：分配空间时容易导致还有不少内存，但却需要足够的连续空间安置 而提前触发垃圾收集；并且复制大对象需要高额内存开销。
+    -XX：PretenureSizeThreshold，指定大于该设置值的对象直接在老年代分配，目的是避免在Eden区及两个Survivor区之间来回复制，产生大量的内存复制操作。（注意：参数只限于Serial和ParNew两款新生代收集器）
+3、长期存活的对象将进入老年代
+    -XX：MaxTenuringThreshold[=15]，对象晋升老年代的年龄阈值，对象在Survivor区中每熬过一次Minor GC，年龄就增加1岁，超过阈值会晋升到老年代中
+4、动态对象年龄判断
+    如果在Survivor空间中相同年龄所有对象大小的总和大于Survivor空间的一半，年龄大于或等于该年龄的对象就可以直接进入老年代
+
+5、空间分配担保
+    在Minor GC之前，JVM必须先检查老年代中最大可用的连续空间是否大于新生代中所有对象总空间，
+        大于，进行Minor GC，
+        小于，JVM会先检查-XX：HandlePromotionFailure[=true/false]设置的值是否允许担保失败，
+            允许，继续检查老年代最大可用的连续空间是否大于历次晋升到老年代对象的平均大小，
+                大于，进行一次Minor GC。
+                小于，进行一次Full GC。
+            不允许，进行一次Full GC。
 
 ```
 #### 8.4、性能调优
 
+- **大内存硬件上的程序部署策略**
 ```
-
+背景：一个15万PV/日左右的在线文档类型网站，服务器的硬件为四路志强处理器、16GB物理内存，操作系统为64位CentOS 5.4，Resin作为Web服务器。
 ```
 
 #### 8.5、类加载机制
