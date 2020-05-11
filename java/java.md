@@ -280,6 +280,55 @@
     该问题既有JBossCache的缺陷，也有MIS系统实现方式上的缺陷。应避免使用JBossCache这种非集中式集群缓存来实现数据同步，可以频繁读操作，但不应频繁写操作带来较大的网络同步开销
 ```
 - **堆外内存导致内存溢出**
+```
+背景：大量的NIO操作需要使用到直接内存
+    直接内存：可通过-XX：MaxDirectMemorySize调整大小，内存不足时抛出OutOf-MemoryError或者OutOfMemoryError：Direct buffer memory。
+```
+- **外部命令导致系统缓慢**
+```
+背景：通过操作系统的mpstat工具发现处理器使用率很高，但是系统中占用绝大多数处理器资源的程序并不是该应用本身
+    每个用户请求的处理都需要执行一个外部Shell脚本来获得系统的一些信息。执行这个Shell脚本是通过Java的Runtime.getRuntime().exec()方法来调用的。
+        频繁调用时创建进程的开销较大，资源消耗严重。
+            应该去掉shell脚本执行语句，使用java的API去获取相关信息
+```
+- **服务器虚拟机进程崩溃**
+```
+背景：集群节点的虚拟机进程频繁自动关闭，留下一个hs_err_pid###.log文件
+    异常信息：
+        java.net.SocketException: Connection reset
+        at java.net.SocketInputStream.read(SocketInputStream.java:168)
+        at java.io.BufferedInputStream.fill(BufferedInputStream.java:218)
+        at java.io.BufferedInputStream.read(BufferedInputStream.java:235)
+        at org.apache.axis.transport.http.HTTPSender.readHeadersFromSocket(HTTPSender.java:583)
+        at org.apache.axis.transport.http.HTTPSender.invoke(HTTPSender.java:143)
+        ... 99 more
+    由于MIS系统的用户多，待办事项变化很快，为了不被OA系统速度拖累，使用了异步的方式调用Web服务，但由于两边服务速度的完全不对等，时间越长就累积了越多Web服务没有调用完成，导致在等待的线程和Socket连接越来越多，最终超过虚拟机的承受能力后导致虚拟机进程崩溃
+解决：
+    通知OA门户方修复无法使用的集成接口，并将异步调用改为生产者/消费者模式的消息队列实现
+```
+- **不恰当的数据结构导致内存占用过大**
+```
+背景：一个后台RPC服务器，使用64位Java虚拟机，内存配置为-Xms4g-Xmx8g-Xmn1g，使用ParNew加CMS的收集器组合。
+    平时对外服务的Minor GC时间约在30毫秒以内，完全可以接受。但业务上需要每10分钟加载一个约80MB的数据文件到内存进行数据分析，这些数据会在内存中形成超过100万个HashMap<Long，Long>Entry，在这段时间里面Minor GC就会造成超过500毫秒的停顿
+    在分析数据文件期间，800MB的Eden空间很快被填满引发垃圾收集，但Minor GC之后，新生代中绝大部分对象依然是存活的。我们知道ParNew收集器使用的是复制算法，这个算法的高效是建立在大部分对象都“朝生夕灭”的特性上的，如果存活对象过多，把这些对象复制到Survivor并维持这些对象引用的正确性就成为一个沉重的负担，因此导致垃圾收集的暂停时间明显变长。
+解决：
+    不修改程序，从GC调优角度解决：（治标）
+        可以考虑直接将Survivor空间去掉（加入参数-XX：SurvivorRatio=65536、-XX：MaxTenuringThreshold=0或者-XX：+Always-Tenure），让新生代中存活的对象在第一次Minor GC后立即进入老年代，等到Major GC的时候再去清理它们。
+    修改程序：（治本）
+        分析HashMap<Long，Long>空间效率，两个长整型实际存放数据占2*8=16byte，但实际耗费内存：(Long(24byte)×2)+Entry(32byte)+HashMapRef(8byte)=88byte，空间效率为16字节/88字节=18%，这确实太低
+```
+- **由安全点导致长时间停顿**
+```
+背景：一个比较大的承担公共计算任务的离线HBase集群，运行在JDK 8上，使用G1收集器。
+    每天都有大量的MapReduce或Spark离线分析任务对其进行访问，同时有很多其他在线集群Replication过来的数据写入，因为集群读写压力较大，而离线分析任务对延迟又不会特别敏感，所以将-XX：MaxGCPauseMillis参数设置到了500毫秒。不过运行一段时间后发现垃圾收集的停顿经常达到3秒以上，而且实际垃圾收集器进行回收的动作就只占其中的几百毫秒
+解决：    
+    加入参数-XX：+PrintSafepointStatistics和-XX：PrintSafepointStatisticsCount=1去查看安全点日志
+        日志显示当前虚拟机的操作（VM Operation，VMOP）是等待所有用户线程进入到安全点，但是有两个线程特别慢，导致发生了很长时间的自旋等待，所以垃圾收集线程无法开始工作，只能空转（自旋）等待。
+            第一步把这两个慢的线程找出来：添加-XX：+SafepointTimeout和-XX：SafepointTimeoutDelay=2000两个参数，让虚拟机在等到线程进入安全点的时间超过2000毫秒时就认定为超时，这样就会输出导致问题的线程名称
+        最终查明导致这个问题是HBase中一个连接超时清理的函数，由于集群会有多个MapReduce或Spark任务进行访问，而每个任务又会同时起多个Mapper/Reducer/Executer，其每一个都会作为一个HBase的客户端，这就导致了同时连接的数量会非常多。
+            更为关键的是，清理连接的索引值就是int类型，所以这是一个可数循环，HotSpot不会在循环中插入安全点。当垃圾收集发生时，如果RpcServer的Listener线程刚好执行到该函数里的可数循环时，则必须等待循环全部跑完才能进入安全点，此时其他线程也必须一起等着，所以从现象上看就是长时间的停顿
+    解决：把循环索引的数据类型从int改为long即可，（需要掌握安全点和垃圾收集的知识）
+```
 
 #### 8.5、类加载机制
 - **类文件结构**
