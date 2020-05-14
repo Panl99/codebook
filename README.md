@@ -2,9 +2,11 @@
 
 ## Java
 - [java.md ✔](https://github.com/Panl99/codebook/blob/master/java/java.md)
+- [java.java](https://github.com/Panl99/codebook/blob/master/java/java.java)
 
 ## Python ✔
 - [python.md ✔](https://github.com/Panl99/codebook/blob/master/python/python.md)
+- [python.py](https://github.com/Panl99/codebook/blob/master/python/python.py)
 - [Python-100天从新手到大师：https://github.com/jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days)
 
 ## Spring ✔
