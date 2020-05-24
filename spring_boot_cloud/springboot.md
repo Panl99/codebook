@@ -84,6 +84,7 @@ java -jar xxx.jar --spring.profiles.active=prod
 - 开发环境：application-dev.yml
 - 生产环境：application-prod.yml
 - 测试环境：application-test.yml
+
 **同一YAML文件进行多环境配置**  
 ```
 logging:
