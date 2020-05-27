@@ -1,10 +1,68 @@
 # 一、Java基础
 ## 1、Java基础
 #### 1.1、String常用方法
-方法|描述|实例,//返回值
-:-|:-|:-
-.equals()|相等|"abc".equals("abc"),//true
-|||
+方法|返回值类型|描述|实例
+|---|---|---|---|
+|.charAt(int index)|char|||
+|.chars()|IntStream|||
+|.codePointAt(int index)|int|||
+|.codePointBefore(int index)|int|||
+|.codePointCount(int beginIndex, int endIndex)|int|||
+|.codePoints()|IntStream|||
+|.compareTo(String anotherString)|int|||
+|.compareToIgnoreCase(String str)|int|||
+|.concat(String str)|String|||
+|.contains(CharSequence s)|boolean|||
+|.contentEquals(CharSequence cs)|boolean|||
+|.contentEquals(StringBuffer sb)|boolean|||
+|.endsWith(String suffix)|boolean|||
+|.equals(Object anObject)|boolean|判断两个字符串是否相等|"abc".equals("abc"),//true|
+|.equalsIgnoreCase(String anotherString)|boolean|忽略大小写判断两个字符串是否相等|"abc".equalsIgnoreCase("ABc"),//true|
+|.getBytes()|byte[]|||
+|.getBytes(Charset charset)|byte[]|||
+|.getBytes(String charsetName)|byte[]|||
+|.getChars(int srcBegin, int srcEnd, char dst[], int dstBegin)|void|||
+|.getClass()|Class<?>|||
+|.hashCode()|int|||
+|.indexOf(int ch)|int|||
+|.indexOf(int ch, int fromIndex)|int|||
+|.indexOf(String str)|int|||
+|.indexOf(String str, int fromIndex)|int|||
+|.intern()|native|||
+|.isEmpty()|boolean|判空，字符串长度是否为0|"".isEmpty(),//true|
+|.lastIndexOf(int ch)|int|||
+|.lastIndexOf(int ch, int fromIndex)|int|||
+|.lastIndexOf(String str)|int|||
+|.lastIndexOf(String str, int fromIndex)|int|||
+|.length()|int|||
+|.matches(String regex)|boolean|||
+|.notify()|void|||
+|.notifyAll()|void|||
+|.offsetByCodePoints(int index, int codePointOffset)|int|||
+|.regionMatches(int toffset, String other, int ooffset, int len)|boolean|||
+|.regionMatches(boolean ignoreCase, int toffset, String other, int ooffset, int len)|boolean|||
+|.replace(char oldChar, char newChar)|String|||
+|.replace(CharSequence target, CharSequence replacement)|String|||
+|.replaceAll(String regex, String replacement)|String|||
+|.replaceFirst(String regex, String replacement)|String|||
+|.split(String regex, int limit)|String[]|||
+|.split(String regex)|String[]|||
+|.startsWith(String prefix, int toffset)|boolean|||
+|.startsWith(String prefix)|boolean|||
+|.substring(int beginIndex)|String|||
+|.substring(int beginIndex, int endIndex)|String|||
+|.subSequence(int beginIndex, int endIndex)|CharSequence|||
+|.toCharArray()|char[]|||
+|.toString()|String|||
+|.toLowerCase()|String|||
+|.toLowerCase(Locale locale)|String|||
+|.toUpperCase()|String|||
+|.toUpperCase(Locale locale)|String|||
+|.trim()|String|||
+|.valueOf(Object obj)|String||
+|.wait()|void|||
+|.wait(long timeout, int nanos)|void|||
+|//todo|||
 
 
 #### 1.2、流程控制
@@ -566,6 +624,149 @@ Java线程调度： 指系统为线程分配处理器使用权的过程，调度
 pattern
 
 ## 10、Lambda
+#### Lambda表达式语法  
+    (parameters) -> expression  
+    (parameters) -> { statements; }
+```
+(String s) -> s.length()  //具有一个String类型的参数并返回一个int。Lambda没有return语句，因为已经隐含了return，使用return要加花括号
+(Apple a) -> a.getWeight() > 150  //有一个Apple 类型的参数并返回一个boolean（苹果的重量是否超过150克）
+(int x, int y) -> {  //具有两个int类型的参数而没有返回值（void返回）。注意Lambda表达式可以包含多行语句，这里是两行
+    System.out.println("Result:");
+    System.out.println(x+y);
+}
+() -> 42  //没有参数， 返回一个int
+() -> void  //代表了参数列表为空，且返回void的函数。
+(Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())  //具有两个Apple类型的参数，返回一个int：比较两个Apple的重量
+
+布尔表达式： (List<String> list) -> list.isEmpty()  函数式接口：Predicate<List<String>>
+创建对象： () -> new Apple(10)  函数式接口：Supplier<Apple>
+消费一个对象：   函数式接口：Consumer<Apple>
+(Apple a) -> {
+    System.out.println(a.getWeight());
+}
+从一个对象中选择/抽取： (String s) -> s.length()  函数式接口：Function<String, Integer>或ToIntFunction<String>
+组合两个值： (int a, int b) -> a * b  函数式接口：IntBinaryOperator
+比较两个对象： (Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())  函数式接口：Comparator<Apple>或BiFunction<Apple, Apple, Integer>或ToIntBiFunction<Apple, Apple>
+```
+#### 在哪里以及如何使用Lambda
+1. Lambda表达式可以被赋给一个变量
+2. 传递给一个 接受函数式接口作为参数 的方法  
+- **函数式接口上使用Lambda**  
+    函数式接口：只定义一个抽象方法的接口。  
+        Lambda表达式允许直接以内联的形式为函数式接口的抽象方法提供实现，并把整个表达式作为函数式接口的实例。（要比使用匿名内部类简洁许多）  
+        可以使用@FunctionalInterface标注函数式接口，若被标记接口不是函数式接口，编译器会返回错误：“Multiple non-overriding abstract methods found in interface Foo”表示存在多个抽象方法。
+```java
+//使用Lambda
+Runnable r1 = () -> System.out.println("Hello World 1");
+
+//使用匿名类
+Runnable r2 = new Runnable(){
+    public void run(){
+        System.out.println("Hello World 2");
+    }
+};
+
+//运行
+public static void process(Runnable r){
+    r.run();
+}
+process(r1);
+process(r2);
+//利用直接传递的Lambda方式
+process(() -> System.out.println("Hello World 3"));
+```
+```java
+//资源处理实例：打开一个资源，做一些处理，然后关闭资源。
+// 1、使用try-resource方式，只能读取文件第一行
+public static String processFile() throws IOException {
+    try (BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {
+        return br.readLine();
+    }
+}
+
+// 2、灵活读取
+//1：创建一个能匹配BufferedReader -> String，且可以抛出IOException异常的接口
+@FunctionalInterface
+public interface BufferedReaderProcessor {
+    String process(BufferedReader b) throws IOException;
+}
+//2：将函数式接口作为参数，并处理BufferedReader对象
+public static String processFile(BufferedReaderProcessor p) throws IOException {
+    try (BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {
+        return p.process(br);
+    }
+}
+//3：接收BufferedReader参数并返回String的Lambda
+String oneLine = processFile((BufferedReader br) -> br.readLine());
+String twoLines = processFile((BufferedReader br) -> br.readLine() + br.readLine());
+```
+```java
+Java中函数式接口：
+Comparable、Runnable、Callable   Predicate、Consumer、Function
+
+//1、java.util.function.Predicate<T>接口定义了一个名叫test的抽象方法，它接受泛型T对象，并返回一个boolean。
+// 在需要表示一个涉及类型T的布尔表达式时，就可以使用这个接口。比如，可以定义一个接受String对象的Lambda表达式
+//    @FunctionalInterface
+//    public interface Predicate<T>{
+//        boolean test(T t);
+//    }
+public static <T> List<T> filter(List<T> list, Predicate<T> p) {
+    List<T> results = new ArrayList<>();
+    for(T s: list){
+        if(p.test(s)){
+            results.add(s);
+        }
+    }
+    return results;
+}
+Predicate<String> nonEmptyStringPredicate = (String s) -> !s.isEmpty();
+List<String> nonEmpty = filter(listOfStrings, nonEmptyStringPredicate);
+
+//2、java.util.function.Consumer<T>定义了一个名叫accept的抽象方法，它接受泛型T的对象，没有返回（void）。
+// 如果需要访问类型T的对象，并对其执行某些操作，就可以使用这个接口。比如，可以用它来创建一个forEach方法，接受一个Integers的列表，并对其中每个元素执行操作。
+// 如下可以使用这个forEach方法，并配合Lambda来打印列表中的所有元素。
+//@FunctionalInterface
+//public interface Consumer<T>{
+//    void accept(T t);
+//}
+public static <T> void forEach(List<T> list, Consumer<T> c){
+    for(T i: list){
+        c.accept(i);
+    }
+}
+forEach(
+        Arrays.asList(1,2,3,4,5), 
+        (Integer i) -> System.out.println(i)
+        );
+
+//3、java.util.function.Function<T, R>接口定义了一个叫作apply的方法，它接受一个泛型T的对象，并返回一个泛型R的对象。
+// 如果需要定义一个Lambda，将输入对象的信息映射到输出，就可以使用这个接口（比如提取苹果的重量，或把字符串映射为它的长度）。
+// 如下利用它来创建一个map方法，以将一个String列表映射到包含每个String长度的Integer列表。
+//@FunctionalInterface
+//public interface Function<T, R>{
+//    R apply(T t);
+//}
+public static <T, R> List<R> map(List<T> list, Function<T, R> f) {
+    List<R> result = new ArrayList<>();
+    for(T s: list){
+        result.add(f.apply(s));
+    }
+    return result;
+}
+// [7, 2, 6]
+List<Integer> l = map(
+        Arrays.asList("lambdas","in","action"),
+        (String s) -> s.length()
+);
+```
+#### 编译器对Lambda做类型检查、类型推断、限制
+~~略~~
+#### 方法引用
+```java
+//例如排序
+先前：inventory.sort((Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight()));
+之后：inventory.sort(comparing(Apple::getWeight)); //使用方法引用和java.util.Comparator.comparing
+```
 
 ## 11、函数式编程
 
