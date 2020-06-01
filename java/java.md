@@ -762,11 +762,25 @@ List<Integer> l = map(
 #### 编译器对Lambda做类型检查、类型推断、限制
 ~~略~~
 #### 方法引用
+使用方式：目标引用放在分隔符::前，方法的名称放在后面，方法不需要括号，因为没有实际调用这个方法。  
+针对单一方法的Lambda
 ```java
 //例如排序
 先前：inventory.sort((Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight()));
-之后：inventory.sort(comparing(Apple::getWeight)); //使用方法引用和java.util.Comparator.comparing
+之后：inventory.sort(comparing(Apple::getWeight)); //使用方法引用和java.util.Comparator.comparing；Apple::getWeight就是引用了Apple类中定义的方法getWeight。
 ```
+|Lambda|等效方法引用|
+|---|---|
+|(Apple a) -> a.getWeight()|Apple::getWeight|
+|() -> Thread.currentThread().dumpStack()|Thread.currentThread()::dumpStack|
+|(str, i) -> str.substring(i)|String::substring|
+|(String s) -> System.out.println(s)|System.out::println|
+- **构建方法引用**  
+    (1) 指向静态方法的方法引用（例如Integer的parseInt方法，写作Integer::parseInt）。  
+    (2) 指向任意类型实例方法的方法引用（例如String 的length 方法，写作String::length）。  
+    (3) 指向现有对象的实例方法的方法引用（假设你有一个局部变量expensiveTransaction用于存放Transaction类型的对象，它支持实例方法getValue，那么你就可以写expensiveTransaction::getValue）  
+
+    
 
 ## 11、函数式编程
 
