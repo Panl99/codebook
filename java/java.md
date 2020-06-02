@@ -70,7 +70,8 @@
 ## 2、集合
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
-## 3、I/O流
+## 3、流(Stream)
+流只能消费一次
 
 ## 4、面向对象
 #### 继承
@@ -780,7 +781,53 @@ List<Integer> l = map(
     (2) 指向任意类型实例方法的方法引用（例如String 的length 方法，写作String::length）。  
     (3) 指向现有对象的实例方法的方法引用（假设你有一个局部变量expensiveTransaction用于存放Transaction类型的对象，它支持实例方法getValue，那么你就可以写expensiveTransaction::getValue）  
 
-    
+- **复合Lambda表达式**  
+```java
+1、比较器复合：
+    //对库存进行排序，比较苹果的重量
+    Comparator<Apple> c = Comparator.comparing(Apple::getWeight);
+    //对苹果按重量递减排序
+    inventory.sort(comparing(Apple::getWeight).reversed());
+    //两个苹果一样重时，进一步按国家排序
+    inventory.sort(comparing(Apple::getWeight)
+             .reversed()
+             .thenComparing(Apple::getCountry));
+2、谓词复合：negate(非)、and、or
+and和or方法是按照在表达式链中的位置，从左向右确定优先级的。a.or(b).and(c)可以看作(a || b) && c。
+    //不是红的苹果
+    Predicate<Apple> notRedApple = redApple.negate();
+    //红的并且大于150克的苹果
+    Predicate<Apple> redAndHeavyApple = redApple.and(a -> a.getWeight() > 150);
+    //或者是大于150克的红苹果，或者是绿苹果
+    Predicate<Apple> redAndHeavyAppleOrGreen = redApple.and(a -> a.getWeight() > 150)
+                                                       .or(a -> "green".equals(a.getColor()));
+3、函数复合：
+andThen方法会返回一个函数，它先对输入应用一个给定函数，再对输出应用另一个函数。
+compose方法先把给定的函数用作compose的参数里面给的那个函数，然后再把函数本身用于结果。
+    //合成一个函数h，先给数字加1，再给结果乘2，数学上写作g(f(x))
+    Function<Integer, Integer> f = x -> x + 1;
+    Function<Integer, Integer> g = x -> x * 2;
+    Function<Integer, Integer> h = f.andThen(g);
+    int result = h.apply(1);//返回4
+    //使用compose方法的话等于f(g(x))，上边函数将返回3
+函数复合方式实战：
+    //如对用String表示的一封信做文本转换
+    public class Letter{
+        public static String addHeader(String text){
+            return "From Raoul, Mario and Alan: " + text;
+        }
+        public static String addFooter(String text){
+            return text + " Kind regards";
+        }
+        public static String checkSpelling(String text){
+            return text.replaceAll("labda", "lambda");
+        }
+    }
+    //通过复合这些方法来创建各种转型流水线，比如：先加上抬头，然后进行拼写检查，最后加上一个落款。
+    Function<String, String> addHeader = Letter::addHeader;
+    Function<String, String> transformationPipeline = addHeader.andThen(Letter::checkSpelling)
+                                                               .andThen(Letter::addFooter);
+```    
 
 ## 11、函数式编程
 
