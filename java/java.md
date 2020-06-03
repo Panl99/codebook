@@ -70,8 +70,85 @@
 ## 2、集合
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
-## 3、流(Stream)
+## 3、流(java.util.stream.Stream)
+流：从支持数据处理操作的源生成的元素序列
 流只能消费一次
+```java
+流的使用包含三部分：
+    一个数据源（如集合）来执行一个查询；
+    一个中间操作链，形成一条流的流水线；
+    一个终端操作，执行流水线，并能生成结果。
+
+List<String> names = menu.stream() //获取流
+                         .filter(d -> d.getCalories() > 300) //中间操作(返回Stream)，过滤大于300卡路里的菜
+                         .map(Dish::getName) //中间操作(返回Stream)，获取菜名
+                         .limit(3) //中间操作(返回Stream)，取前3个
+                         .collect(toList()); //终端操作(返回非Stream)，关闭流，生成列表。
+
+List<Dish> menu = Arrays.asList(
+        new Dish("pork", false, 800, Dish.Type.MEAT),
+        new Dish("beef", false, 700, Dish.Type.MEAT),
+        new Dish("chicken", false, 400, Dish.Type.MEAT),
+        new Dish("french fries", true, 530, Dish.Type.OTHER),
+        new Dish("rice", true, 350, Dish.Type.OTHER),
+        new Dish("season fruit", true, 120, Dish.Type.OTHER),
+        new Dish("pizza", true, 550, Dish.Type.OTHER),
+        new Dish("prawns", false, 300, Dish.Type.FISH),
+        new Dish("salmon", false, 450, Dish.Type.FISH) );
+public class Dish {
+    private final String name;
+    private final boolean vegetarian;
+    private final int calories;
+    private final Type type;
+    public Dish(String name, boolean vegetarian, int calories, Type type) {
+        this.name = name;
+        this.vegetarian = vegetarian;
+        this.calories = calories;
+        this.type = type;
+    }
+    public String getName() {
+        return name;
+    }
+    public boolean isVegetarian() {
+        return vegetarian;
+    }
+    public int getCalories() {
+        return calories;
+    }
+    public Type getType() {
+        return type;
+    }
+    @Override
+    public String toString() {
+        return name;
+    }
+    public enum Type { MEAT, FISH, OTHER }
+}
+```
+- **中间操作**
+操作|参数|描述
+---|---|----
+filter|返回boolean的函数|过滤
+map|Function<T, R>|T -> R
+flatmap|Function<T, R>|方法让你把一个流中的每个值都换成另一个流，然后把所有的流连接起来成为一个流。
+limit(n)|int|返回截至前n个元素的流，如果源是一个Set，limit的结果不会以任何顺序排列。
+sorted|
+distinct|无|去重
+skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个，则返回一个空流。 
+
+- **终端操作**  
+操作|返回类型|目的
+---|---|---
+forEach|void|消费流中的每个元素并对其应用Lambda。
+count|long|返回流中元素的个数。
+collect|集合(如List、Map、Integer)|把流归约成一个集合。
+anyMatch|boolean|是否至少匹配一个元素。
+allMatch|boolean|是否匹配所有元素
+noneMatch|boolean|没有匹配任何元素
+findAny||返回当前流中的任意元素。5.3.3
+ 
+
+
 
 ## 4、面向对象
 #### 继承
