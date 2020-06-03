@@ -71,7 +71,7 @@
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
 ## 3、流(java.util.stream.Stream)
-流：从支持数据处理操作的源生成的元素序列
+流：从支持数据处理操作的源生成的元素序列  
 流只能消费一次
 ```java
 流的使用包含三部分：
@@ -126,17 +126,19 @@ public class Dish {
 }
 ```
 - **中间操作**
-操作|参数|描述
----|---|----
+
+操作|参数|描述  
+---|---|---  
 filter|返回boolean的函数|过滤
 map|Function<T, R>|T -> R
 flatmap|Function<T, R>|方法让你把一个流中的每个值都换成另一个流，然后把所有的流连接起来成为一个流。
 limit(n)|int|返回截至前n个元素的流，如果源是一个Set，limit的结果不会以任何顺序排列。
-sorted|
+sorted| |
 distinct|无|去重
 skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个，则返回一个空流。 
 
 - **终端操作**  
+
 操作|返回类型|目的
 ---|---|---
 forEach|void|消费流中的每个元素并对其应用Lambda。
