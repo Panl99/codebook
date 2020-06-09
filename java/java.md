@@ -71,6 +71,7 @@
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
 ## 3、流(java.util.stream.Stream)
+#### 3.1、流的基本操作
 流：从支持数据处理操作的源生成的元素序列  
 流只能消费一次
 ```java
@@ -133,9 +134,14 @@ filter|返回boolean的函数|过滤
 map|Function<T, R>|T -> R
 flatmap|Function<T, R>|方法让你把一个流中的每个值都换成另一个流，然后把所有的流连接起来成为一个流。
 limit(n)|int|返回截至前n个元素的流，如果源是一个Set，limit的结果不会以任何顺序排列。
-sorted| |
+sorted|Comparator<T>|(T, T) -> int
 distinct|无|去重
 skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个，则返回一个空流。 
+数值流：mapToInt、mapToDouble和mapToLong|IntStream、DoubleStream和LongStream|将流转化为数值流，转回一般流可以使用 数值流.boxed()方法
+构建流：| |①由值创建流：Stream<String> stream = ***Stream.of***("Java 8 ", "Lambdas ", "In ", "Action"); 创建空流：***Stream.empty();***
+| | |②由数组创建流：int[] numbers = {2, 3, 5, 7, 11, 13}; int sum = ***Arrays.stream***(numbers).sum();
+| | |③由文件生成流：java.nio.file.Files中的很多静态方法都会返回一个流，如：Files.lines
+| | |④由函数生成流：创建无限流：Stream.iterate和Stream.generate。如：Stream.iterate(0, n -> n + 2).limit(10).forEach(System.out::println);生成了一个正偶数流，iterate应该在依次生成一系列值的时候使用。Stream.generate(Math::random).limit(5).forEach(System.out::println);生成一个有五个0到1之间的随机双精度数的流
 
 - **终端操作**  
 
@@ -147,10 +153,38 @@ collect|集合(如List、Map、Integer)|把流归约成一个集合。
 anyMatch|boolean|是否至少匹配一个元素。
 allMatch|boolean|是否匹配所有元素
 noneMatch|boolean|没有匹配任何元素
-findAny||返回当前流中的任意元素。5.3.3
- 
+findAny|Optional<T>|返回当前流中的任意元素。java.util.Optional是一个容器类，代表一个值存在或不存在。
+findFirst|Optional<T>|返回第一个元素。
+reduce| |归约，接收两个参数：①初始值，②一个BinaryOperator<T>来将两个元素结合起来产生一个新值。如求和操作，①int sum = numbers.stream().reduce(0, (a, b) -> a + b);②int sum = numbers.stream().reduce(0, Integer::sum);
+| | |reduce求最大/最小值，如：Optional<Integer> max = numbers.stream().reduce(Integer::max);  reduce(Integer::min);
 
+#### 3.2、用流收集数据
+```java
+//todo
+```
+- **Collectors类的静态工厂方法**  
 
+工厂方法|返回类型|作用|示例
+---|---|---|---
+toList|List<T>|把流中所有项目收集到一个List|List<Dish> dishes = menuStream.collect(toList());
+toSet|Set<T>|把流中所有项目收集到一个Set，删除重复项|Set<Dish> dishes = menuStream.collect(toSet());
+toCollection|Collection<T>|把流中所有项目收集到给定的供应源创建的集合|Collection<Dish> dishes = menuStream.collect(toCollection(),ArrayList::new);
+counting|Long|计算流中元素的个数|long howManyDishes = menuStream.collect(counting());
+summingInt|Integer|对流中项目的一个整数属性求和|int totalCalories = menuStream.collect(summingInt(Dish::getCalories));
+averagingInt|Double|计算流中项目Integer 属性的平均值|double avgCalories = menuStream.collect(averagingInt(Dish::getCalories));
+summarizingInt|IntSummaryStatistics|收集关于流中项目Integer 属性的统计值，例如最大、最小、总和与平均值|IntSummaryStatistics menuStatistics = menuStream.collect(summarizingInt(Dish::getCalories));
+joining|String|连接对流中每个项目调用toString 方法所生成的字符串|String shortMenu = menuStream.map(Dish::getName).collect(joining(", "));
+maxBy|Optional<T>|一个包裹了流中按照给定比较器选出的最大元素的Optional，或如果流为空则为Optional.empty()|Optional<Dish> fattest = menuStream.collect(maxBy(comparingInt(Dish::getCalories)));
+minBy|Optional<T>|一个包裹了流中按照给定比较器选出的最小元素的Optional，或如果流为空则为Optional.empty()|Optional<Dish> lightest = menuStream.collect(minBy(comparingInt(Dish::getCalories)));
+reducing|归约操作产生的类型|从一个作为累加器的初始值开始，利用BinaryOperator 与流中的元素逐个结合，从而将流归约为单个值|int totalCalories = menuStream.collect(reducing(0, Dish::getCalories, Integer::sum));
+collectingAndThen|转换函数返回的类型|包裹另一个收集器，对其结果应用转换函数|int howManyDishes = menuStream.collect(collectingAndThen(toList(), List::size));
+groupingBy|Map<K, List<T>>|根据项目的一个属性的值对流中的项目作问组，并将属性值作为结果Map 的键|Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
+partitioningBy|Map<Boolean,List<T>>|根据对流中每个项目应用谓词的结果来对项目进行分区|Map<Boolean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));
+
+#### 3.3、并行流处理数据
+```java
+//todo
+```
 
 ## 4、面向对象
 #### 继承
@@ -915,6 +949,218 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
 ## 网络
 
 ## 设计模式
+#### 使用Lambda重构设计模式
+- **策略模式**  
+解决某类算法的通用方案，包含三部分内容：  
+一个代表某个算法的接口（它是策略模式的接口）。  
+一个或多个该接口的具体实现，它们代表了算法的多种实现（比如，实体类Concrete-StrategyA或者ConcreteStrategyB）。  
+一个或多个使用策略对象的客户。  
+```java
+//假设希望验证输入的内容是否根据标准进行了恰当的格式化（比如只包含小写字母或数字）。
+//1、可以从定义一个验证文本（以String的形式表示）的接口入手：
+public interface ValidationStrategy {
+    boolean execute(String s);
+}
+//2、定义了该接口的一个或多个具体实现：
+public class IsAllLowerCase implements ValidationStrategy {
+    public boolean execute(String s){
+        return s.matches("[a-z]+");
+    }
+}
+public class IsNumeric implements ValidationStrategy {
+    public boolean execute(String s){
+        return s.matches("\\d+");
+    }
+}
+//3、在程序中使用这些略有差异的验证策略：
+public class Validator{
+    private final ValidationStrategy strategy;
+    public Validator(ValidationStrategy v){
+        this.strategy = v;
+    }
+    public boolean validate(String s){
+        return strategy.execute(s);
+    }
+}
+Validator numericValidator = new Validator(new IsNumeric());
+boolean b1 = numericValidator.validate("aaaa");//返回false
+Validator lowerCaseValidator = new Validator(new IsAllLowerCase ());
+boolean b2 = lowerCaseValidator.validate("bbbb");//返回true
+
+//使用Lambda（ValidationStrategy是一个函数接口）
+Validator numericValidator = new Validator((String s) -> s.matches("[a-z]+"));
+boolean b1 = numericValidator.validate("aaaa");
+Validator lowerCaseValidator = new Validator((String s) -> s.matches("\\d+"));
+boolean b2 = lowerCaseValidator.validate("bbbb");
+```
+- **工厂模式**  
+无需暴露实例化的逻辑就能完成对象的创建。  
+```java
+//1、创建一个工厂类，它包含一个负责实现不同对象的方法
+public class ProductFactory {
+    public static Product createProduct(String name){
+        switch(name){
+            case "loan": return new Loan();
+            case "stock": return new Stock();
+            case "bond": return new Bond();
+            default: throw new RuntimeException("No such product " + name);
+        }
+    }
+}
+//2、创建产品
+Product p = ProductFactory.createProduct("loan");
+
+//使用Lambda
+//创建一个Map，将产品名映射到对应的构造函数
+final static Map<String, Supplier<Product>> map = new HashMap<>();
+static {
+    map.put("loan", Loan::new);
+    map.put("stock", Stock::new);
+    map.put("bond", Bond::new);
+}
+//利用这个Map来实例化不同的产品
+public static Product createProduct(String name){
+    Supplier<Product> p = map.get(name);
+    if(p != null) {
+        return p.get();
+    } else {
+        throw new IllegalArgumentException("No such product " + name);
+    }
+}
+//引用构造函数
+Supplier<Product> loanSupplier = Loan::new;
+Loan loan = loanSupplier.get();
+```
+
+- **观察者模式**  
+某些事件发生时，需要自动地通知其他多个对象(观察者)  
+```java
+//通知系统，报纸机构订阅了新闻，当接收的新闻中包含的关键字时，能得到特别通知。
+//1、创建一个观察者接口，且仅有一个名为notify的方法，一旦接收到一条新的新闻，该方法就会被调用：
+interface Observer {
+    void notify(String tweet);
+}
+//2、声明不同的观察者，依据新闻中不同的关键字分别定义不同的行为：
+class NYTimes implements Observer{
+    public void notify(String tweet) {
+        if(tweet != null && tweet.contains("money")){
+            System.out.println("Breaking news in NY! " + tweet);
+        }
+    }
+}
+class Guardian implements Observer{
+    public void notify(String tweet) {
+        if(tweet != null && tweet.contains("queen")){
+            System.out.println("Yet another news in London... " + tweet);
+        }
+    }
+}
+class LeMonde implements Observer{
+    public void notify(String tweet) {
+        if(tweet != null && tweet.contains("wine")){
+            System.out.println("Today cheese, wine and news! " + tweet);
+        }
+    }
+}
+//3、定义一个接口Subject，registerObserver方法可以注册一个新的观察者，notifyObservers方法通知它的观察者一个新闻的到来。
+interface Subject{
+    void registerObserver(Observer o);
+    void notifyObservers(String tweet);
+}
+//4、实现Feed类
+class Feed implements Subject{
+    private final List<Observer> observers = new ArrayList<>();
+    public void registerObserver(Observer o) {
+        this.observers.add(o);
+    }
+    public void notifyObservers(String tweet) {
+        observers.forEach(o -> o.notify(tweet));
+    }
+}
+//5、Feed类在内部维护了一个观察者列表，一条新闻到达时，它就进行通知。
+Feed f = new Feed();
+f.registerObserver(new NYTimes());
+f.registerObserver(new Guardian());
+f.registerObserver(new LeMonde());
+f.notifyObservers("The queen said her favourite book is Java 8 in Action!");
+
+//使用Lambda
+f.registerObserver((String tweet) -> {
+    if(tweet != null && tweet.contains("money")){
+        System.out.println("Breaking news in NY! " + tweet);
+    }
+});
+f.registerObserver((String tweet) -> {
+    if(tweet != null && tweet.contains("queen")){
+        System.out.println("Yet another news in London... " + tweet);
+    }
+});
+```
+
+- **模板方法**  
+需要采用某个算法的框架，同时又希望有一定的灵活度，能对它的某些部分进行改进  
+```java
+//processCustomer方法搭建了在线银行算法的框架：获取客户提供的ID，然后提供服务给用户。不同的支行可以通过继承OnlineBanking类，对该方法提供差异化的实现。
+abstract class OnlineBanking {
+    public void processCustomer(int id){
+        Customer c = Database.getCustomerWithId(id);
+        makeCustomerHappy(c);
+    }
+    abstract void makeCustomerHappy(Customer c);
+}
+
+//使用Lambda
+public void processCustomer(int id, Consumer<Customer> makeCustomerHappy){
+    Customer c = Database.getCustomerWithId(id);
+    makeCustomerHappy.accept(c);
+}
+//可以直接插入不同的行为，不再需要继承OnlineBanking类
+new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.println("Hello " + c.getName());
+```
+
+- **责任链模式**  
+一个处理对象可能需要在完成一些工作之后，将结果传递给另一个对象，这个对象接着做一些工作，再转交给下一个处理对象，以此类推。  
+```java
+//这种模式通常是通过定义一个代表处理对象的抽象类来实现的，在抽象类中会定义一个字段来记录后续对象。一旦对象完成它的工作，处理对象就会将它的工作转交给它的后继。
+public abstract class ProcessingObject<T> {
+    protected ProcessingObject<T> successor;
+    public void setSuccessor(ProcessingObject<T> successor){
+        this.successor = successor;
+    }
+    public T handle(T input){
+        T r = handleWork(input);
+        if(successor != null){
+            return successor.handle(r);
+        }
+        return r;
+    }
+    abstract protected T handleWork(T input);
+}
+//创建两个处理对象，进行一些文本处理工作。
+public class HeaderTextProcessing extends ProcessingObject<String> {
+    public String handleWork(String text){
+        return "From Raoul, Mario and Alan: " + text;
+    }
+}
+public class SpellCheckerProcessing extends ProcessingObject<String> {
+    public String handleWork(String text){
+        return text.replaceAll("labda", "lambda");
+    }
+}
+//将这两个处理对象结合起来，构造一个操作序列！
+ProcessingObject<String> p1 = new HeaderTextProcessing();
+ProcessingObject<String> p2 = new SpellCheckerProcessing();
+p1.setSuccessor(p2);
+String result = p1.handle("Aren't labdas really sexy?!!");
+System.out.println(result);
+
+//使用Lambda
+UnaryOperator<String> headerProcessing = (String text) -> "From Raoul, Mario and Alan: " + text;
+UnaryOperator<String> spellCheckerProcessing = (String text) -> text.replaceAll("labda", "lambda");
+Function<String, String> pipeline = headerProcessing.andThen(spellCheckerProcessing);
+String result = pipeline.apply("Aren't labdas really sexy?!!");
+```
+
 
 ## 数据结构
 
