@@ -67,6 +67,8 @@
 
 #### 1.2、流程控制
 
+#### 1.3、日期、时间API
+
 ## 2、集合
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
@@ -184,6 +186,102 @@ partitioningBy|Map<Boolean,List<T>>|根据对流中每个项目应用谓词的�
 #### 3.3、并行流处理数据
 ```java
 //todo
+```
+
+#### 3.4、Optional类(java.util.Optional<T>)
+```
+对存在或缺失(null)的变量值进行建模：
+变量存在时，Optional类只是对类简单封装。
+变量不存在时，缺失的值会被建模成一个“空”的Optional对象，由方法Optional.empty()返回。
+```
+- **声明一个空的Optional**  
+```java
+Optional<Car> optCar = Optional.empty();
+```
+- **依据一个非空值创建Optional**  
+```java
+//如果car是一个null，这段代码会立即抛出一个NullPointerException，而不是等到访问car的属性值时才返回一个错误。
+Optional<Car> optCar = Optional.of(car); 
+```
+- **可接受null的Optional**  
+```java
+//如果car是null，那么得到的Optional对象就是个空对象。
+Optional<Car> optCar = Optional.ofNullable(car);
+```
+- **使用map 从Optional 对象中提取和转换值**  
+```java
+//要从insurance公司对象中提取公司的名称。提取名称之前，你需要检查insurance对象是否为null
+String name = null;
+if(insurance != null){
+    name = insurance.getName();
+}
+
+//使用Optional提供的map方法
+Optional<Insurance> optInsurance = Optional.ofNullable(insurance);
+Optional<String> name = optInsurance.map(Insurance::getName);
+```
+- **使用flatMap 链接Optional 对象**  
+```java
+//使用Optional获取car的Insurance名称
+public String getCarInsuranceName(Optional<Person> person) {
+    return person.flatMap(Person::getCar)
+                 .flatMap(Car::getInsurance)
+                 .map(Insurance::getName)
+                 .orElse("Unknown");
+}
+//使用Optional解引用串接的Person/Car/Insurance对象
+
+```
+- **默认行为及解引用Optional 对象**  
+
+- **使用filter 剔除特定的值**  
+```java
+//需要检查保险公司的名称是否为“Cambridge-Insurance”
+Insurance insurance = ...;
+if(insurance != null && "CambridgeInsurance".equals(insurance.getName())){
+    System.out.println("ok");
+}
+//使用Optional对象的filter方法
+//filter方法接受一个谓词作为参数。如果Optional对象的值存在，并且它符合谓词的条件，filter方法就返回其值；否则它就返回一个空的Optional对象。
+Optional<Insurance> optInsurance = ...;
+optInsurance.filter(insurance -> "CambridgeInsurance".equals(insurance.getName()))
+            .ifPresent(x -> System.out.println("ok"));
+```
+- **Optional类的方法** 
+
+方法|描述
+---|---
+empty|返回一个空的Optional 实例
+filter|如果值存在并且满足提供的谓词，就返回包含该值的Optional 对象；否则返回一个空的Optional 对象
+flatMap|如果值存在，就对该值执行提供的mapping 函数调用，返回一个Optional 类型的值，否则就返回一个空的Optional 对象
+get|如果该值存在，将该值用Optional 封装返回，否则抛出一个NoSuchElementException 异常
+ifPresent|如果值存在，就执行使用该值的方法调用，否则什么也不做
+isPresent|如果值存在就返回true，否则返回false
+map|如果值存在，就对该值执行提供的mapping 函数调用
+of|将指定值用Optional 封装之后返回，如果该值为null，则抛出一个NullPointerException异常
+ofNullable|将指定值用Optional 封装之后返回，如果该值为null，则返回一个空的Optional 对象
+orElse|如果有值则将其返回，否则返回一个默认值
+orElseGet|如果有值则将其返回，否则返回一个由指定的Supplier 接口生成的值
+orElseThrow|如果有值则将其返回，否则抛出一个由指定的Supplier 接口生成的异常
+
+- **Optional实战示例**
+```java
+//1、用Optional 封装可能为null 的值
+//假设你有一个Map<String, Object>方法，访问由key索引的值时，如果map中没有与key关联的值，该次调用就会返回一个null。
+Object value = map.get("key");
+//采用Optional.ofNullable方法：
+Optional<Object> value = Optional.ofNullable(map.get("key"));
+
+//2、异常与Optional 的对比
+public static Optional<Integer> stringToInt(String s) {
+    try {
+        return Optional.of(Integer.parseInt(s));
+    } catch (NumberFormatException e) {
+        return Optional.empty();
+    }
+}
+//***可以将多个类似的方法封装到一个工具类OptionalUtility中。通过直接调用OptionalUtility.stringToInt方法，将String转换为一个Optional<Integer>对象，而不再需要用try/catch了。
+
 ```
 
 ## 4、面向对象
@@ -944,6 +1042,8 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
 
 ## 11、函数式编程
 
+## 12、异步编程
+
 ## 序列化，反序列化
 
 ## 网络
@@ -1160,7 +1260,6 @@ UnaryOperator<String> spellCheckerProcessing = (String text) -> text.replaceAll(
 Function<String, String> pipeline = headerProcessing.andThen(spellCheckerProcessing);
 String result = pipeline.apply("Aren't labdas really sexy?!!");
 ```
-
 
 ## 数据结构
 
