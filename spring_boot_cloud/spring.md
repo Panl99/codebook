@@ -38,6 +38,14 @@ Spring是一个轻量级的开发框架，旨在降低应用开发的复杂度�
 
 ## Spring自动装配(AutoWire) //TODO
 
+## Spring MVC流程
+- 用户发送请求到前端控制器DispatcherServlet；
+- DispatcherServlet收到请求后调用HandlerMapping处理器映射器；
+- 处理器映射器根据请求url找到具体的处理器，生成处理器对象和处理器拦截器(如果有则生成)，一并返回给DispatcherServlet；
+- DispatcherServlet之后通过HandlerAdapter处理器适配器执行处理器Controller(后端控制器)，执行完后返回ModelAndView；
+- DispatcherServlet将ModelAndView传给ViewReslover视图解析器进行解析；
+- DispatcherServlet对解析后的View进行渲染，并返回用户。
+
 ## Spring中使用的设计模式
 - 工厂设计模式：Spring使用工厂模式通过BeanFactory、ApplicationContext创建bean对象。
 - 代理设计模式：Spring AOP功能的实现。
