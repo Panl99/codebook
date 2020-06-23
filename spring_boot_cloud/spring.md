@@ -64,3 +64,53 @@ Spring是一个轻量级的开发框架，旨在降低应用开发的复杂度�
 前端控制器和后置处理器的区别  
 Spring MVC流程  
 Spring MVC核心入口类
+
+# Spring Data JPA 持久化数据
+## 添加依赖
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+    <version>2.3.0.RELEASE</version>
+</dependency>
+```
+## 将领域对象标注为实体
+//TODO
+## 声明 JPA repository
+//TODO
+#### 自定义 JPA repository
+//TODO
+
+# Spring Security
+## 添加依赖
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+    <version>2.3.0.RELEASE</version>
+</dependency>
+```
+## 安全特性
+- 所有的HTTP请求路径都需要认证；
+- 不需要特定的角色和权限；
+- 没有登录页面；
+- 认证过程是通过HTTP basic认证对话框实现的；
+- 系统只有一个用户，用户名为user。（密码随机生成，被写入应用日志中，大致为： `Using default security password：xxx`）
+
+**要确保应用的安全性，至少还需要配置如下功能：**  
+- 通过登录页面来提示用户进行认证，而不是使用HTTP basic认证对话框；
+- 提供多个用户，并提供一个注册页面，以便新用户注册进来；
+- 对不同的请求路径，执行不同的安全规则。如：主页和注册页不需要认证。
+
+## 配置Spring Security
+//TODO
+#### 基于内存的用户存储
+//TODO
+#### 基于JDBC的用户存储
+//TODO
+#### 基于LDAP作为后端的用户存储
+//TODO
+#### 自定义用户认证
+//TODO
+
+## 保护Web请求
