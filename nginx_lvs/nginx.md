@@ -129,7 +129,7 @@
 |选择事件模型|***use*** "kqueue/rtsig/***epoll***/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
 |每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。|
 
-# 3、HTTP模块
+# 三、HTTP模块
 ## 3.1、用HTTP核心模块配置一个静态web服务器 
 - [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)  
 
@@ -403,7 +403,6 @@ proxy_next_upstream的参数用来说明在哪些情况下会继续选择下一�
 
 Nginx的反向代理模块还提供了很多种配置，如设置连接的超时时间、临时文件如何存储，以及最重要的如何缓存上游服务器响应等功能。这些配置可以通过阅读ngx_http_proxy_module模块的说明了解，只有深入地理解，才能实现一个高性能的反向代理服务器。  
 
-
 ## 3.3、将HTTP模块编译到Nginx中
 1. 将源码文件放在一个目录下（如：/nginx/），并在此目录下创建一个文件命名为config；
 2. 在configure脚本执行时添加参数：--add-module=/nginx/；
@@ -424,7 +423,8 @@ Nginx的反向代理模块还提供了很多种配置，如设置连接的超时
     . auto/make
     ```
 ## 3.4、定义一个HTTP模块
-
+Nginx HTTP模块调用的简化流程  
+![Nginx HTTP模块调用的简化流程](resources\static\images\Nginx HTTP模块调用简化流程.PNG)
 
 ## event模块
 
