@@ -1,8 +1,7 @@
 > [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
 > [深入理解Nginx：模块开发与架构解析（第2版）](https://github.com/Panl99/codebook/blob/master/nginx_lvs/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
-# 一、Nginx
-## 1、关于Nginx
-#### 1.1、Nginx特点
+# 一、关于Nginx
+## 1.1、Nginx特点
 - **更快：** 不论单次请求还是高峰大量的并发请求，Nginx都可以快速的响应。
 - **高扩展性：** Nginx的设计极具扩展性，它完全是由多个不同功能、不同层次、不同类型且耦合度极低的模块组成。Nginx的模块都是嵌入到二进制文件中执行的，所以无论官方发布的模块还是第三方模块都一样具备很好的性能。
 - **高可靠性：** Nginx常用模块非常稳定，每个worker进程相对独立，master进程在1个worker进程出错时可以快速“拉起”新的worker子进程提供服务。
@@ -11,7 +10,7 @@
 - **热部署：** master管理进程与worker工作进程分离设计可支持热部署，支持更新配置、更换日志等功能。
 - **开源协议友好：** BSD开源协议不仅允许用户免费使用，还允许直接使用、修改源码并发布。
 
-#### 1.2、安装使用Nginx
+## 1.2、安装使用Nginx
 - Linux2.6以上版本才支持epoll，查询Linux内核版本：uname -a
 - 使用Nginx必备软件：
     1. GCC编译器：用来编译C语言，安装方式：yum install -y gcc
@@ -66,8 +65,8 @@
         3. 停止旧版本Nginx：kill -s SIGQUIT <nginx master pid>
     8. 帮助：usr/local/nginx/sbin/nginx -h
 
-## 2、Nginx配置
-#### 2.1、Nginx进程间关系
+# 二、Nginx配置
+## 2.1、Nginx进程间关系
 - 1个master进程管理多个worker进程
 - worker进程数量=服务器cpu核心数（默认情况，可配置）
 - 真正提供互联网服务的是worker进程，master进程只负责监控管理worker进程
@@ -75,7 +74,7 @@
     2. 多个worker进程处理请求可以提高服务健壮性
     3. 1个worker进程同时处理的请求数只受限于内存大小，多个worker进程处理并发请求时几乎没有同步锁的限制，worker进程一般不会睡眠，因此worker进程数等于cpu核心数时，进程间切换代价最小
     
-#### 2.2、配置语法
+## 2.2、配置语法
 - 块配置项用大括号包括，配置项名后用空格分隔
 - 块配置项可以嵌套，内层块会继承外层块，当内外层块配置冲突时-取决于解析这个配置项的模块
 - 每行配置结尾需要加分号;
@@ -87,7 +86,7 @@
 - $ 引用变量符
 - 大部分模块都必须在nginx.conf中读取某个配置项后才会在Nginx启用
 
-#### 2.3、Nginx基本配置
+## 2.3、Nginx基本配置
 **按使用功能分为四类：**  
 - **用于调试、定位问题的配置**
 
@@ -130,8 +129,8 @@
 |选择事件模型|***use*** "kqueue/rtsig/***epoll***/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
 |每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。|
 
-## 3、HTTP模块
-#### 3.1、用HTTP核心模块配置一个静态web服务器 
+# 3、HTTP模块
+## 3.1、用HTTP核心模块配置一个静态web服务器 
 - [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)  
 
 **主要介绍：ngx_http_core_module模块**  
@@ -219,9 +218,192 @@
 ||||||
 ||||||
 
-#### 3.2、反向代理配置
+## 3.2、反向代理配置
+**反向代理（reverse proxy）** 方式是指用代理服务器来接受Internet上的连接请求，然后将请求转发给内部网络中的上游服务器，并将从上游服务器上得到的结果返回给Internet上请求连接的客户端，此时代理服务器对外的表现就是一个Web服务器。
+- Nginx反向代理特点：当客户端发来HTTP请求时，Nginx并不会立刻转发到上游服务器，而是先把用户的请求（包括HTTP包体）**完整**地接收到Nginx所在服务器的硬盘或者内存中，然后再向上游服务器发起连接，把缓存的客户端请求转发到上游服务器。  
+- 缺点：延长了一个请求的处理时间，并增加了用于缓存请求内容的内存和磁盘空间。
+- 优点：降低了上游服务器的负载，尽量把压力放在Nginx服务器上。减轻了上游服务器的并发压力。
 
-#### 3.3、将HTTP模块编译到Nginx中
+#### 负载均衡基本配置
+**（1）upstream块**  
+语法： upstream name{...}  
+配置块： http  
+upstream块定义了一个上游服务器的集群，便于反向代理中的proxy_pass使用。例如：  
+```javascript
+upstream backend {
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com;
+} 
+server {
+    location / {
+        proxy_pass http://backend;
+    }
+}
+```
+**（2）server**  
+语法： server name[parameters];  
+配置块： upstream  
+server配置项指定了一台上游服务器的名字，这个名字可以是域名、IP地址端口、UNIX句柄等，在其后还可以跟下列参数。
+- weight=number：设置向这台上游服务器转发的权重，默认为1。
+- max_fails=number：该选项与fail_timeout配合使用，指在fail_timeout时间段内，如果向当前的上游服务器转发失败次数超过number，则认为在当前的fail_timeout时间段内这台上游服务器不可用。max_fails默认为1，如果设置为0，则表示不检查失败次数。
+- fail_timeout=time：fail_timeout表示该时间段内转发失败多少次后就认为上游服务器暂时不可用，用于优化反向代理功能。它与向上游服务器建立连接的超时时间、读取上游服务器的响应超时时间等完全无关。fail_timeout默认为10秒。
+- down：表示所在的上游服务器永久下线，只在使用ip_hash配置项时才有用。
+- backup：在使用ip_hash配置项时它是无效的。它表示所在的上游服务器只是备份服务器，只有在所有的非备份上游服务器都失效后，才会向所在的上游服务器转发请求。
+例如：
+```javascript
+upstream backend {
+    server backend1.example.com weight=5;
+    server 127.0.0.1:8080 max_fails=3 fail_timeout=30s;
+    server unix:/tmp/backend3;
+}
+```
+**（3）ip_hash**  
+语法： ip_hash;  
+配置块： upstream  
+在有些场景下，我们可能会希望来自某一个用户的请求始终落到固定的一台上游服务器中。例如，假设上游服务器会缓存一些信息，如果同一个用户的请求任意地转发到集群中的任一台上游服务器中，那么每一台上游服务器都有可能会缓存同一份信息，这既会造成资源的浪费，也会难以有效地管理缓存信息。ip_hash就是用以解决上述问题的，它首先根据客户端的IP地址计算出一个key，将key按照upstream集群里的上游服务器数量进行取模，然后以取模后的结果把请求转发到相应的上游服务器中。这样就确保了同一个客户端的请求只会转发到指定的上游服务器中。  
+ip_hash与weight（权重）配置不可同时使用。如果upstream集群中有一台上游服务器暂时不可用，不能直接删除该配置，而是要down参数标识，确保转发策略的一贯性。例如：  
+```javascript
+upstream backend {
+    ip_hash;
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com down;
+    server backend4.example.com;
+}
+```
+**（4）记录日志时支持的变量**  
+如果需要将负载均衡时的一些信息记录到access_log日志中，那么在定义日志格式时可以使用负载均衡功能提供的变量，见表2-2。  
+表2-2　访问上游服务器时可以使用的变量  
+
+|变量名|意义|
+|---|---|
+|$upstream_addr|处理请求的上游服务器地址|
+|$upstream_cache_status|表示是否命中缓存，取值范围：MISS、EXPIRED、UPDATING、STALE、HIT|
+|$upstream_status|上游服务器返回的响应中的HTTP响应码|
+|$upstream_response_time|上游服务器的响应时间，精度到毫秒|
+|$upstream_http_$HEADER|HTTP的头部，如$upstream_http_host|
+例如，可以在定义access_log访问日志格式时使用表2-2中的变量：
+```javascript
+log_format timing '$remote_addr - $remote_user [$time_local] $request' 'upstream_response_time $upstream_response_time' 'msec $msec request_time $request_time';
+log_format up_head '$remote_addr - $remote_user [$time_local] $request' 'upstream_http_content_type $upstream_http_content_type';
+```
+#### 反向代理基本配置
+**（1）proxy_pass**  
+语法： proxy_pass URL;  
+配置块： location、if  
+此配置项将当前请求反向代理到URL参数指定的服务器上，URL可以是主机名或IP地址加端口的形式，例如：  
+```javascript
+proxy_pass http://localhost:8000/uri/;
+```
+也可以是UNIX句柄：  
+```javascript
+proxy_pass http://unix:/path/to/backend.socket:/uri/;
+```
+还可以如上节负载均衡中所示，直接使用upstream块，例如：  
+```javascript
+upstream backend {
+    …
+} 
+server {
+    location / {
+        proxy_pass http://backend;
+    }
+}
+```
+用户可以把HTTP转换成更安全的HTTPS，例如：  
+```javascript
+proxy_pass https://192.168.0.1;
+```
+默认情况下反向代理是不会转发请求中的Host头部的。如果需要转发，那么必须加上配置：  
+```javascript
+proxy_set_header Host $host;
+```
+**（2）proxy_method**  
+语法： proxy_method method;  
+配置块： http、server、location  
+此配置项表示转发时的协议方法名。例如设置为：  
+```javascript
+proxy_method POST;
+```
+那么客户端发来的GET请求在转发时方法名也会改为POST。  
+**（3）proxy_hide_header**  
+语法： proxy_hide_header the_header;  
+配置块： http、server、location  
+Nginx会将上游服务器的响应转发给客户端，但默认不会转发以下HTTP头部字段：Date、Server、X-Pad和X-Accel-*。使用proxy_hide_header后可以任意地指定哪些HTTP头部字段不能被转发。例如：  
+```javascript
+proxy_hide_header Cache-Control;
+proxy_hide_header MicrosoftOfficeWebServer;
+```
+**（4）proxy_pass_header**  
+语法： proxy_pass_header the_header;  
+配置块： http、server、location  
+与proxy_hide_header功能相反，proxy_pass_header会将原来禁止转发的header设置为允许转发。例如：  
+```javascript
+proxy_pass_header X-Accel-Redirect;
+```
+**（5）proxy_pass_request_body**  
+语法： proxy_pass_request_body on|off;  
+默认： proxy_pass_request_body on;  
+配置块： http、server、location  
+作用为确定是否向上游服务器发送HTTP包体部分。  
+**（6）proxy_pass_request_headers**  
+语法： proxy_pass_request_headers on|off;  
+默认： proxy_pass_request_headers on;  
+配置块： http、server、location  
+作用为确定是否转发HTTP头部。  
+**（7）proxy_redirect**  
+语法： proxy_redirect[default|off|redirect replacement];  
+默认： proxy_redirect default;  
+配置块： http、server、location  
+当上游服务器返回的响应是重定向或刷新请求（如HTTP响应码是301或者302）时，proxy_redirect可以重设HTTP头部的location或refresh字段。
+例如，如果上游服务器发出的响应是302重定向请求，location字段的URI是http://localhost:8000/two/some/uri/ ，那么在下面的配置情况下，实际转发给客户端的location是http://frontendonesome/uri/ 。
+```javascript
+proxy_redirect http://localhost:8000/two/  http://frontendone;
+```
+这里还可以使用ngx-http-core-module提供的变量来设置新的location字段。例如：  
+```javascript
+proxy_redirect http://localhost:8000/  http://$host:$server_port/;
+```
+也可以省略replacement参数中的主机名部分，这时会用虚拟主机名称来填充。例如：  
+```javascript
+proxy_redirect http://localhost:8000/two/one;
+```
+使用off参数时，将使location或者refresh字段维持不变。例如：
+```javascript
+proxy_redirect off;
+```
+使用默认的default参数时，会按照proxy_pass配置项和所属的location配置项重组发往客户端的location头部。例如，下面两种配置效果是一样的：  
+```javascript
+location one {
+    proxy_pass http://upstream:port/two/;
+    proxy_redirect default;
+} 
+location one {
+    proxy_pass http://upstream:port/two/;
+    proxy_redirect http://upstream:port/two/one;
+}
+```
+**（8）proxy_next_upstream**  
+语法：proxy_next_upstream[error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_404|off];  
+默认： proxy_next_upstream error timeout;  
+配置块： http、server、location  
+此配置项表示当向一台上游服务器转发请求出现错误时，继续换一台上游服务器处理这个请求。前面已经说过，上游服务器一旦开始发送应答，Nginx反向代理服务器会立刻把应答包转发给客户端。因此，一旦Nginx开始向客户端发送响应包，之后的过程中若出现错误也是不允许换下一台上游服务器继续处理的。这很好理解，这样才可以更好地保证客户端只收到来自一个上游服务器的应答。  
+proxy_next_upstream的参数用来说明在哪些情况下会继续选择下一台上游服务器转发请求。  
+- error：当向上游服务器发起连接、发送请求、读取响应时出错。
+- timeout：发送请求或读取响应时发生超时。
+- invalid_header：上游服务器发送的响应是不合法的。
+- http_500：上游服务器返回的HTTP响应码是500。
+- http_502：上游服务器返回的HTTP响应码是502。
+- http_503：上游服务器返回的HTTP响应码是503。
+- http_504：上游服务器返回的HTTP响应码是504。
+- http_404：上游服务器返回的HTTP响应码是404。
+- off：关闭proxy_next_upstream功能—出错就选择另一台上游服务器再次转发。  
+
+Nginx的反向代理模块还提供了很多种配置，如设置连接的超时时间、临时文件如何存储，以及最重要的如何缓存上游服务器响应等功能。这些配置可以通过阅读ngx_http_proxy_module模块的说明了解，只有深入地理解，才能实现一个高性能的反向代理服务器。  
+
+
+## 3.3、将HTTP模块编译到Nginx中
 1. 将源码文件放在一个目录下（如：/nginx/），并在此目录下创建一个文件命名为config；
 2. 在configure脚本执行时添加参数：--add-module=/nginx/；
 3. config文件编写：（仅开发HTTP模块，包含下3个变量即可）
@@ -240,7 +422,7 @@
     . auto/modules
     . auto/make
     ```
-#### 3.4、定义一个HTTP模块
+## 3.4、定义一个HTTP模块
 
 
 ## event模块
