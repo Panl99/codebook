@@ -1,5 +1,6 @@
 ##快捷鍵  
 Ctrl+Alt+L，格式化代码
+Alt+Insert，生成构造方法、Getter、Setter等
 
 ##idea优化  
 - **启动优化**  

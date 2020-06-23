@@ -283,7 +283,8 @@ upstream backend {
 |$upstream_status|上游服务器返回的响应中的HTTP响应码|
 |$upstream_response_time|上游服务器的响应时间，精度到毫秒|
 |$upstream_http_$HEADER|HTTP的头部，如$upstream_http_host|
-例如，可以在定义access_log访问日志格式时使用表2-2中的变量：
+
+例如，可以在定义access_log访问日志格式时使用表2-2中的变量：  
 ```javascript
 log_format timing '$remote_addr - $remote_user [$time_local] $request' 'upstream_response_time $upstream_response_time' 'msec $msec request_time $request_time';
 log_format up_head '$remote_addr - $remote_user [$time_local] $request' 'upstream_http_content_type $upstream_http_content_type';
