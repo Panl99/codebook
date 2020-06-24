@@ -424,7 +424,7 @@ Nginx的反向代理模块还提供了很多种配置，如设置连接的超时
     ```
 ## 3.4、定义一个HTTP模块
 #### Nginx-HTTP模块调用的简要流程  
-![Nginx-HTTP模块调用的简化流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/Nginx-HTTP模块调用简化流程.PNG)
+![Nginx-HTTP模块调用的简化流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/Nginx-HTTP模块调用简化流程.gif)
 
 worker进程会在一个for循环语句里反复调用事件模块检测网络事件。当事件模块检测到某个客户端发起的TCP请求时（接收到SYN包），将会为它建立TCP连接，成功建立连接后根据nginx.conf文件中的配置会交由HTTP框架处理。HTTP框架会试图接收完整的HTTP头部，并在接收到完整的HTTP头部后将请求分发到具体的HTTP模块中处理。  
 HTTP模块在处理请求的结束时，大多会向客户端发送响应，此时会自动地依次调用所有的HTTP过滤模块，每个过滤模块可以根据配置文件决定自己的行为。例如，gzip过滤模块根据配置文件中的gzip on|off来决定是否压缩响应。HTTP处理模块在返回时会将控制权交还给HTTP框架，如果在返回前设置了subrequest，那么HTTP框架还会继续异步地调用适合的HTTP模块处理子请求。  
