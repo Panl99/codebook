@@ -404,8 +404,8 @@ proxy_next_upstream的参数用来说明在哪些情况下会继续选择下一�
 Nginx的反向代理模块还提供了很多种配置，如设置连接的超时时间、临时文件如何存储，以及最重要的如何缓存上游服务器响应等功能。这些配置可以通过阅读ngx_http_proxy_module模块的说明了解，只有深入地理解，才能实现一个高性能的反向代理服务器。  
 
 ## 3.3、将HTTP模块编译到Nginx中
-1. 将源码文件放在一个目录下（如：/nginx/），并在此目录下创建一个文件命名为config；
-2. 在configure脚本执行时添加参数：--add-module=/nginx/；
+1. 将源码文件放在一个目录下（如：/nginx/），并在此目录下创建一个文件命名为config，用于通知Nginx如何编译本模块；
+2. 在configure脚本执行时添加参数：--add-module=/nginx/；（在执行完configure脚本后Nginx会生成objs/Makefile和objs/ngx_modules.c文件，可以去修改这两个文件实现其他需求）
 3. config文件编写：（仅开发HTTP模块，包含下3个变量即可）
     - ngx_addon_name：仅在configure执行时使用，一般设置为模块名称。
     - HTTP_MODULES：保存所有的HTTP模块名称，每个HTTP模块间使用空格符连接。重设此变量时不要进行覆盖，可以引用。
@@ -432,6 +432,83 @@ HTTP模块在处理请求的结束时，大多会向客户端发送响应，此�
 **开发HTTP模块时，需要注意两点：**  
 - HTTP框架到具体的HTTP模块间数据流的传递
 - 开发的HTTP模块如何与诸多的过滤模块协同工作
+
+#### 自定义HTTP模块：ngx_http_outman_module
+**HTTP模块命名：ngx_http_outman_module**  
+**源码文件命名：ngx_http_outman_module.c**  
+1. 先将HTTP模块编译进Nginx(见3.3)
+2. 设置模块在运行中生效(典型如根据URI匹配location /uri {outman;})
+
+**定义HTTP模块方式**  
+```javascript
+ngx_module_t ngx_http_outman_module;
+```
+//TODO
+
+#### 处理用户请求
+//TODO
+#### 发送响应
+//TODO
+
+
+
+#### Nginx的基本数据结构和方法
+- 整形封装  
+ngx_int_t封装有符号整型，ngx_uint_t封装无符号整型。  
+```javascript
+typedef intptr_t ngx_int_t; 
+typedef uintptr_t ngx_uint_t;
+```
+- 字符串结构  
+ngx_str_t结构就是字符串。  
+ngx_str_t只有两个成员，其中data指针指向字符串起始地址，len表示字符串的有效长度。
+```javascript
+typedef struct {
+    size_t  len;
+    u_char  *data;
+} ngx_str_t;
+```
+- 列表结构  
+ngx_list_t是Nginx封装的链表容器，  
+```javascript
+typedef struct ngx_list_part_s ngx_list_part_t; struct ngx_list_part_s {
+    void *elts;
+    ngx_uint_t nelts;
+    ngx_list_part_t *next;
+};
+typedef struct {
+    ngx_list_part_t *last;
+    ngx_list_part_t part;
+    size_t size;
+    ngx_uint_t nalloc;
+    ngx_pool_t *pool;
+} ngx_list_t;
+```
+- key/value结构  
+ngx_table_elt_t  
+```javascript
+typedef struct {
+    ngx_uint_t hash;
+    ngx_str_t key;
+    ngx_str_t value;
+    u_char *lowcase_key;
+} ngx_table_elt_t;
+```
+- 缓冲结构  
+ngx_buf_t，既应用于内存数据也应用于磁盘数据。  
+```javascript
+//TODO
+```
+- 链表结构  
+ngx_chain_t，是与ngx_buf_t配合使用的链表数据结构  
+在向用户发送HTTP包体时，就要传入ngx_chain_t链表对象，注意，如果是最后一个ngx_chain_t，那么必须将next置为NULL，否则永远不会发送成功，而且这个请求将一直不会结束（Nginx框架的要求）。  
+```javascript
+typedef struct ngx_chain_s ngx_chain_t; struct ngx_chain_s {
+    ngx_buf_t *buf;
+    ngx_chain_t *next;
+};
+```
+
 
 
 ## event模块
