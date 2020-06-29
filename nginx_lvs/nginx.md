@@ -1,5 +1,9 @@
 > [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
 > [深入理解Nginx：模块开发与架构解析（第2版）](https://github.com/Panl99/codebook/blob/master/nginx_lvs/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
+> [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
+
+@[toc]
+
 # 一、关于Nginx
 ## 1.1、Nginx特点
 - **速度更快：** 不论单次请求还是高峰大量的并发请求，Nginx都可以快速的响应。
@@ -56,7 +60,8 @@ net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请�
     4. 默认情况下Nginx被安装在：usr/local/nginx
         二进制文件路径：usr/local/nginx/sbin/nginx
         配置文件路径：usr/local/nginx/conf/nginx.conf
-- configure分析：略
+- configure分析：//TODO  
+    使用configure 命令参数可以在新编译的Nginx 程序里打包指定的模块，或去除指定的模块，这样可以自定义Nginx 功能，同时可以减少内存占用。
 - Nginx命令：
     1. 启动：
         1. 默认启动：usr/local/nginx/sbin/nginx，会读取usr/local/nginx/conf/nginx.conf  
@@ -536,3 +541,19 @@ typedef struct ngx_chain_s ngx_chain_t; struct ngx_chain_s {
 ## event模块
 
 ## 负载均衡机制
+
+# 四、数据库基本操作
+Nginx使用Redis作数据缓存，使用Memcached作文件缓存，使用MongoDB持久化NoSQL数据，使用MySQL集群作关系型数据库。  
+## MySQL
+- MySQL 支持读写分区，可以通过代理分离读和写操作，实现高性能。在读写分离的机制下， 一个MySQL 簇由代理服务器、主服务器和从服务器构成。主服务器负责写人，多实例的从服务器负责读响应，主、从服务器之间通过数据同步／异步地写入数据。各服务器可以动态扩展以增容，自然地实现了备份。
+- MySQL 5.7 现在已经可以轻松达到50 万QPS (Queries Per Second，每秒查询率）的性能，并支持NoSQL 接口，通过NoSQL 接口可以达到100 万QPS 。
+#### MySQL安装
+- 查看自带MySQL 是否已安装：`yum list installed | grep mysql`
+- 卸载自带MySQL：`yum -y remove mysql-libs.x86_64`
+- 查看yum 库上的MySQL 版本信息：`yum list | grep mysql` 或`yum -y list mysql*`
+- 使用yum 安装MySQL 数据库：`yum -y install mysql-server mysql mysql-devel`  
+    当结果显示为时，即安装完毕。注意：安装mysql只是安装了数据库，只有安装mysql-server才相当于安装了客户端。  
+- 查看MySQL 数据库版本信息：`rpm -qi mysql-server`
+- 查看mysql组：`id mysql`
+- 启动mysqld服务：`service mysqld start`
+- 检查端口查看MySQL是否启动：`netstat -anp | grep 3306`
