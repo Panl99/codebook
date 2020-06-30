@@ -3,7 +3,7 @@
 > [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
 # 目录
-- [数据库基本操作](#四、数据库基本操作)
+- [数据库基本操作](#数据库基本操作)
     - [MySQL](#MySQL)
     - [Redis](#redis)
 
@@ -545,7 +545,7 @@ typedef struct ngx_chain_s ngx_chain_t; struct ngx_chain_s {
 
 ## 负载均衡机制
 
-# 四、数据库基本操作
+# 数据库基本操作
 Nginx使用Redis作数据缓存，使用Memcached作文件缓存，使用MongoDB持久化NoSQL数据，使用MySQL集群作关系型数据库。  
 ## MySQL
 #### MySQL特点
