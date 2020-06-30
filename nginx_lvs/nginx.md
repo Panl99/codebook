@@ -3,7 +3,7 @@
 > [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
 # 目录
-- [四、数据库基本操作](#四、数据库基本操作)
+- [数据库基本操作](#四、数据库基本操作)
     - [MySQL](#MySQL)
     - [Redis](#redis)
 
