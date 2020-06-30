@@ -2,7 +2,9 @@
 > [深入理解Nginx：模块开发与架构解析（第2版）](https://github.com/Panl99/codebook/blob/master/nginx_lvs/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
 > [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
-@[toc]
+- [四、数据库基本操作](#四、数据库基本操作)
+    - [MySQL](#MySQL)
+    - [Redis](#redis)
 
 # 一、关于Nginx
 ## 1.1、Nginx特点
@@ -545,6 +547,7 @@ typedef struct ngx_chain_s ngx_chain_t; struct ngx_chain_s {
 # 四、数据库基本操作
 Nginx使用Redis作数据缓存，使用Memcached作文件缓存，使用MongoDB持久化NoSQL数据，使用MySQL集群作关系型数据库。  
 ## MySQL
+#### MySQL特点
 - MySQL 支持读写分区，可以通过代理分离读和写操作，实现高性能。在读写分离的机制下， 一个MySQL 簇由代理服务器、主服务器和从服务器构成。主服务器负责写人，多实例的从服务器负责读响应，主、从服务器之间通过数据同步／异步地写入数据。各服务器可以动态扩展以增容，自然地实现了备份。
 - MySQL 5.7 现在已经可以轻松达到50 万QPS (Queries Per Second，每秒查询率）的性能，并支持NoSQL 接口，通过NoSQL 接口可以达到100 万QPS 。
 #### MySQL安装
@@ -557,3 +560,203 @@ Nginx使用Redis作数据缓存，使用Memcached作文件缓存，使用MongoDB
 - 查看mysql组：`id mysql`
 - 启动mysqld服务：`service mysqld start`
 - 检查端口查看MySQL是否启动：`netstat -anp | grep 3306`
+- 测试连接：运行客户端mysql，在mysql/bin目录下，测试是否能连到mysqld：`mysql`
+- Windows上使用Navicat连接mysql
+
+## Redis
+#### Redis特点
+- Redis 支持数据的持久化，可以将内存中的数据保存在磁盘中，重启的时候可以再次加载进行使用。
+- Redis 不仅仅支持简单的key-value 类型数据，同时提供list 、set 、zset 、hash 等数据结构的存储。
+- Redis 支持数据备份，即master-slave 模式的数据备份。  
+Redis 优势比较多：  
+- 性能极高：读速度是110000 次/s ，写速度是81000 次/s 。
+- 丰富的数据类型：支持strings 、lists 、hashes 、sets及ordered sets 数据类型。
+- 原子： Redis 操作都是原子操作，还支持全并发原子操作。
+- 丰富的特性：支持publish/subscribe、通知、key过期等特性。
+- 持久化： 支持以RDB 和AOF 方式将数据持久化到文件中。
+- 数据复制： Redis 的主从复制功能非常强大，一个master 可以拥有多个slave ，而一个slave 又可以拥有多个slave ，如此下去，形成了强大的多级服务器集群架构。
+#### Redis安装
+- Redis 的下载地址：http://redis.io/download
+- 下载、安装
+```shell script
+wget http://download.redis.io/releases/redis-3.2.6.tar.gz
+tar xzf redis-3.2.6.tar.gz
+cd redis-3.2.6
+make
+```
+- 启动
+```shell script
+cd src
+./redis-server #默认启动
+./redis-server redis.conf #指定配置文件启动
+./redis-cli #启动客户端
+#测试客户端 服务端交互
+redis>set foo bar
+OK
+redis>get foo
+"bar"
+```
+- 连接远程Redis
+```shell script
+#语法
+redis-cli -h host -p port -a password
+redis-cli -h 127.0.0.1 -p 6379 -a "mypass"
+```
+#### Redis配置
+- 位置：Redis的配置文件位于Redis安装目录下，文件名为redis.conf。可以通过CONFIG 命令查看配置项或设置配置项。
+- 查看/设置配置：`redis 127.0.0.1:6379> CONFIG GET CONFIG_SETTING_NAME`
+```shell script
+redis 127.0.0.1:6379> CONFIG GET loglevel
+1)"loglevel"
+2)"notice"
+
+#可以使用*号获取所有配置项：
+redis 127.0.0.1:6379> CONFIG GET *
+1)"dbfilename"
+2)"dump.rdb"
+3)"requirepass"
+4)""
+...
+```
+#### 参数说明
+1. **daemonize no**  
+Redis 默认不以守护进程的方式运行，可以通过该配置项修改，使用yes 启用守护进程(daemonize yes)。
+2. **pidfile /var/run/redis.pid**  
+当Redis 以守护进程方式运行时，Redis 默认会把pid写入/var/run/redis.pid 文件，可以通过pidfile 指定。
+3. **port 6379**  
+该配置项用于指定Redis 监昕端口，默认端口为6379。
+4. **bind 127.0.0.1**  
+该配置项用于绑定主机地址。
+5. **timeout 300**  
+该配置项用于指定当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能。
+6. **loglevel verbose**  
+该配置项用于指定日志记录级别，Redis 支持4个级别：debug、verbose、notice、warning，默认为verbose。
+7. **logfile stdout**  
+该配置项用于指定日志记录方式，默认为标准输出，如果配置Redis 为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null。
+8. **databases 16**  
+该配置项用于设置数据库的数量，默认数据库为0，可以使用SELECT <dbid>命令在连接上指定数据库ID。
+9. **save \<seconds\> \<changes\>**  
+该配置项用于指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合。
+    ```shell script
+    #Redis 默认配置文件中提供了3 个条件：
+    save 900 1
+    save 300 10
+    save 60 10000
+    #这3个条件分别表示900秒（15分钟）内有l个更改，300秒（5分钟）内有10个更改，以及60秒内有10000个更改。
+    ```
+10. **rdbcompression yes**  
+该配置项用于指定存储至本地数据库时是否压缩数据，默认为yes。 Redis采用LZF压缩，如果为了节省CPU 时间，可以关闭该选项，但会导致数据库文件变得巨大。
+11. **dbfilename dump.rdb**  
+该配置项用于指定本地数据库文件名，默认值为dump.rdb。
+12. **dir ./**  
+该配置项用于指定本地数据库存放目录。
+13. **slaveof \<masterip\> \<masterport\>**  
+该配置项用于当本机为slave 服务时，设置master 服务的IP 地址及端口，在Redis 启动时，它会自动从master 进行数据同步。
+14. **masterauth \<master-password>**  
+当master 服务设置了密码保护时，slave 服务连接master 的密码。
+15. **requirepass foobared**  
+该配置项用于设置Redis 连接密码，如果配置了连接密码，客户端在连接Redis 时需要通过AUTH \<password> 命令提供密码，默认关闭。
+16. **maxclients 128**  
+该配置项用于设置同一时间最大客户端连接数，默认无限制。Redis 可以同时打开的客户端连接数为Redis 进程可以打开的最大文件描述符数量，如果设置maxclients 0，表示不限制。当客户端连接数到达限制时，Redis 会关闭新的连接并向客户端返回max number ofclients reached 错误信息。
+17. **maxmemory \<bytes>**  
+该配置项用于指定Redis 最大内存限制， Redis 在启动时会把数据加载到内存中，达到最大内存后， Redis 会先尝试清除已到期或即将到期的key ，若当此方法处理后仍然到达最大内存设置，则将无法再进行写入操作，但仍然可以进行读取操作。Redis 新的VM 机制会把key存放在内存，value存放在swap 区。
+18. **appendonly no**  
+该配置项用于指定是否在每次更新操作后进行日志记录，在默认情况下， Redis 异步地把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为Redis 本身同步数据文件是按save 条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no。
+19. **appendfilename appendonly.aof**  
+该配置项用于指定更新日志文件名，默认为appendonly.aof。
+20. **appendfsync everysec**  
+    ```shell script
+    #该配置项用于指定更新日志条件，共有3 个可选值。
+    1) no： 表示等操作系统进行数据缓存同步到磁盘（快） 。
+    2) always： 表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） 。
+    3) everysec： 表示每秒同步一次（折中，默认值） 。
+    ```
+21. **vm-enabled no**  
+该配置项用于指定是否启用虚拟内存机制，默认值为no。简单地介绍一下，VM 机制将数据分页存放，由Redis 将访问量较少的页即冷数据存放到磁盘上，访问多的页面由磁盘自动换出到内存中。
+22. **vm-swap-file /tmp/redis.swap**  
+该配置项用于指定虚拟内存文件路径，默认值为/tmp/redis.swap ，不可多个Redis 实例共享。
+23. **vm-max-memory 0**  
+将所有大于vm-max-memory 的数据存入虚拟内存，元论vm-max-memory 设置多小，所有索引数据都是内存存储的（Redis 的索引数据就是keys），也就是说，当vm-maxmemory设置为0 时，其实是所有value 都存在于磁盘中。默认值为0。
+24. **vm-page-size 32**  
+Redis swap 文件分成了很多的page，一个对象可以保存在多个page 中，但一个page不能被多个对象共享， vm-page-size 是要根据存储的数据大小来设定的：如果存储很多小对象， page 大小最好设置为32B 或者64B；如果存储很大对象，则可以使用更大的page，如果不确定，就使用默认值。
+25. **vm-pages 134217728**  
+该配置项用于设置swap 文件中的page 数量，由于page 表（一种表示页面空闲或使用的bitmap）是放在内存中的，在磁盘上每8 个pages 将消耗lB 的内存。
+26. **vm-max-threads 4**  
+该配置项用于设置访问swap 文件的线程数，最好不要超过机器的核数，如果设置为0，那么所有对swap 文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4 。
+27. **glueoutputbuf yes**  
+该配置项用于设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启。
+28. **hash-max-zipmap-entries 64 、hash-max-zipmap-value 512**  
+该配置项用于指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的晗希算法。
+29. **activerehashing yes**  
+该配置项用于指定是否激活重量哈希，默认为开启。
+30. **include /path/to/local.conf**
+该配置项用于指定包含其他的配置文件，可以在同一主机上多个Redis 实例之间使用同一份配置文件，而各个实例又同时拥有自己特定的配置文件。
+
+#### 数据类型
+Redis 支持5 种数据类型：string（字符串）、hash（哈希）、list（列表）、set（集合）及zset(sorted set，有序集合）。  
+1. **string（字符串）**  
+一个key 对应一个value，一个key 的最大存储容量为512MB。string 类型是二进制安全的，即Redis的string 可以包含任何数据。如JPG 图片或者序列化的对象。
+    ```shell script
+    redis 127.0.0.1:6379> SET name "test"
+    OK
+    redis 127.0.0.1:6379> GET name "test"
+    ```
+2. **hash（哈希）**  
+Redis hash 是一个key-value 对集合。Redis hash 是一个string 类型的field 和value 的映射表，特别适合用于存储对象。
+    ```shell script
+    127.0.0.1:6379> HMSET user:1 username test password test points 200
+    OK
+    127.0.0.1:6379> HGETALL user:1
+    l) "username"
+    2) "test"
+    3) "password"
+    4) "test"
+    5) "points""
+    6) "200"
+    127.0.0.1: 6379>
+    #hash 数据类型存储了包含用户脚本信息的用户对象。实例使用了Redis HMSET、HGETALL 命令，user:1 为key 值。
+    #每个hash 可以存储2的32次方-l 个key-value对（40 多亿） 。
+    ```
+3. **list（列表）**  
+简单的字符串列表，***按照插入顺序排序***。你可以添加一个元素到列表的头部（左边）或者尾部（右边）。
+    ```shell script
+    redis 127.0.0.1:6379> lpush test redis(integer)1
+    redis 127.0.0.1:6379> lpush test mongodb(integer)2
+    redis 127.0.0.1:6379> lpush test rabitmq(integer)3
+    redis 127.0.0.1:6379> lrange test 0 10
+    1) "rabitmq"
+    2) "mongodb"
+    3) "redis"
+    redis 127.0.0.1:6379> lrange test 5 10
+    (empty list or set)
+    #列表最多可存储2的32次方-l个元素（ 40 多亿） 。
+    ```
+4. **set（集合）**  
+Redis 的set 是string 类型的***无序集合***。集合是通过哈希表实现的，所以添加、删除、查找的复杂度都是***O(1)***。sadd 命令用于添加一个string 元素到key 对应的set 集合中，成功则返回1 ，如果元素已经在集合中则返回0, key 对应的set 不存在则返回错误。
+    ```shell script
+    redis 127.0.0.1:6379> sadd test redis(integer)1
+    redis 127.0.0.1:6379> sadd test mongodb(integer)1
+    redis 127.0.0.1:6379> sadd test rabitmq(integer)1
+    redis 127.0.0.1:6379> sadd test rabitmq(integer)0
+    redis 127.0.0.1:6379> smembers test
+    l)"rabitmq(integer)l"
+    2)"mongodb(integer)l"
+    3)"redis(integer)l"
+    #注意：在以上实例中， rabitmq 添加了两次，但根据集合内元素的唯一性，第二次插入的元素将被忽略。
+    #集合中最大的成员数为2的32次方-l（40 多亿） 。
+    ```
+5. **zset（有序集合）**  
+Redis zset 也是string 类型元素的集合，且***不允许重复***的成员。不同的是，zset 的每个元素都会关联一个double 类型的分数。Redis 正是通过分数为集合中的成员进行从小到大排序的。zset 的成员是唯一的，但分数（score）可以重复。
+```shell script
+redis 127.0.0.1:6379> zadd test 0 redis(integer)1
+redis 127.0.0.1:6379> zadd test 0 mongodb(integer)1
+redis 127.0.0.1:6379> zadd test 0 rabitmq(integer)1
+redis 127.0.0.1:6379> zadd test 0 rabitmq(integer)0
+redis 127.0.0.1:6379> ZRANGEBYSCORE test 0 1000
+1) "mongodb(integer)1 "
+2) "rabitmq(integer)0"
+3) "rabitmq(integer)1"
+4) "redis(integer)1 "
+```
+
+# OpenResty
