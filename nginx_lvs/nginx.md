@@ -785,6 +785,22 @@ redis 127.0.0.1:6379> ZRANGEBYSCORE test 0 1000
 ## Memcached
 Memcached 是一个高性能分布式内存对象缓存系统，用于动态Web 应用以减轻数据库负载。它通过在内存中缓存数据和对象来减少读取数据库的次数，从而提高数据库驱动网站的速度。Memcached 基于一个存储键/值对的HashMap。  
 #### Memcached安装
+- 安装：`yum -y install memcached`
+- 启动/停止： `service memcached start/stop`
+- Memcached的配置是通过命令行进行的，简单使用service命令就可以了。
+- 如果安装缺少其他支持，可以使用以下命令： `yum groupinstall "Development Tools"`
+- 连接： `telnet HOST PORT`，如： `telnet 127.0.0.l 11211`
+- 启动Memcached： `memcached -d -m 64 -I 20m -u root -1 192.168.4.86 -p 11211 -c 1024 -P /tmp/memcached.pid`  
+    参数描述//TODO  
+- 停止Memcached：  
+    ```shell script
+    1) ps -ef I grep memcached
+       kill -9 <PID>
+    2) kill -9 `cat /tmp/memcached.pid`
+    3) memcache d -u root -d stop
+    ```
+#### Memcached命令
+//TODO
 
 [返回目录](#目录)
 
