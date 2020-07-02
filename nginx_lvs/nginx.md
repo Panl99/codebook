@@ -6,6 +6,8 @@
 - [数据库基本操作](#数据库基本操作)
     - [MySQL](#MySQL)
     - [Redis](#redis)
+    - [PostgreSQL](#PostgreSQL)
+    - [Memcached](#Memcached)
 
 # 一、关于Nginx
 ## 1.1、Nginx特点
@@ -762,6 +764,30 @@ redis 127.0.0.1:6379> ZRANGEBYSCORE test 0 1000
 4) "redis(integer)1 "
 ```
 [返回目录](#目录)
+
+## PostgreSQL
+#### PostgreSQL安装
+- 安装PostgreSQL yum repository：`yum -i http://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6.4-x86_64/pgdg-redhat96-9.6-3.noarch.rpm`  
+    RPM包地址：[http://yum.postgresql.org](http://yum.postgresql.org)
+- 安装PostgreSQL：  
+    安装新版PG：`yum install postgresql92-server postgresql92-contrib`  
+    如果没有安装PostgreSQL yum repository，使用命令安装8.X 版本：`yum install postgresql*-server postgresql*-contrib`  
+- 查看安装：`rpm -qa | grep postgresql`
+- 初始化并启动数据库：  
+    初始化：`service postgresql-9.6 initdb`  
+    启动：`service postgresql-9.6 start`  
+- 测试：  
+    切换postgres用户：`su - postgres`  
+    执行psql 命令查看数据库列表：`psql -l`  
+
+[返回目录](#目录)
+
+## Memcached
+Memcached 是一个高性能分布式内存对象缓存系统，用于动态Web 应用以减轻数据库负载。它通过在内存中缓存数据和对象来减少读取数据库的次数，从而提高数据库驱动网站的速度。Memcached 基于一个存储键/值对的HashMap。  
+#### Memcached安装
+
+[返回目录](#目录)
+
 
 
 # OpenResty
