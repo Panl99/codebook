@@ -3,15 +3,30 @@
 > [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
 # 目录
+- [关于Nginx](#关于Nginx)
+    - [Nginx特点](#Nginx特点)
+    - [安装使用Nginx](#安装使用Nginx)
+- [Nginx配置](#Nginx配置)
+    - [Nginx进程间关系](#Nginx进程间关系)
+    - [配置语法](#配置语法)
+    - [Nginx基本配置](#Nginx基本配置)
+- [HTTP模块](#HTTP模块)
+    - [用HTTP核心模块配置一个静态web服务器](#用HTTP核心模块配置一个静态web服务器)
+    - [反向代理配置](#反向代理配置)
+    - [将HTTP模块编译到Nginx中](#将HTTP模块编译到Nginx中)
+    - [定义一个HTTP模块](#定义一个HTTP模块)
 - [数据库基本操作](#数据库基本操作)
     - [MySQL](#MySQL)
     - [Redis](#redis)
     - [PostgreSQL](#PostgreSQL)
     - [Memcached](#Memcached)
     - [MongoDB](#MongoDB)
+- [OpenResty](#OpenResty)
 
-# 一、关于Nginx
-## 1.1、Nginx特点
+[Back to TOC](#目录)
+
+# 关于Nginx
+## Nginx特点
 - **速度更快：** 不论单次请求还是高峰大量的并发请求，Nginx都可以快速的响应。
 - **高扩展性：** Nginx的设计极具扩展性，它完全是由多个不同功能、不同层次、不同类型且耦合度极低的模块组成。Nginx的模块都是嵌入到二进制文件中执行的，所以无论官方发布的模块还是第三方模块都一样具备很好的性能。
 - **高可靠性：** Nginx常用模块非常稳定，每个worker进程相对独立，master进程在1个worker进程出错时可以快速“拉起”新的worker子进程提供服务。
@@ -20,7 +35,9 @@
 - **热部署：** master管理进程与worker工作进程分离设计可支持热部署，支持更新配置、更换日志等功能。
 - **开源协议友好：** BSD开源协议不仅允许用户免费使用，还允许直接使用、修改源码并发布。
 
-## 1.2、安装使用Nginx
+[返回目录](#目录)
+
+## 安装使用Nginx
 - Linux2.6以上版本才支持epoll，查询Linux内核版本：uname -a
 - 使用Nginx必备软件：
     1. GCC编译器：用来编译C语言，安装方式：yum install -y gcc
@@ -98,16 +115,20 @@ net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请�
         3. 停止旧版本Nginx：kill -s SIGQUIT <nginx master pid>
     8. 帮助：usr/local/nginx/sbin/nginx -h
 
-# 二、Nginx配置
-## 2.1、Nginx进程间关系
+[返回目录](#目录)
+
+# Nginx配置
+## Nginx进程间关系
 - 1个master进程管理多个worker进程
 - worker进程数量=服务器cpu核心数（默认情况，可配置）
 - 真正提供互联网服务的是worker进程，master进程只负责监控管理worker进程
     1. master只专注于管理工作，如启动、停止、重新加载配置文件、平滑升级等服务，需要较大权限
     2. 多个worker进程处理请求可以提高服务健壮性
     3. 1个worker进程同时处理的请求数只受限于内存大小，多个worker进程处理并发请求时几乎没有同步锁的限制，worker进程一般不会睡眠，因此worker进程数等于cpu核心数时，进程间切换代价最小
-    
-## 2.2、配置语法
+
+[返回目录](#目录)
+  
+## 配置语法
 - 块配置项用大括号包括，配置项名后用空格分隔
 - 块配置项可以嵌套，内层块会继承外层块，当内外层块配置冲突时-取决于解析这个配置项的模块
 - 每行配置结尾需要加分号;
@@ -119,7 +140,9 @@ net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请�
 - $ 引用变量符
 - 大部分模块都必须在nginx.conf中读取某个配置项后才会在Nginx启用
 
-## 2.3、Nginx基本配置
+[返回目录](#目录)
+
+## Nginx基本配置
 **按使用功能分为四类：**  
 - **用于调试、定位问题的配置**
 
@@ -162,8 +185,10 @@ net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请�
 |选择事件模型|***use*** "kqueue/rtsig/***epoll***/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
 |每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。|
 
-# 三、HTTP模块
-## 3.1、用HTTP核心模块配置一个静态web服务器 
+[返回目录](#目录)
+
+# HTTP模块
+## 用HTTP核心模块配置一个静态web服务器 
 - [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)  
 
 **主要介绍：ngx_http_core_module模块**  
@@ -251,7 +276,9 @@ net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请�
 ||||||
 ||||||
 
-## 3.2、反向代理配置
+[返回目录](#目录)
+
+## 反向代理配置
 **反向代理（reverse proxy）** 方式是指用代理服务器来接受Internet上的连接请求，然后将请求转发给内部网络中的上游服务器，并将从上游服务器上得到的结果返回给Internet上请求连接的客户端，此时代理服务器对外的表现就是一个Web服务器。
 - Nginx反向代理特点：当客户端发来HTTP请求时，Nginx并不会立刻转发到上游服务器，而是先把用户的请求（包括HTTP包体）**完整**地接收到Nginx所在服务器的硬盘或者内存中，然后再向上游服务器发起连接，把缓存的客户端请求转发到上游服务器。  
 - 缺点：延长了一个请求的处理时间，并增加了用于缓存请求内容的内存和磁盘空间。
@@ -436,7 +463,9 @@ proxy_next_upstream的参数用来说明在哪些情况下会继续选择下一�
 
 Nginx的反向代理模块还提供了很多种配置，如设置连接的超时时间、临时文件如何存储，以及最重要的如何缓存上游服务器响应等功能。这些配置可以通过阅读ngx_http_proxy_module模块的说明了解，只有深入地理解，才能实现一个高性能的反向代理服务器。  
 
-## 3.3、将HTTP模块编译到Nginx中
+[返回目录](#目录)
+
+## 将HTTP模块编译到Nginx中
 1. 将源码文件放在一个目录下（如：/nginx/），并在此目录下创建一个文件命名为config，用于通知Nginx如何编译本模块；
 2. 在configure脚本执行时添加参数：--add-module=/nginx/；（在执行完configure脚本后Nginx会生成objs/Makefile和objs/ngx_modules.c文件，可以去修改这两个文件实现其他需求）
 3. config文件编写：（仅开发HTTP模块，包含下3个变量即可）
@@ -455,7 +484,9 @@ Nginx的反向代理模块还提供了很多种配置，如设置连接的超时
     . auto/modules
     . auto/make
     ```
-## 3.4、定义一个HTTP模块
+[返回目录](#目录)
+   
+## 定义一个HTTP模块
 #### Nginx-HTTP模块调用的简要流程  
 ![Nginx-HTTP模块调用的简化流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/Nginx-HTTP模块调用简化流程.gif)
 
@@ -482,8 +513,6 @@ ngx_module_t ngx_http_outman_module;
 //TODO
 #### 发送响应
 //TODO
-
-
 
 #### Nginx的基本数据结构和方法
 - 整形封装  
@@ -542,7 +571,7 @@ typedef struct ngx_chain_s ngx_chain_t; struct ngx_chain_s {
 };
 ```
 
-
+[返回目录](#目录)
 
 ## event模块
 
