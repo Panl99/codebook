@@ -8,6 +8,7 @@
     - [Redis](#redis)
     - [PostgreSQL](#PostgreSQL)
     - [Memcached](#Memcached)
+    - [MongoDB](#MongoDB)
 
 # 一、关于Nginx
 ## 1.1、Nginx特点
@@ -571,7 +572,7 @@ Nginx使用Redis作数据缓存，使用Memcached作文件缓存，使用MongoDB
 ## Redis
 #### Redis特点
 - Redis 支持数据的持久化，可以将内存中的数据保存在磁盘中，重启的时候可以再次加载进行使用。
-- Redis 不仅仅支持简单的key-value 类型数据，同时提供list 、set 、zset 、hash 等数据结构的存储。
+- Redis 不仅仅支持简单的key-value 类型数据，同时提供list、set、zset、hash 等数据结构的存储。
 - Redis 支持数据备份，即master-slave 模式的数据备份。  
 Redis 优势比较多：  
 - 性能极高：读速度是110000 次/s ，写速度是81000 次/s 。
@@ -580,6 +581,10 @@ Redis 优势比较多：
 - 丰富的特性：支持publish/subscribe、通知、key过期等特性。
 - 持久化： 支持以RDB 和AOF 方式将数据持久化到文件中。
 - 数据复制： Redis 的主从复制功能非常强大，一个master 可以拥有多个slave ，而一个slave 又可以拥有多个slave ，如此下去，形成了强大的多级服务器集群架构。
+
+- **注意**：
+    - Redis 本身是单线程的，因此可以**设置每个实例在6~8GB之间，通过启动更多的实例提高吞吐量**。例如，128GB的服务器上可以开启8GBx10个实例，充分利用多核CPU的性能。
+    - 在实际项目中，为了提高吞吐量，往往需要使用**主从策略，即数据写到主Redis，读取时从从Redis上读**，这样可以通过挂载更多的从服务器提高吞吐量， 而且可以通过主从机制，在叶子节点开启持久化方式防止数据丢失。更大型的系统则需要使用twemproxy 实现Redis 集群。
 #### Redis安装
 - Redis 的下载地址：http://redis.io/download
 - 下载、安装
@@ -804,6 +809,156 @@ Memcached 是一个高性能分布式内存对象缓存系统，用于动态Web 
 
 [返回目录](#目录)
 
+## MongoDB
+#### MongoDB特点
+- **面向集合存储，容易存储对象类型的数据**。在MongoDB 中，数据被分组存储在集合中，集合类似RDBMS 中的表，一个集合可以存储无限多的文档。
+- **模式自由，采用无模式结构存储**。在MongoDB 的集合中存储的数据是无模式的文档。采用无模式存储数据是集合区别于RDBMS 表的一个重要特征。
+- **支持完全索引，可以在任意属性上建立索引，包含内部对象**。MongoDB 的索引和RDBMS 的索引基本一样，可以在指定属性、内部对象上创建索引以提高查询的速度。除此之外， MongoDB 还提供创建基于地理空间的索引能力。
+- **支持查询**。MongoDB 支持丰富的查询操作，支持SQL 中的大部分查询。
+- **强大的聚合工具**。MongoDB 除了提供丰富的查询功能外，还提供强大的聚合工具，如count 、group 等，支持使用Map Reduce 完成复杂的聚合任务。
+- **支持复制和数据恢复**。MongoDB 支持主从复制机制，可以实现数据备份、故障恢复、读扩展等功能。而基于副本集的复制机制提供了自动故障恢复的功能，确保集群数据不会丢失。
+- **使用高效的二进制数据存储，包括大型对象（如视频）**。MongoDB 支持以二进制格式存储数据，可以保存任何类型的数据对象。
+- **自动处理分片，以支持云计算层次的扩展**。MongoDB 支持集群自动切分数据，对数据进行分片可以使集群存储更多的数据， 实现更大的负载，也能保证存储的负载均衡。
+- **支持各种语言**。Perl、PHP、Java、C#、JavaScript、Ruby、C和C++语言的驱动程序。MongoDB提供了当前所有主流开发语言的数据库驱动包，开发人员使用任何一种主流开发语言都可以轻松编程，实现访问MongoDB 数据库。
+- **文件存储格式为BSON**(JSON的一种扩展）。BSON 是二进制格式的JSON 的简称，BSON 支持文档和数组的嵌套。
+- **可以通过网络访问**。可以通过网络远程访问MongoDB 数据库。
 
+#### MongoDB适用场景
+- **网站实时数据处理**。MongoDB 非常适合实时的插入、更新与查询，并具备网站实时数据存储所需的复制及高度伸缩性。
+- **缓存**。由于性能很高， MongoDB 适合作为信息基础设施的缓存层。在系统重启之后，由它搭建的持久化缓存层可以避免下层的数据源过载。
+- **高伸缩性的场景**。MongoDB 非常适合由数十或数百台服务器组成的数据库，它的路线图中已经包含对MapReduce 引擎的内置支持。  
+
+**MongoDB 不适用的场景如下：**  
+- 要求**高度事务性**的系统。
+- 传统的商业智能应用。
+- 复杂的跨文档（表）**级联查询**。
+
+#### MongoDB安装
+- 配置yum源：  
+    - 查看MongoDB 的包信息： `yum info mongo*`  
+    - 如果提示没有相关匹配的信息，说明CentOS 系统中的yum 源不包含MongoDB 的相关资源，所以要在使用yum 命令安装MongoDB 前增加yum 源，即在/etc/yum.repos.d/目录中增加*.repo yum 源配置文件。
+        ```shell script
+        #增加、进入配置文件
+        vi /etc/yum.repos.d/mongodb-org-3.4.repo
+        #添加内容
+        [mongodb-org-3.4]
+        name=MongoDB Repository
+        baseurl=https://repo.mongodb.org/yum/amazon/2013.03/mongodb-org/3.4/x86_64/
+        gpgcheck=l
+        enabled=l
+        gpgkey=https://www.mongodb.org/static/pgp/server-3.4.asc
+        #添加完后再查一把
+        `yum info mongo*`
+        ```
+- 安装MongoDB 的服务器端：
+    - 安装： `sudo yum install -y mongodb-org`
+    - 安装完检查MongoDB程序文件： `# ls /usr/bin/mongo (tab键）`
+        - MongoDB 数据文件默认保存在`/var/lib/mongo` 目录，日志文件保存在`/var/log/mongodb`。
+        - 使用MongoDB 作为运行用户。可以在`/etc/mongod.conf`里修改数据文件和日志文件的路径，参数为`systemLog.path`和`storage.dbPath`。
+        - 如果修改了运行MongoDB 的用户， 必须确保该用户对`/var/lib/mongo`和`/var/log/mongodb` 两个目录有修改权限。
+- 运行MongoDB： `sudo service mongod start`
+- 确认MongoDB 是否启动成功： 
+    - 通过检查`/var/log/mongodb/mongod.log`文件内容检查MongoDB是否启动成功，检查这行信息：`[initandlisten) waiti ng for connections on port <port>`，<port>是在`/etc/mongod.conf`中配置的端口号，默认值是`27017`。
+    - 也可以使用下面命令让MongoDB 在系统启动时自动运行：`sudo chkconf ig mongod on`
+- 停止MangoDB： `sudo service mongod stop`
+- 重启MongoDB： `sudo service mongod restart`， 可以在`/var/log/mongodb/mongod.log`实时查看进程的状态。
+- 测试MongoDB 是否正常运行：
+    - 进入mongodb 的shell 模式： `mongo`
+    - 查看数据库列表： `show dbs`
+    - 查看当前db版本： `db.version();`
+- 卸载MongoDB：
+    - 停止MongoDB： `sudo service mongod stop`
+    - 卸载安装包： `sudo yum erase $(rpm -qa |grep mongodb-org)`
+    - 删除数据和日志目录： `sudo rm -r /var/log/mongodb`， `sudo rm -r /var/lib/mongo`
+    
+#### mongod.conf配置说明
+MongoDB 的配置文件为`/etc/mongod.conf`
+```shell script
+# mongo.conf
+
+# 日志保存位置
+logpath=/var/log/mongo/mongod.log
+
+# 以追加方式写入日志
+logappend=true
+
+# 在后台运行
+fork = true
+
+# 服务运行端口
+#port= 27017
+
+# 数据库文件保存位置
+dbpath=/var/lib/mongo
+
+# 启用定期记录CPU 利用率和I/O 等待
+#cpu = true
+
+# 是否以安全认证方式运行，默认是不认证的非安全方式
+#noauth = true
+#auth = true
+
+# 详细记录输出
+#verbose = true
+
+# 用于开发驱动程序时的检查客户端接收数据的有效性
+#objcheck = true
+
+# 启用数据库配额管理，默认每个db可以有8个文件，可以用quotaFiles参数设置
+#quota = true
+
+# 设置oplog记录等级
+# 0=off (默认)
+# l=W
+# 2=R
+# 3=both
+# 7=W+some reads
+#oplog = 0
+
+# 动态调试项
+#nocursors = true
+
+# 忽略查询提示
+#nohints = true
+
+# 禁用HTTP 界面，默认为localhost:28017
+#nohttpinterf ace = true
+
+# 关闭服务器端脚本， 这将极大地限制功能
+#noscripting = true
+
+# 关闭扫描表， 任何查询将会是扫描失败
+#notablescan = true
+
+# 关闭数据文件预分配
+#noprealloc = true
+
+# 为新数据库指定.ns 文件的大小，单位为MB
+# nssize = <size>
+
+# 监视服务器的账号token
+#mms-token = <token>
+
+# mongo 监控服务器的名称
+#mms-name = <server-name>
+
+# mongo 监控服务器的ping 间隔
+#mms-interval = <seconds>
+
+# 复制选项
+# 在复制中，指定当前是从关系
+#slave = true
+#source = master.example.com
+# Slave only: specify a single database to replicate
+#only = master.example.com
+# or
+#master = true
+#source = slave.example.com
+
+# 更多参数查看：
+# mongod -h
+```
+
+[返回目录](#目录)
 
 # OpenResty
