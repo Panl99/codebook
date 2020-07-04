@@ -1005,7 +1005,7 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 
 **注意：**
 - 上面4 个模块默认并未启用，需要分别加入`--with-lua51`、`--with-http_drizzle_module`、`--with-http_postgres_module` 和`--with-http_iconv_module` 编译选项开启它们。
-- 在1.5.8.1 版本之前，OpenResty 默认使用标准Lua5.1 解释器。所以对于老版本，需要显式地加入--with-luajit 编译选项（1.5.8.1以后的版本已默认开启）来启用LuaJIT 组件。
+- 在1.5.8.1 版本之前，OpenResty 默认使用标准Lua5.1 解释器。所以对于老版本，需要显式地加入`--with-luajit` 编译选项（1.5.8.1以后的版本已默认开启）来启用LuaJIT 组件。
 - 非必要时，不推荐启用标准Lua 5.1 解释器，而应尽量使用LuaJIT 组件。
 - OpenResty支持的模块：
     ```shell script
@@ -1057,7 +1057,7 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 ## OpenResty安装
 - 官网： `https://openresty.org/cn/installation.html`
 - 添加资源库：
-    - 创建一个名为/etc/yum.repos.d/OpenResty.repo的文件，内容如下：
+    - 创建一个名为`/etc/yum.repos.d/OpenResty.repo`的文件，内容如下：
         ```shell script
         [openresty]
         name=Official OpenResty Repository
@@ -1076,8 +1076,8 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
     - 使用yum 安装OpenResty 可能会因为缺少GeoIP 库失败，需要先安装GeoIP：`yum install GeoIP-devel`
     - GeoIP 库的安装可能会因为仓库里没有Extra 库而失败，需要先添加Extra 库： `yum install epel-release`
 - 测试：
-    - 启动Nginx： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/`，在浏览器里输入http://127.0.0.1（或主机IP），看到“Welcome to OpenResty！”表示已经启动成功。
-    - 修改/usr/local/openresty/nginx/conf/nginx.conf，测试Lua 是否正常工作：
+    - 启动Nginx： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/`，在浏览器里输入`http://127.0.0.1（或主机IP）`，看到 `Welcome to OpenResty！` 表示已经启动成功。
+    - 修改`/usr/local/openresty/nginx/conf/nginx.conf`，测试Lua 是否正常工作：
         ```shell script
         worker_processes 1;
         error_log logs/error.log;
