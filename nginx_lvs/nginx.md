@@ -991,3 +991,65 @@ dbpath=/var/lib/mongo
 [返回目录](#目录)
 
 # OpenResty
+## OpenResty概述
+OpenResty 是一个基于Nginx 与Lua 的高性能Web 平台，集成了大量精良的Lua 库、第三方模块以及大多数的依赖项，用于方便地搭建能够处理超高并发、扩展性极高的动态Web 应用、Web 服务和动态网关。  
+Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持的各种C 以及Lua 模块，快速构造出足以胜任10K 乃至1000K 以上单机并发连接的高性能Web 应用系统。  
+
+[返回目录](#目录)
+
+## OpenResty组成
+- 标准Lua 5.1 解释器；
+- Drizzle Nginx 模块；
+- Postgres Nginx 模块；
+- Iconv Nginx 模块。
+
+**注意：**
+- 上面4 个模块默认并未启用，需要分别加入`--with-lua51`、`--with-http_drizzle_module`、`--with-http_postgres_module` 和`--with-http_iconv_module` 编译选项开启它们。
+- 在1.5.8.1 版本之前，OpenResty 默认使用标准Lua5.1 解释器。所以对于老版本，需要显式地加入--with-luajit 编译选项（1.5.8.1以后的版本已默认开启）来启用LuaJIT 组件。
+- 非必要时，不推荐启用标准Lua 5.1 解释器，而应尽量使用LuaJIT 组件。
+- OpenResty支持的模块：
+    ```shell script
+    LuaJIT;
+    ArrayVarNginxModule;
+    AuthRequestNginxModule;
+    CoolkitNginxModule;
+    DrizzleNginxModule;
+    EchoNginxModule;
+    EncryptedSessionNginxModule;
+    FormInputNginxModule;
+    HeadersMoreNginxModule;
+    IconvNginxModule;
+    StandardLualnterpreter;
+    MemcNginxModule;
+    Nginx;
+    NginxDevelKit;
+    LuaCjsonLibrary;
+    LuaNginxModule;
+    LuaRdsParserLibrary;
+    LuaRedisParserLibrary;
+    LuaRestyCoreLibrary;
+    LuaRestyDNSLibrary;
+    LuaRestyLockLibrary;
+    LuaRestyLrucacheLibrary;
+    LuaRestyMemcachedLibrary;
+    LuaRestyMySQLLibrary;
+    LuaRestyRedisLibrary;
+    LuaRestyStringLibrary;
+    LuaRestyUploadLibrary;
+    LuaRestyUpstreamHealthcheckLibrary;
+    LuaRestyWebSocketLibrary;
+    LuaRestyLimitTrafficLibrary;
+    LuaUpstreamNginxModule;
+    PostgresNginxModule;
+    RdsCsvNginxModule;
+    RdsJsonNginxModule;
+    RedisNginxModule;
+    Redis2NginxModule;
+    RestyCLI;
+    OPM;
+    SetMiscNginxModule;
+    SrcacheNginxModule;
+    XssNginxModule。
+    ```
+
+[返回目录](#目录)
