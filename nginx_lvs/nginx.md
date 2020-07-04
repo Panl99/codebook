@@ -1053,3 +1053,58 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
     ```
 
 [返回目录](#目录)
+
+## OpenResty安装
+- 官网： `https://openresty.org/cn/installation.html`
+- 添加资源库：
+    - 创建一个名为/etc/yum.repos.d/OpenResty.repo的文件，内容如下：
+        ```shell script
+        [openresty]
+        name=Official OpenResty Repository
+        baseurl=https://copr-be.cloud.fedoraproject.org/results/openresty/openresty/epel-$releasever-$basearch/
+        skip_if_unavailable=True
+        gpgcheck=1
+        gpgkey=https://copr-be.cloud.fedoraproject.org/results/openresty/openresty/pubkey.gpg
+        enabled=1
+        enabled_metadata=1
+        ```
+    - 也可以直接运行命令添加仓库： `sudo yum-config-manager --add-repo https://openresty.org/yum/centos/OpenResty.repo`
+    - 国内用户可以把baseurl 改成后面链接，速度会更快：`baseurl= https://openresty.org/yum/openresty/openresty/epel-$releasever$basearch/`
+    - 或者运行下面命令直接添加仓库：`sudo yum-config-manager --add-repo https://openresty.org/yum/cn/centos/OpenResty.repo`
+- 列出资源库中所有的OpenResty 包： `sudo yum --disablerepo="*"--enablerepo="openresty" list available`
+- 安装： `sudo yum install openresty`
+    - 使用yum 安装OpenResty 可能会因为缺少GeoIP 库失败，需要先安装GeoIP：`yum install GeoIP-devel`
+    - GeoIP 库的安装可能会因为仓库里没有Extra 库而失败，需要先添加Extra 库： `yum install epel-release`
+- 测试：
+    - 启动Nginx： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/`，在浏览器里输入http://127.0.0.1（或主机IP），看到“Welcome to OpenResty！”表示已经启动成功。
+    - 修改/usr/local/openresty/nginx/conf/nginx.conf，测试Lua 是否正常工作：
+        ```shell script
+        worker_processes 1;
+        error_log logs/error.log;
+      
+        events {
+          worker connections 1024;
+        }
+      
+        http {
+            server {
+                listen 8080;
+                location / {
+                    default_type text/html;
+                    content_by_lua 'ngx.say("<p>hello, world</p>")';
+                }
+            }
+        }
+        ```
+    - 测试配置文件正确性： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/ -t`
+    - 重新加载配置文件： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/ -s reload`
+    - 在浏览器里输入`http://127.0.0.1:8080`，如果看到了`hello world`就表示可以正常工作了。
+    - 也可以使用curl命令： `curl http://localhost:8080`，<p>hello, world</p>
+    
+[返回目录](#目录)
+
+## Nginx多实例
+- OpenRestry 安装成功后，包里的Nginx 可以部署多个实例，可以实例化多个不同的服务：或用于对外提供服务，或用于不同的开发任务，或用于学习。
+- 只需要把OpenRestry 中的Nginx 目录复制一份就可以启动不同的实例： `cp -r /usr/local/openrestry/nginx /usr/local/openrestry/nginx_9090`
+- 然后修改`nginx_9090/conf/nginx.conf`，把端口从8080 修改为9090 ，把"hello world"修改为"hello world2"，修改完成后启动实例： `/usr/local/openrestry/nginx_9090/sbin/nginx -p /usr/local/openrestry/nginx_9090/`
+- 在浏览器里输入`http://127.0.0.l:9090 `，可以得到：`hello world2` 表示新实例启动成功。
