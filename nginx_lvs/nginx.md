@@ -27,6 +27,15 @@
     - [OpenResty安装](#OpenResty安装)
     - [Nginx多实例](#Nginx多实例)
 - [Nginx核心技术](#Nginx核心技术)
+    -[Nginx架构](#Nginx架构)
+- [Nginx工作流程](#Nginx工作流程)
+    - [Nginx启动流程](#Nginx启动流程)
+    - [Nginx管理进程的工作流程 //TODO](#Nginx管理进程的工作流程)
+    - [工作进程的工作流程](#工作进程的工作流程)
+    - [配置加载流程](#配置加载流程)
+    - [HTTP框架初始化流程](#HTTP框架初始化流程)
+    - [HTTP模块调用流程](#HTTP模块调用流程)
+    - [HTTP请求处理流程](#HTTP请求处理流程)
 
 [Back to TOC](#目录)
 
@@ -1185,5 +1194,96 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 - keepalive 是HTTP长连接，可以提高传输效率。
 - 一般来说，当客户端的一次访问，需要多次访问同一个服务器时，打开keepalive 的优势非常大，如对于图片服务器，通常一个网页会包含很多图片，打开keepalive 会大量减少time-wait 状态。
 #### pipeline
+
+[返回目录](#目录)
+
+# Nginx工作流程
+
+## Nginx启动流程
+1. 从命令行得到配置文件路径
+2. 如是平滑升级，则监听环境变量传进的监听句柄
+3. 调用所有核心模块的create_conf方法，生成配置项结构体
+4. 解析nginx.conf 核心模块部分
+5. 调用所有核心模块的init_conf 方法
+6. 创建目录、打开文件、初始化共享内存
+7. 打开各模块配置的监听端口
+8. 调用所有模块的init_module 方法
+9. Nginx运行模式  
+    - 9.1 master模式运行 -> 11
+    - 9.2 single模式运行 -> 10
+10. 调用所有模块的`init_process` 方法 -> 结束
+11. 管理进程
+12. 启动工作进程
+13. 启动`cache_manager` 进程
+14. 启动`cache_loader` 进程
+15. 调用所有模块的`init_process` 方法 -> 结束
+
+![Nginx启动流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/Nginx启动流程.PNG)
+
+[返回目录](#目录)
+
+## Nginx管理进程的工作流程
+//TODO
+
+![管理进程的工作流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/管理进程的工作流程.PNG)
+
+## 工作进程的工作流程
+- worker进程是通过工作进程协调各模块组件完成任务的。工作进程由管理进程管理，它们之间的工作机制是通过信号实现的，worker进程关注的4个信号对应4个全局变量：
+    - `ngx_exiting`：标志位（退出时作为标志位使用）。
+    - `ngx_terminate` : TERM 信号，对应强制退出操作。
+    - `ngx_reopen` : USR1 信号，重新打开文件。
+    - `ngx_quit`: QUIT 信号，"优雅"地退出。
+
+![工作进程的工作流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/工作进程的工作流程.PNG)
+
+[返回目录](#目录)
+
+## 配置加载流程
+- 一个典型的nginx.conf
+    ```shell script
+    #user nobody;
+    worker_processes 1;
+    
+    events {
+      worker_connections 1024;
+    }
+  
+    http {
+      include mime.types;
+      default_type application/octet-stream;
+  
+      sendfile on;
+      keepalive_timeout 65;
+      
+      server {
+        listen 80;
+        server_name localhost;
+  
+        #access_log logs/host.access.log main;
+        
+        location / {
+          root html;
+          index index.html index.htm;
+        }
+        
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+          root html;
+        }
+      }
+    }
+    ```
+
+[返回目录](#目录)
+
+## HTTP框架初始化流程
+
+[返回目录](#目录)
+
+## HTTP模块调用流程
+
+[返回目录](#目录)
+
+## HTTP请求处理流程
 
 [返回目录](#目录)
