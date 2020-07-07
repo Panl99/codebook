@@ -1315,9 +1315,25 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 [返回目录](#目录)
 
 ## HTTP模块调用流程
+- 全异步方式
+#### 一个简略的HTTP模块调用流程，去除了异步的处理机制
+- 工作进程在主循环调用事件模型，检测网络事件，当有新连接请求时，则建立TCP 连接，然后根据nginx.conf 配置，将请求交由HTTP 框架处理。
+- 框架首先尝试接收HTTP 头部，接收到完整HTTP 头部后，将请求分发到具体的HTTP 模块处理。
+    - 通常根据URI 和  nginx.conf 里的location 匹配程度决定分发策略。
+- 请求处理结束时，通常都向客户端发送响应，这时一般自动依次调用所有的HTTP 过滤模块，每个模块根据配置文件中定义的策略决定自己的行为。
+    - 如可调用gzip 模块根据nginx.conf 中`gzip on|off;`决定是否将响应压缩。
+    - 如果设置了子请求调用，在返回前还会执行异步的子请求调用。
+
+![HTTP模块调用流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/HTTP模块调用流程.PNG)
 
 [返回目录](#目录)
 
 ## HTTP请求处理流程
+- 对于Nginx 来说，从`ngx_http_init_request`开始处理一个请求
+    - 在这个函数中，会设置读事件为`ngx_http_process_request_line` ，表示接下来的网络事件，会由`ngx_http_process_request_line` 执行，来处理请求行。
+    - 通过`ngx_http_read_request_header` 读取请求数据，然后调用`ngx_http_parse_request_line` 函数解析请求行。
+- 在解析完请求行后， Nginx 会使用`ngx_http_process_request_headers` 设置读事件的handler ，然后后续的请求就在`ngx_http_process_request_headers` 中进行读取与解析。
+- 当Nginx解析到 两个回车换行符时，就表示请求头已经结束，此时会调用`ngx_http_process_request` 处理请求。
+    - `ngx_http_process_request` 会设置当前连接的读写事件处理函数为`ngx_http_request_handler` ，然后调用`ngx_http_handler` 真正开始处理一个完整的HTTP 请求。
 
 [返回目录](#目录)
