@@ -1273,6 +1273,19 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
       }
     }
     ```
+- 框架程序在解析配置文件时，通过3个HTTP模块的回调函数将配置信息传给HTTP模块：
+    - `create_main_conf`：对应配置块`http{}`，只被调用一次
+    - `create_svr_conf`：对应配置块`server{}`，可调用多次
+    - `create_loc_conf`：对应配置块`location{}`，可调用多次
+
+- **配置文件加载、解析**
+    - 从Nginx命令行获取配置文件路径
+    - 调用所有核心模块的create_conf方法，生成配置项结构体
+    - 框架代码解析nginx.conf核心模块部分
+    - 调用所有核心模块的init_conf方法，解析对应的配置块
+- **HTTP配置块解析** 
+
+![HTTP配置项解析过程](https://github.com/Panl99/codebook/tree/master/resources/static/images/HTTP配置项解析过程.PNG)
 
 [返回目录](#目录)
 
