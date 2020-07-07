@@ -1290,6 +1290,27 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 [返回目录](#目录)
 
 ## HTTP框架初始化流程
+- HTTP部分由核心模块`ngx_http_moudle`、`ngx_http_core_moudle`、`ngx_http_upstream_moudle`模块组成。
+1. 初始化`ngx_module` 数据中所有HTTP 模块的`ctx_index` 字段，从0 开始递增。这个索引就是请求响应时调用的顺序，而这个顺序最终是由编译Nginx 时的模块顺序决定的，同时初始化存放配置信息的`ngx_http_conf_ctx_t` 数据结构。
+2. 依次调用所有HTTP 模块的`create_main_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`main_conf` 数组。
+3. 依次调用所有HTTP 模块的`create_svr_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`svr_conf` 数组。
+4. 依次调用所有HTTP 模块的`create_loc_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`loc_conf` 数组。
+5. 依次调用所有模块的`preconfiguration` 方法，`preconfiguration` 回调函数完成了对应模块的预处理操作，其主要工作是创建模块用到的变量。
+6. 调用所有HTTP 模块的`init_conf` 方法，告诉模块配置解析完成。
+7. 合并配置项。
+8. Nginx 将HTTP 处理过程划分成了11 个阶段，使多个模块可以介入到不同的阶段进行流水线式操作，充分发挥模块式架构的优势，并实现请求过程异步化。
+    - 其中有7 个阶段是允许用户介入的： 
+        - NGX_HTTP_POST_READ_PHASE 
+        - NGX_HTTP_SERVER_REWRITE_PHASE
+        - NGX_HTTP_REWRITE_PHASE
+        - NGX_HTTP_PREACCESS_PHASE
+        - NGX_HTTP_ACCESS_PHASE
+        - NGX_HTTP_CONTENT_PHASE
+        - NGX_HTTP_LOG_PHASE
+    - 调用`ngx_http＿init_phases` 方法初始化这7 个动态数组，数据保存在phases 数组中。
+9. 依次调用所有HTTP 模块的`postconfiguration` 方法，使HTTP 模块可以处理HTTP阶段，将HTTP 模块的`ngx_http_handler_pt` 处理方法添加到HTTP 阶段中。
+10. 构建虚拟主机的查找散列表。虚拟主机配置在`server{}`中，为了提高请求时查找的速度，使用散列表对主机server name 进行了索引。
+11. 建立server 与监听端口间的关联，同时设置新连接的回调方法。
 
 [返回目录](#目录)
 
