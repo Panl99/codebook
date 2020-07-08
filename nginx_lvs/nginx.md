@@ -36,6 +36,9 @@
     - [HTTP框架初始化流程](#HTTP框架初始化流程)
     - [HTTP模块调用流程](#HTTP模块调用流程)
     - [HTTP请求处理流程](#HTTP请求处理流程)
+- [Lua](#Lua)
+    - [Lua教程](#Lua教程)
+    - [Lua通用库](#Lua通用库)
 
 [Back to TOC](#目录)
 
@@ -1335,5 +1338,36 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 - 在解析完请求行后， Nginx 会使用`ngx_http_process_request_headers` 设置读事件的handler ，然后后续的请求就在`ngx_http_process_request_headers` 中进行读取与解析。
 - 当Nginx解析到 两个回车换行符时，就表示请求头已经结束，此时会调用`ngx_http_process_request` 处理请求。
     - `ngx_http_process_request` 会设置当前连接的读写事件处理函数为`ngx_http_request_handler` ，然后调用`ngx_http_handler` 真正开始处理一个完整的HTTP 请求。
+
+[返回目录](#目录)
+
+# Lua
+## Lua教程
+#### Lua特点
+- 轻量级：Lua使用标准C语言编写并以源码形式开放，编译后仅一百余字节，可以很方便嵌入其他程序中。
+- 可扩展：Lua提供了非常容易使用的扩展接口 和机制，由宿主语言(如C/C++)提供功能，Lua可以像内置功能一样使用它们。
+- 其他特性：
+    - 支持面向过程 和函数式编程。
+    - 自动内存管理：通过只提供的一种类型表(table)，实现数组、hash标、集合、对象。
+    - 语言内置模式匹配
+#### Lua安装
+- Linux下载源码包、解压、编译：
+    ```shell script
+    curl -R -O http://www.lua.org/ftp/lua-5.3.0.tar.gz
+    tar zxf lua-5.3.0.tar.gz
+    cd lua-5.3.0
+    make linux test
+    make install
+    ```
+- 测试：
+    - 创建HelloWorld.lua文件，文件内容： `print("Hello World!");`
+    - 执行命令： `lua HelloWorld.lua`
+        - 输出结果：Hello World!
+
+
+
+[返回目录](#目录)
+
+## Lua通用库
 
 [返回目录](#目录)
