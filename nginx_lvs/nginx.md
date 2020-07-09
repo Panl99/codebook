@@ -39,6 +39,7 @@
 - [Lua](#Lua)
     - [Lua教程](#Lua教程)
     - [Lua通用库](#Lua通用库)
+- [nginx.conf](#nginx.conf)
 
 [Back to TOC](#目录)
 
@@ -1421,9 +1422,59 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
     - t.i  --当索引为字符串类型时的一种简化写法
 
 #### Lua循环
+//TODO
+#### Lua流程控制
+//TODO
+#### Lua函数
+//TODO
+#### Lua运算符
+//TODO
+#### Lua字符串
+//TODO
+#### Lua数组
+//TODO
+#### Lua迭代器
+//TODO
+#### Lua表
+//TODO
+#### Lua模块与包
+//TODO
+#### Lua元表
+//TODO
+#### Lua协同程序
+//TODO
+#### Lua错误处理
+//TODO
+#### Lua调试
+//TODO
+#### Lua垃圾回收
+//TODO
+#### Lua面向对象
+//TODO
+#### Lua数据库访问
+//TODO
 
 [返回目录](#目录)
 
 ## Lua通用库
+#### 字符串库
+//TODO
+#### 表库
+//TODO
+#### 文件I/O库
+//TODO
+#### 数学库
+//TODO
+#### 操作系统库
+//TODO
+
+[返回目录](#目录)
+
+# nginx.conf
+Nginx 的工作流程是：在编译阶段选择要使用的模块并编译进整体工程中去。模块和业务的使用通过nginx.conf 配置文件中配置指令的配置得以控制和实现，复杂的业务和自定义的业务逻辑使用Lua 脚本实现。
+
+[nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
+
+
 
 [返回目录](#目录)
