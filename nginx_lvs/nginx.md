@@ -4,7 +4,7 @@
 
 # 目录
 - [关于Nginx](#关于Nginx)
-    - [Nginx特点](#Nginx特点)
+    - [<font color=red>Nginx特点</font>](#Nginx特点)
     - [安装使用Nginx](#安装使用Nginx)
 - [Nginx配置](#Nginx配置)
     - [Nginx进程间关系](#Nginx进程间关系)
