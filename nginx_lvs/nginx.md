@@ -2,9 +2,20 @@
 > [深入理解Nginx：模块开发与架构解析（第2版）](https://github.com/Panl99/codebook/blob/master/nginx_lvs/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
 > [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
+- [Nginx特点](#Nginx特点)-√
+- [Nginx配置-nginx.conf](#Nginx配置-nginx.conf)-9.3-9.4
+- [Nginx负载均衡原理](#Nginx负载均衡原理)
+- [Nginx反向代理原理](#Nginx反向代理原理)
+- [Nginx正向代理原理](#Nginx正向代理原理)
+- [Nginx配置MySQL](#Nginx配置MySQL)-12
+- [Nginx配置Redis](#Nginx配置redis)-11
+- [Nginx配置MongoDB](#Nginx配置MongoDB)-15
+- [ngx_lua原理](#ngx_lua原理)-10
+    - [ngx_lua_module模块配置](#ngx_lua_module模块配置)-27
+
 # 目录
 - [关于Nginx](#关于Nginx)
-    - [<font color=red>Nginx特点</font>](#Nginx特点)
+    - [Nginx特点](#Nginx特点)
     - [安装使用Nginx](#安装使用Nginx)
 - [Nginx配置](#Nginx配置)
     - [Nginx进程间关系](#Nginx进程间关系)
@@ -49,7 +60,7 @@
 - **高扩展性：** Nginx的设计极具扩展性，它完全是由多个不同功能、不同层次、不同类型且耦合度极低的模块组成。Nginx的模块都是嵌入到二进制文件中执行的，所以无论官方发布的模块还是第三方模块都一样具备很好的性能。
 - **高可靠性：** Nginx常用模块非常稳定，每个worker进程相对独立，master进程在1个worker进程出错时可以快速“拉起”新的worker子进程提供服务。
 - **低内存消耗：** 一般10000个非活跃的HTTP Keep-Alive连接在Nginx中仅消耗2.5MB的内存。
-- **高并发：** Nginx能支持10万以上的并发请求。
+- **高并发：** Nginx能支持<font color=red>10万</font>以上的并发请求。
 - **热部署：** master管理进程与worker工作进程分离设计可支持热部署，支持更新配置、更换日志等功能。
 - **开源协议友好：** BSD开源协议不仅允许用户免费使用，还允许直接使用、修改源码并发布。
 
