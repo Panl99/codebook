@@ -1,4 +1,5 @@
-- [Python+Cookbook第三版中文v3.0.0.pdf](https://github.com/Panl99/codebook/tree/master/resources/static/books/Python+Cookbook第三版中文v3.0.0.pdf)
+> [Python+Cookbook第三版中文v3.0.0.pdf](https://github.com/Panl99/codebook/tree/master/resources/static/books/Python+Cookbook第三版中文v3.0.0.pdf)
+> [Python3.8.1标准库参考中文手册.pdf](https://github.com/Panl99/codebook/tree/master/resources/static/books/Python3.8.1标准库参考中文手册(The&ensp;Python&ensp;Library&ensp;Reference)&ensp;高清pdf版.pdf)
 
 # 目录
 - [一、Python基础](#一、Python基础)
