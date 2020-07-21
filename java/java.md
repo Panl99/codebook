@@ -1,6 +1,58 @@
+# 目录
+- [一、Java基础](#一、Java基础)
+    - [1、Java基础](#1、Java基础)
+        - [1.1、String常用方法](#1.1、String常用方法)
+        - [1.2、流程控制-×](#1.2、流程控制)
+        - [1.3、日期、时间API-×](#1.3、日期、时间API)
+    - [2、集合](#2、集合)
+    - [3、流(java.util.stream.Stream)](#3、流(java.util.stream.Stream))
+        - [3.1、流的基本操作](#3.1、流的基本操作)
+        - [3.2、用流收集数据](#3.2、用流收集数据)
+        - [3.3、并行流处理数据-×](#3.3、并行流处理数据)
+        - [3.4、Optional类(java.util.Optional<T>)](#3.4、Optional类(java.util.Optional<T>))
+    - [4、面向对象-×](#4、面向对象)
+    - [5、异常处理-×](#5、异常处理)
+    - [6、多线程-×](#6、多线程)
+    - [7、泛型-×](#7、泛型)
+    - [8、JVM、GC](#8、JVM、GC)
+        - [8.1、自己编译jdk](#8.1、自己编译jdk)
+        - [8.2、java内存管理机制](#8.2、java内存管理机制)
+        - [8.3、垃圾回收](#8.3、垃圾回收)
+        - [8.4、性能调优](#8.4、性能调优)
+        - [8.5、类加载机制](#8.5、类加载机制)
+        - [8.6、高并发](#8.6、高并发)
+    - [9、正则-×](#9、正则)
+    - [10、Lambda](#10、Lambda)
+        - [10.1、Lambda表达式语法](#10.1、Lambda表达式语法)
+        - [10.2、在哪里以及如何使用Lambda](#10.2、在哪里以及如何使用Lambda)
+        - [10.3、编译器对Lambda做类型检查、类型推断、限制-×](#10.3、编译器对Lambda做类型检查、类型推断、限制)
+        - [10.4、方法引用](#10.4、方法引用)
+            - [构建方法引用](#构建方法引用)
+            - [复合Lambda表达式 ](#复合Lambda表达式 )
+    - [11、函数式编程-×](#11、函数式编程)
+    - [12、异步编程-×](#12、异步编程)
+    - [序列化，反序列化-×](#序列化，反序列化)
+    - [网络-×](#网络)
+    - [数据结构-×](#数据结构)
+    - [反射-×](#反射)
+
+- [设计模式](#设计模式)
+    - [使用Lambda重构设计模式](#使用Lambda重构设计模式)
+        - [策略模式](#策略模式)
+        - [工厂模式](#工厂模式)
+        - [观察者模式](#观察者模式)
+        - [模板方法](#模板方法)
+        - [责任链模式](#责任链模式)
+- [N、解析文件-×](#N、解析文件)
+    - [解析json-×](#解析json)
+    - [解析xml-×](#解析xml)
+    - [解析Excel-×](#解析Excel)
+
+[返回目录](#目录)
+
 # 一、Java基础
 ## 1、Java基础
-#### 1.1、String常用方法
+### 1.1、String常用方法
 方法|返回值类型|描述|实例
 |---|---|---|---|
 |.charAt(int index)|char|||
@@ -69,11 +121,15 @@
 
 #### 1.3、日期、时间API
 
+[返回目录](#目录)
+
 ## 2、集合
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
+[返回目录](#目录)
+
 ## 3、流(java.util.stream.Stream)
-#### 3.1、流的基本操作
+### 3.1、流的基本操作
 流：从支持数据处理操作的源生成的元素序列  
 流只能消费一次
 ```java
@@ -160,6 +216,8 @@ findFirst|Optional<T>|返回第一个元素。
 reduce| |归约，接收两个参数：①初始值，②一个BinaryOperator<T>来将两个元素结合起来产生一个新值。如求和操作，①int sum = numbers.stream().reduce(0, (a, b) -> a + b);②int sum = numbers.stream().reduce(0, Integer::sum);
 | | |reduce求最大/最小值，如：Optional<Integer> max = numbers.stream().reduce(Integer::max);  reduce(Integer::min);
 
+[返回目录](#目录)
+
 #### 3.2、用流收集数据
 ```java
 //todo
@@ -183,10 +241,14 @@ collectingAndThen|转换函数返回的类型|包裹另一个收集器，对其�
 groupingBy|Map<K, List<T>>|根据项目的一个属性的值对流中的项目作问组，并将属性值作为结果Map 的键|Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
 partitioningBy|Map<Boolean,List<T>>|根据对流中每个项目应用谓词的结果来对项目进行分区|Map<Boolean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));
 
+[返回目录](#目录)
+
 #### 3.3、并行流处理数据
 ```java
 //todo
 ```
+
+[返回目录](#目录)
 
 #### 3.4、Optional类(java.util.Optional<T>)
 ```
@@ -284,11 +346,15 @@ public static Optional<Integer> stringToInt(String s) {
 
 ```
 
+[返回目录](#目录)
+
 ## 4、面向对象
-#### 继承
-#### 多态
-#### 抽象
-#### 封装
+### 继承
+### 多态
+### 抽象
+### 封装
+
+[返回目录](#目录)
 
 ## 5、异常处理
 
@@ -296,8 +362,10 @@ public static Optional<Integer> stringToInt(String s) {
 `//8.6`
 ## 7、泛型
 
+[返回目录](#目录)
+
 ## 8、JVM、GC
-#### 8.1、自己编译jdk 
+### 8.1、自己编译jdk 
 - **获取OpenJDK 12源码：** [https://hg.openjdk.java.net/jdk/jdk12/](https://hg.openjdk.java.net/jdk/jdk12/)
 ```
 1、访问网址，点击左边菜单中的“Browse”显示源码根目录
@@ -360,7 +428,9 @@ public static Optional<Integer> stringToInt(String s) {
 5、编译完成之后，进入OpenJDK源码的“build/配置名称/jdk”目录下就可以看到OpenJDK的完整编译结果了，把它复制到JAVA_HOME目录，就可以作为一个完整的JDK来使用
 ```
 
-#### 8.2、java内存管理机制
+[返回目录](#目录)
+
+### 8.2、java内存管理机制
 - **java内存区域划分**
 
 |运行时数据区|用途|生命周期|异常|
@@ -430,7 +500,9 @@ public static Optional<Integer> stringToInt(String s) {
 |jhat|JVM Heap Analysis Tool：与jmap搭配使用，来分析jmap生成的堆转储快照。|||
 |jstack|Stack Trace for Java：用于生成虚拟机当前时刻的线程快照（一般称为threaddump或者javacore文件）|jstack [ option ] vmid|-F，-l，-m|
 
-#### 8.3、垃圾回收
+[返回目录](#目录)
+
+### 8.3、垃圾回收
 - **垃圾回收**
 ```
 1、哪些内存需要回收？
@@ -519,7 +591,10 @@ public static Optional<Integer> stringToInt(String s) {
                 小于，进行一次Full GC。
             不允许，进行一次Full GC。
 ```
-#### 8.4、性能调优
+
+[返回目录](#目录)
+
+### 8.4、性能调优
 
 - **大内存硬件上的程序部署策略**
 ```
@@ -598,7 +673,9 @@ public static Optional<Integer> stringToInt(String s) {
     解决：把循环索引的数据类型从int改为long即可，（需要掌握安全点和垃圾收集的知识）
 ```
 
-#### 8.5、类加载机制
+[返回目录](#目录)
+
+### 8.5、类加载机制
 - **类文件结构**
 ```
 //TODO 6.3
@@ -700,7 +777,10 @@ public static Optional<Integer> stringToInt(String s) {
             6）否则，查找Dynamic Import列表的Bundle，委派给对应Bundle的类加载器加载。
             7）否则，类查找失败。
 ```
-#### 8.6、高并发
+
+[返回目录](#目录)
+
+### 8.6、高并发
 系统运行耗费时间项：磁盘IO、网络通信、数据库访问  
 TPS：每秒事务处理数，代表1秒内服务端平均能响应的请求总数
 - **Java内存模型(JMM)**  
@@ -832,11 +912,13 @@ Java线程调度： 指系统为线程分配处理器使用权的过程，调度
 ```
 ~~***锁优化***~~
 
+[返回目录](#目录)
+
 ## 9、正则
 pattern
 
 ## 10、Lambda
-#### Lambda表达式语法  
+### 10.1、Lambda表达式语法  
     (parameters) -> expression  
     (parameters) -> { statements; }
 ```
@@ -860,7 +942,10 @@ pattern
 组合两个值： (int a, int b) -> a * b  函数式接口：IntBinaryOperator
 比较两个对象： (Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())  函数式接口：Comparator<Apple>或BiFunction<Apple, Apple, Integer>或ToIntBiFunction<Apple, Apple>
 ```
-#### 在哪里以及如何使用Lambda
+
+[返回目录](#目录)
+
+### 10.2、在哪里以及如何使用Lambda
 1. Lambda表达式可以被赋给一个变量
 2. 传递给一个 接受函数式接口作为参数 的方法  
 - **函数式接口上使用Lambda**  
@@ -971,9 +1056,12 @@ List<Integer> l = map(
         (String s) -> s.length()
 );
 ```
-#### 编译器对Lambda做类型检查、类型推断、限制
+
+[返回目录](#目录)
+
+### 10.3、编译器对Lambda做类型检查、类型推断、限制
 ~~略~~
-#### 方法引用
+### 10.4、方法引用
 使用方式：目标引用放在分隔符::前，方法的名称放在后面，方法不需要括号，因为没有实际调用这个方法。  
 针对单一方法的Lambda
 ```java
@@ -987,12 +1075,14 @@ List<Integer> l = map(
 |() -> Thread.currentThread().dumpStack()|Thread.currentThread()::dumpStack|
 |(str, i) -> str.substring(i)|String::substring|
 |(String s) -> System.out.println(s)|System.out::println|
-- **构建方法引用**  
+#### 构建方法引用  
     (1) 指向静态方法的方法引用（例如Integer的parseInt方法，写作Integer::parseInt）。  
     (2) 指向任意类型实例方法的方法引用（例如String 的length 方法，写作String::length）。  
     (3) 指向现有对象的实例方法的方法引用（假设你有一个局部变量expensiveTransaction用于存放Transaction类型的对象，它支持实例方法getValue，那么你就可以写expensiveTransaction::getValue）  
 
-- **复合Lambda表达式**  
+[返回目录](#目录)
+
+#### 复合Lambda表达式  
 ```java
 1、比较器复合：
     //对库存进行排序，比较苹果的重量
@@ -1040,6 +1130,8 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
                                                                .andThen(Letter::addFooter);
 ```    
 
+[返回目录](#目录)
+
 ## 11、函数式编程
 
 ## 12、异步编程
@@ -1048,9 +1140,15 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
 
 ## 网络
 
-## 设计模式
-#### 使用Lambda重构设计模式
-- **策略模式**  
+## 数据结构
+
+## 反射
+
+[返回目录](#目录)
+
+# 设计模式
+## 使用Lambda重构设计模式
+### 策略模式  
 解决某类算法的通用方案，包含三部分内容：  
 一个代表某个算法的接口（它是策略模式的接口）。  
 一个或多个该接口的具体实现，它们代表了算法的多种实现（比如，实体类Concrete-StrategyA或者ConcreteStrategyB）。  
@@ -1093,7 +1191,10 @@ boolean b1 = numericValidator.validate("aaaa");
 Validator lowerCaseValidator = new Validator((String s) -> s.matches("\\d+"));
 boolean b2 = lowerCaseValidator.validate("bbbb");
 ```
-- **工厂模式**  
+
+[返回目录](#目录)
+
+### 工厂模式
 无需暴露实例化的逻辑就能完成对象的创建。  
 ```java
 //1、创建一个工厂类，它包含一个负责实现不同对象的方法
@@ -1132,7 +1233,9 @@ Supplier<Product> loanSupplier = Loan::new;
 Loan loan = loanSupplier.get();
 ```
 
-- **观察者模式**  
+[返回目录](#目录)
+
+### 观察者模式  
 某些事件发生时，需要自动地通知其他多个对象(观察者)  
 ```java
 //通知系统，报纸机构订阅了新闻，当接收的新闻中包含的关键字时，能得到特别通知。
@@ -1197,7 +1300,9 @@ f.registerObserver((String tweet) -> {
 });
 ```
 
-- **模板方法**  
+[返回目录](#目录)
+
+### 模板方法  
 需要采用某个算法的框架，同时又希望有一定的灵活度，能对它的某些部分进行改进  
 ```java
 //processCustomer方法搭建了在线银行算法的框架：获取客户提供的ID，然后提供服务给用户。不同的支行可以通过继承OnlineBanking类，对该方法提供差异化的实现。
@@ -1218,7 +1323,9 @@ public void processCustomer(int id, Consumer<Customer> makeCustomerHappy){
 new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.println("Hello " + c.getName());
 ```
 
-- **责任链模式**  
+[返回目录](#目录)
+
+### 责任链模式
 一个处理对象可能需要在完成一些工作之后，将结果传递给另一个对象，这个对象接着做一些工作，再转交给下一个处理对象，以此类推。  
 ```java
 //这种模式通常是通过定义一个代表处理对象的抽象类来实现的，在抽象类中会定义一个字段来记录后续对象。一旦对象完成它的工作，处理对象就会将它的工作转交给它的后继。
@@ -1261,15 +1368,13 @@ Function<String, String> pipeline = headerProcessing.andThen(spellCheckerProcess
 String result = pipeline.apply("Aren't labdas really sexy?!!");
 ```
 
-## 数据结构
+[返回目录](#目录)
 
-## 反射
+# N、解析文件
+## 解析json
+## 解析xml
+## 解析Excel
 
-## N、解析文件
-#### 解析json
-#### 解析xml
-#### 解析Excel
-
-
+[返回目录](#目录)
 
 
