@@ -24,7 +24,7 @@
 - [mongodb.md](https://github.com/Panl99/codebook/blob/master/redis_mongodb/mongodb.md)
 
 ## Mysql,Oracle ✔
-- [mysql.md](https://github.com/Panl99/codebook/blob/master/mysql_oracle/mysql.md)
+- [mysql.md 0/7](https://github.com/Panl99/codebook/blob/master/mysql_oracle/mysql.md)
 - [oracle.md ✔](https://github.com/Panl99/codebook/blob/master/mysql_oracle/oracle.md)
 
 ## Docker,Kubernetes
