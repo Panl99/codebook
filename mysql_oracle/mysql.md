@@ -110,28 +110,90 @@
 
 # mysql使用
 ## 连接mysql
+`mysql -h localhost -P 3306 -u root -p`
+- 查看当前用户：`whoami`
+- 断开连接：`exit;` 或者`Ctrl+D`
+- 撤销命令：`\c` 或者`Ctrl+C`
 
 [返回目录](#目录)
 ## 数据定义语言DDL
 操作数据库和表
 ### 库操作
+- 创建数据库：`create database company`,名称包含特殊字符：`create database \`my.contacts\``
+- 切换数据库：`use company`
+- 列出所有库：`show databases;`
+- 查看链接到了哪个库：`select database();`
 
 [返回目录](#目录)
 ### 表操作
+- 数据类型：
+    - 数字：TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT、BIT
+    - 浮点数：DECIMAL、FLOAT、DOUBLE
+    - 字符串：CHAR、VARCHAR、BINARY、VARBINARY、BLOB、TEXT、ENUM、SET
+    - JSON数据类型
+- 创建表：
+```mysql
+CREATE TABLE IF NOT EXISTS `company`.`customers` (
+  `id` int unsigned AUTO_INCREMENT,
+  `first_name` varchar(20) DEFAULT NULL COMMENT '名',
+  `last_name` varchar(20) DEFAULT NULL COMMENT '姓',
+  `country` varchar(20) DEFAULT NULL COMMENT '国家',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COMMENT='用户表';
+```
+- 查看所有存储引擎：`show engines\G`
+- 列出所有表：`show tables;`
+- 查看表结构：`show create table customers\G` 或者：`desc customers;`
+- 克隆表结构：`create table new_customers like customers;`
 
 [返回目录](#目录)
 ## 数据操作语言DML
 insert、update、delete、select表数据操作
 ### 插入
+```mysql
+insert ignore into `company`.`customers`(first_name,last_name,country)
+values
+{'mike','Christensen','USA'},
+{'Andy','Hollands','Australia'},
+{'Ravi','Vedantam','India'},
+{'Rajiv','Perera','Sri Lanka'};
+```
+- ignore：如果该行已经存在，并给出了ignore子句，则新数据将被忽略。
+- 处理重复项：
+    - `replace`：行存在则删除行并插入新行，行不存在则replace<=>insert。
+    `replace into customers values {1,'mike','Christensen','Australia'};`
+    - 使用`on duplicate key update`：行已存在，并且主键重复，则更新已有行。
+    `insert into customers values {1,'mike','Christensen','India'} on duplicate key update country=country+values(country);`
 
 [返回目录](#目录)
 ### 修改
+```mysql
+update customers set first_name='Rajiv',last_name='UK' where id=4;
+```
 
 [返回目录](#目录)
 ### 删除
+```mysql
+delete from customers where id=4 and first_name='Rajiv';
+```
+- 删除表的所有行最快方法是使用`truncating table`，该操作属于DDL操作，一旦数据清空就不能回滚了。
+    - `truncating table customers;`
 
 [返回目录](#目录)
 ### 查询
+- 查询表`departments`所有数据：`select * from departments;`
+- 查询表`employees`员工数量：`select count(*) from employees;`
+- 查询表`employees`中first_name为a，且last_name为b的员工emp_no：`select emp_no from employees where first_name='a' and last_name='b';`
+- **in:** 找出姓氏为a、b、c的所有员工数：`select count(*) from employees where last_name in ('a','b','c');`
+- **between...and:** 找出2000年12月入职的所有员工数：`select count(*) from employees where hire_date between '2000-12-01' and '2000-12-31';`
+- **not:** 找出不是在2000年12月入职的所有员工数：`select count(*) from employees where hire_date not between '2000-12-01' and '2000-12-31';`
+- **%:** 模糊匹配，找出名字以a开头的员工数：`select count(*) from employees where first_name like 'a%';`
+    - 找出名字以a开头c结尾的员工数：`select count(*) from employees where first_name like 'a%c';`
+    - 找出名字包含b的员工数：`select count(*) from employees where first_name like '%b%';`
+- **_:** 精准匹配一个字符，找出名字以任意两个字符开头、后跟随ab、后再跟随任意字符的员工数：`select count(*) from employees where first_name like '__ab%';`
+- **正则：**
+    - //TODO
+
 
 [返回目录](#目录)
 ## 存储过程
