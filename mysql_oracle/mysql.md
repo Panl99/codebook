@@ -212,7 +212,6 @@ delete from customers where id=4 and first_name='Rajiv';
     \W:任何非字母和数字
     {m}:m次重复
     {m,n}:m-n次重复
-    select regexp_like()
     ```
     - 找出名字以a开头的所有员工数：`select count(*) from employees where first_name RLIKE '^a';`
     - 找出名字以bc结尾的所有员工数：`select count(*) from employees where first_name REGEXP 'bc$';`
