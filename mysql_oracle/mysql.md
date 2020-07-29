@@ -225,7 +225,7 @@ delete from customers where id=4 and first_name='Rajiv';
 - **having:** 找出平均工资超过10000的员工：`select emp_no,AVG(salary) as avg from salaries group by emp_no having avg>100000 order by avg desc;`
 - **distinct:** 找出所有title，去重：`select distinct title from titles;`
 - **表关联**
-    - 部门表：`departments`，员工表：`employees`，员工-部门映射表：`dept_manager`，
+    - 部门表：`departments`，员工表：`employees`，员工-部门映射表：`dept_manager`
     - **join：** 找到员工号为110022的姓名和部门编码：
         ```mysql
         select 
