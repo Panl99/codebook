@@ -192,8 +192,75 @@ delete from customers where id=4 and first_name='Rajiv';
     - 找出名字包含b的员工数：`select count(*) from employees where first_name like '%b%';`
 - **_:** 精准匹配一个字符，找出名字以任意两个字符开头、后跟随ab、后再跟随任意字符的员工数：`select count(*) from employees where first_name like '__ab%';`
 - **正则：**
-    - //TODO
-
+    ```mysql
+    *：0次或多次重复
+    +：1次或多次重复
+    ?：可选字符
+    .：任何字符
+    \.：区间
+    ^：以...开始
+    $:以...结束
+    [abc]:只有a、b、c
+    [^abc]:不包含a、b、c
+    [a-z]:字符a-z
+    [0-9]:数字0-9
+    \d:任何数字
+    \D:任何非数字字符
+    \s:任何空格
+    \S:任何非空白字符
+    \w:任何字母或数字
+    \W:任何非字母和数字
+    {m}:m次重复
+    {m,n}:m-n次重复
+    select regexp_like()
+    ```
+    - 找出名字以a开头的所有员工数：`select count(*) from employees where first_name RLIKE '^a';`
+    - 找出名字以bc结尾的所有员工数：`select count(*) from employees where first_name REGEXP 'bc$';`
+    - 找出名字不包含abc的所有员工数：`select count(*) from employees where first_name NOT REGEXP '[abc]';`
+- **limit:** 找出在2000年之前入职的任意10个员工：`select first_name,last_name from employees where hire_date < '2000-01-01' limit 10;`
+- **order by:** 找出薪水最高的前5个员工：`select emp_no,salary from salaries order by salary desc limit 5;` `desc,asc`
+- **group by:** 找出男、女员工数：`select gender,count(*) as count from employees group by gender;`
+    - 找出最常见5个名字及个数：`select first_name,count(first_name) as count from employees group by first_name order by count desc limit 5;`
+- **sum:** 找出每年给员工薪水总额，并按薪水高低倒序：`select YEAR(from_date),SUM(salary) as sum from salaries group by YEAR(from_date) order by sum desc;`
+- **average:** 找出平均工资最高的10个员工：`select emp_no,AVG(salary) as avg from salaries group by emp_no order by avg desc limit 10;`
+- **having:** 找出平均工资超过10000的员工：`select emp_no,AVG(salary) as avg from salaries group by emp_no having avg>100000 order by avg desc;`
+- **distinct:** 找出所有title，去重：`select distinct title from titles;`
+- **表关联**
+    - 部门表：`departments`，员工表：`employees`，员工-部门映射表：`dept_manager`，
+    - **join：** 找到员工号为110022的姓名和部门编码：
+        ```mysql
+        select 
+            emp.emp_no,emp.first_name,emp.last_name,dept.dept_name 
+        from 
+            employees as emp
+        join dept_manager as dept_mgr on emp.emp_no=dept_mgr.emp_no and emp.emp_no=110022
+        join departments as dept on dept_mgr.dept_no=dept.dept_no;
+        ```
+    - 找出每个部门的平均工资：
+        ```mysql
+        select 
+          dept_name,AVG(s.salary) as avg_salary
+        from 
+          salaries as s
+        join dept_emp as de on s.emp_no=de.emp_no
+        join departments as dept on de.dept_no=dept.dept_no
+        group by de.dept_no
+        order by avg_salary
+        desc;
+        ```
+- **子查询：**
+    - 找出工资最高的员工：
+        ```mysql
+        select emp_no from salaries where salary=(select MAX(salary) from salaries);
+        ```
+    - 找出表list1有，表list2没有的员工：
+        ```mysql
+        select * from employees_list1 where emp_no not in(select emp_no from employees_list2);
+        #或者
+        select l1.* from employees_list1 as l1 
+        left join employees_list2 l2 on l1.emp_no=l2.emp_no
+        where l2.emp_no is null;
+        ```
 
 [返回目录](#目录)
 ## 存储过程
