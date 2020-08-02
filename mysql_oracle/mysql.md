@@ -278,6 +278,25 @@ delete from customers where id=4 and first_name='Rajiv';
 
 [返回目录](#目录)
 ## 事件
+- MySQL使用事件调度线程来执行所有预定事件。低于8.0.3版本默认未启用。
+- 启用事件调度线程：`SET GLOBAL event_scheduler = ON;`
+- 查看事件：`SHOW EVENTS\G`
+- 查看事件定义：`SHOW CREATE EVENT purge_salary_audit\G`
+- 禁用事件：`ALTER EVENT purge_salary_audit DISABLE;`
+- 启用事件：`ALTER EVENT purge_salary_audit ENABLE;`
+- 创建一个事件：每日运行，删除一个月前的薪水审计记录。
+```mysql
+drop event if exists purge_salary_audit;
+delimiter $$
+create event if not exists purge_salary_audit
+on schedule 
+    every 1 week 
+    starts current_date
+    do begin 
+        delete from salary_audit where date_modified < date_add(curdate(), interval -7 day );
+    end $$
+delimiter ;
+```
 
 [返回目录](#目录)
 
