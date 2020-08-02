@@ -272,6 +272,21 @@ delete from customers where id=4 and first_name='Rajiv';
 
 [返回目录](#目录)
 ## 触发器
+- 用于在触发事件之前或者之后处理某些内容。
+- 触发时间可以是：`before`、`after`
+- 触发事件可以是：`insert（包含：insert、replace、load data）`、`delete（包含：delete、replace）`、`update`
+- 从5.7版本开始，一个表可以有多个触发器。但要使用follows或precedes指定先行的触发器。
+- 创建一个触发器：将薪水插入salaries表之前对其进行四舍五入。NEW指的是插入的新值。
+    ```mysql
+    drop trigger if exists salary_round;
+    delimiter $$
+    create trigger salary_round before insert on salaries
+    for each row 
+    begin 
+        set NEW.salary = round(NEW.salary);
+    end $$
+    delimiter ;
+    ```
 
 [返回目录](#目录)
 ## 视图
@@ -285,18 +300,18 @@ delete from customers where id=4 and first_name='Rajiv';
 - 禁用事件：`ALTER EVENT purge_salary_audit DISABLE;`
 - 启用事件：`ALTER EVENT purge_salary_audit ENABLE;`
 - 创建一个事件：每日运行，删除一个月前的薪水审计记录。
-```mysql
-drop event if exists purge_salary_audit;
-delimiter $$
-create event if not exists purge_salary_audit
-on schedule 
-    every 1 week 
-    starts current_date
-    do begin 
-        delete from salary_audit where date_modified < date_add(curdate(), interval -7 day );
-    end $$
-delimiter ;
-```
+    ```mysql
+    drop event if exists purge_salary_audit;
+    delimiter $$
+    create event if not exists purge_salary_audit
+    on schedule 
+        every 1 week 
+        starts current_date
+        do begin 
+            delete from salary_audit where date_modified < date_add(curdate(), interval -7 day );
+        end $$
+    delimiter ;
+    ```
 
 [返回目录](#目录)
 
