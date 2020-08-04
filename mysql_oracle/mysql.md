@@ -26,6 +26,8 @@
 - [二进制日志](#二进制日志)
 - [复制](#复制)
 - [性能优化](#性能优化)
+    - [explain](#explain)
+    - [添加索引](#添加索引)
 
 [返回目录](#目录)
 
@@ -490,5 +492,32 @@ delete from customers where id=4 and first_name='Rajiv';
 [返回目录](#目录)
 
 # 性能优化
+## explain
+- 使用explain计划
+```mysql
+explain select dept_name from dept_tmp 
+join employees on dept_emp.emp_no=employees.emp_no
+join departments on departments.dept_no=dept_emp.dept_no
+where employees.first_name='Aamer';
+```
+- 使用explain json，以json格式显示
+```mysql
+explain format=json select dept_name from dept_tmp 
+join employees on dept_emp.emp_no=employees.emp_no
+join departments on departments.dept_no=dept_emp.dept_no
+where employees.first_name='Aamer';
+```
+- 使用explain连接正在进行的会话，需要指定connection ID。
+    - 获取connection ID：`select CONNECTION_ID();`
+    - 连接：`explain format=json for CONNECTION 778;`
+
+[返回目录](#目录)
+
+## 添加索引
+- 给last_name添加索引：`alter table employees add index index_last_name (last_name);`
+- **唯一索引**：`alter table employees add unique index unique_index_name (last_name,first_name);`
+- **前缀索引**：列的前部分非整列的索引：`alter table employees add index index_last_name (last_name(10));`
+- 删除索引：`alter table employees drop index last_name;`
+
 
 [返回目录](#目录)
