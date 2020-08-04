@@ -165,6 +165,11 @@ values
     - 使用`on duplicate key update`：行已存在，并且主键重复，则更新已有行。
     `insert into customers values {1,'mike','Christensen','India'} on duplicate key update country=country+values(country);`
 
+- **全部插入**
+    ```mysql
+    insert into `t_dept_manager`(emp_no,emp_name,emp_status) (select emp_no,emp_name,'on' from t_departments)
+    ```
+
 [返回目录](#目录)
 ### 修改
 ```mysql
@@ -263,12 +268,144 @@ delete from customers where id=4 and first_name='Rajiv';
 
 [返回目录](#目录)
 ## 存储过程
+- 示例：添加新员工：
+    ```mysql
+    drop procedure if exists create_employee;
+    delimiter $$
+    create procedure create_employee(OUT new_emp_no INT, IN first_name varchar(20), IN last_name varchar(20), IN gender enum('M','F'), IN birth_date date, IN emp_dept_name varchar(40), IN title varchar(50))
+    BEGIN 
+        declare emp_dept_no char(4);
+        declare salary int default 60000;
+    
+        select max(emp_no) into new_emp_no from employees;
+        set new_emp_no = new_emp_no + 1;
+        insert into employees values(new_emp_no, birth_date,first_name,last_name,gender,CURDATE());
+        
+        select emp_dept_name;
+        select dept_no into emp_dept_no from departments where dept_name = emp_dept_name;
+        select emp_dept_no;
+    
+        insert into dept_emp values(new_emp_no,emp_dept_no,CURDATE(),'9999-01-01');
+        insert into titles values(new_emp_no,title,CURDATE(),'9999-01-01');
+    
+        if title = 'Staff' then
+            set salary = 100000;
+        elseif title = 'Senior Staff' then
+            set salary = 120000;
+        end if;
+    
+        insert into salaries values(new_emp_no, salary,CURDATE(),'9999-01-01');
+    END $$
+    delimiter ;
+    
+    -- 调用
+    call create_employee(@new_emp_no,'John','Smith','M','1984-06-19','Research','Staff');
+    -- 查询存储在@new_emp_no变量中的emp_no值
+    select @new_emp_no;
+    ```
 
 [返回目录](#目录)
 ## 函数
+- 类似存储过程，区别：函数应该有返回值，并且可以在select中调用函数。通常创建函数是为了简化复杂的计算。
+- 示例：根据客户收入水平给出信用卡额度：
+    ```mysql
+    drop function if exists get_sal_level;
+    delimiter $$
+    create function get_sal_level(emp int) returns varchar(10)
+    deterministic 
+    BEGIN 
+        declare sal_level varchar(10);
+        declare avg_sal float;
+        
+        select avg(salary) into avg_sal from salaries where emp_no=emp;
+        
+        if avg_sal < 50000 then
+            set sal_level = 'BRONZE';
+        elseif (avg_sal >= 50000 and avg_sal < 70000) then
+            set sal_level = 'SILVER';
+        elseif (avg_sal >= 70000 and avg_sal < 90000) then
+            set sal_level = 'GOLD';
+        elseif (avg_sal >= 90000) then
+            set sal_level = 'PLANTINUM';
+        else 
+            set sal_level = 'NOT FOUND';
+        end if;
+        
+        return (sal_level);
+    END $$
+    delimiter ;
+    
+    -- 调用
+    select get_sal_level(10002);
+    ```
 
 [返回目录](#目录)
 ## 游标
+- 游标对对少量数据可以(千百条)，大量数据(万级以上)避免使用游标，速度慢或可能报错，可以使用临时表。
+- 示例：遍历表数据：
+    ```mysql
+    drop procedure if exists get_info;
+    delimiter $$
+    create procedure get_info(IN start_time INT, IN end_time INT)
+    BEGIN 
+        declare t_id int default '';
+        declare t_name varchar(64) default ''; 
+        declare status int default 0;
+  
+        declare cur cursor for select id,name from t_result_info where hire_date between start_time and end_time;
+        declare continue handler for sqlstate '02000' set status = 1;
+          
+        open cur;
+        label:LOOP 
+          fetch cur into t_id,t_name;
+          if status = 1 then
+              leave label;
+          end if;
+          
+        end LOOP;
+        close cur;
+    END $$
+    delimiter ;
+    
+    -- 调用
+    call get_info(1984,1988);
+    ```
+- 使用临时表代替游标
+    ```mysql
+    drop procedure if exists get_info;
+    delimiter $$
+    create procedure get_info(IN start_time INT, IN end_time INT)
+    BEGIN 
+        declare t_id varchar(16) default '';
+        declare t_name varchar(64) default ''; 
+        declare count int default 0;
+        declare i int default 1;
+          
+        drop table if exists t_result_tmp;
+        CREATE TEMPORARY TABLE IF NOT EXISTS t_result_tmp (
+          `tmp_id` int NOT NULL,
+          `tmp_name` varchar(64) NOT NULL,
+          PRIMARY KEY (`tmp_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        
+        set @sqlstmt = concat('insert into t_result_tmp(`tmp_id`,`tmp_name`) (select id,name from t_result_info where hire_date between ',start_time ,' and ', end_time, ');');
+        prepare stmt from @sqlstmt;
+        execute stmt;
+        deallocate prepare stmt;
+  
+        select min(`tmp_id`) into i from t_result_tmp;
+        select max(`tmp_id`) into count from t_result_tmp;
+  
+        while i <= count do
+          select tmp_id,tmp_name into t_id,t_name from t_result_tmp where tmp_id = i;
+          set i = i + 1;
+        end while;
+    END $$
+    delimiter ;
+    
+    -- 调用
+    call get_info(1984,1988);
+    ```
 
 [返回目录](#目录)
 ## 触发器
@@ -290,6 +427,19 @@ delete from customers where id=4 and first_name='Rajiv';
 
 [返回目录](#目录)
 ## 视图
+- 视图是一个基于SQL语句的结果集的虚拟表。
+- 可以使用视图来限制用户对特定行的访问。
+- 示例：只提供表salaries的emp_no列和salary列，且from_date在2002-01-01之后的数据访问权限：
+    ```mysql
+    create ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost`
+    sql security definer view salary_view
+    as
+    select emp_no,salary from salaries where from_date > '2002-01-01';
+    
+    -- 查询视图
+    select emp_no,avg(salary) as avg from salary_view group by emp_no order by avg desc limit 5;
+    ```
 
 [返回目录](#目录)
 ## 事件
