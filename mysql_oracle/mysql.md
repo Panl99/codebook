@@ -518,6 +518,21 @@ where employees.first_name='Aamer';
 - **唯一索引**：`alter table employees add unique index unique_index_name (last_name,first_name);`
 - **前缀索引**：列的前部分非整列的索引：`alter table employees add index index_last_name (last_name(10));`
 - 删除索引：`alter table employees drop index last_name;`
+- 生成列的索引：
+    - 对于封装在函数中的列不能使用索引。
+        - 如果给hire_date添加索引：`alter table employees add index index_hire_date (hire_date);`
+        - hire_date上的索引可用于在where子句中带有hire_date的查询。
+        - 相反，如果将hire_date放入函数中，MySQL就必须扫描整个表：`explain select count(*) from employees where YEAR(hire_date)>=2000;`
+        - 所以，避免将索引列放入函数中。
+    - 如果无法避免使用函数，那就创建一个虚拟列，并在虚拟列上添加索引。
+        - 创建虚拟列：`alter table employees add hire_date_year YEAR as (YEAR(hire_date)) VIRTUAL, add index index_hire_date_year (hire_date_year);`
+        - 现在，查询无须使用YEAR()函数，可以直接在where子句中使用hire_date_year：`explain select count(*) from employees where hire_date_year>=2000;`
+        - 此时即使使用YEAR(hire_date)，优化器也会考虑该索引hire_date_year。
+- 不可见索引：若想删除索引，可以不立即删除，可以先将其标记为不可见。
+    - 将last_name上的索引标记不可见：`alter table employees alter index last_name INVISIBLE;`
+    - 将last_name上的索引标记可见：`alter table employees alter index last_name VISIBLE;`
+- 降序索引：MySQL 8.0 引入
+    
 
 
 [返回目录](#目录)
