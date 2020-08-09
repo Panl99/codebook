@@ -22,6 +22,7 @@
 ## Redis,MongoDB ✔
 - [redis.md ✔](https://github.com/Panl99/codebook/blob/master/redis_mongodb/redis.md)
 - [mongodb.md](https://github.com/Panl99/codebook/blob/master/redis_mongodb/mongodb.md)
+- MongoDB -> Cassandra
 
 ## Mysql,Oracle ✔
 - [mysql.md 1/7](https://github.com/Panl99/codebook/blob/master/mysql_oracle/mysql.md)
@@ -35,6 +36,7 @@
 - [nginx.md ✔](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.md)
 - [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
 - [lvs.md](https://github.com/Panl99/codebook/blob/master/nginx_lvs/lvs.md)
+- Nginx -> Envoy Proxy
 
 ## ElasticSearch
 - [elasticsearch.md](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)
