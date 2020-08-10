@@ -27,7 +27,11 @@
 - [复制](#复制)
 - [性能优化](#性能优化)
     - [explain](#explain)
-    - [添加索引](#添加索引)
+    - [索引](#索引)
+        - [添加索引](#添加索引)
+        - [删除索引](#删除索引)
+    - [使用pt-query-digest分析慢查询](#使用pt-query-digest分析慢查询)
+    - [优化数据类型](#优化数据类型)
 
 [返回目录](#目录)
 
@@ -513,7 +517,8 @@ where employees.first_name='Aamer';
 
 [返回目录](#目录)
 
-## 添加索引
+## 索引
+### 添加索引
 - 给last_name添加索引：`alter table employees add index index_last_name (last_name);`
 - **唯一索引**：`alter table employees add unique index unique_index_name (last_name,first_name);`
 - **前缀索引**：列的前部分非整列的索引：`alter table employees add index index_last_name (last_name(10));`
@@ -532,7 +537,53 @@ where employees.first_name='Aamer';
     - 将last_name上的索引标记不可见：`alter table employees alter index last_name INVISIBLE;`
     - 将last_name上的索引标记可见：`alter table employees alter index last_name VISIBLE;`
 - 降序索引：MySQL 8.0 引入
-    
 
+### 删除索引
+- 重复索引
+    - 查看表结构：`show create table employees`
+- 冗余索引
+
+[返回目录](#目录)
+
+## 使用pt-query-digest分析慢查询
+- pt-query-digest是Percona工具包的一部分，用于对查询进行分析。
+- 慢查询日志：
+    - 查看、设置`long_query_time`：
+        - `SELECT @@GLOBAL.LONG_QUERY_TIME;`
+        - `SET @@GLOBAL.LONG_QUERY_TIME=1;`
+    - 查看、设置慢查询文件：
+        - `SELECT @@GLOBAL.slow_query_log_file;`
+        - `SET @@GLOBAL.slow_query_log_file='/var/log/mysql/mysql_slow.log';`
+        - `FLUSH LOGS`
+    - 查看、启用慢查询日志：
+        - `SELECT @@GLOBAL.slow_query_log;`
+        - `SET @@GLOBAL.slow_query_log=1;`
+    - 验证查询是否被记录：
+        - `SELECT SLEEP(2);`
+        - `sudo less /var/log/mysql/mysql_slow.log;`
+- 分析慢查询日志：`sudo pt-query-digest /var/lib/mysql/ubuntu-slow.log > query_digest`
+- 分析通用查询日志：`sudo pt-query-digest --type genlog /var/lib/mysql/db1.log > general_query_digest`
+- 进程列表
+- 二进制日志
+- TCP转储
+
+[返回目录](#目录)
+
+## 优化数据类型
+- 优化表，使表在磁盘占用空间减小，好处：
+    - 向磁盘写入或读取的数据越少，查询就越快。
+    - 在处理查询时，磁盘上的内容会被加载到主内存中。所以，表越小，占主存空间越小。
+    - 被索引占用的空间越小。
+- 优化：
+    - 如果存储员工编号，可能最大值为500000，则最好的数据类型为`MEDIUMINT UNSIGNED`(3个字节)。如果存为`INT`(4个字节)，每行就会浪费1个字节。
+    - 如果存储员工名字，可能最大值为20字节，则最好声明为`varchar(20)`。如果是`char(20)`，但只有几个员工名字为20字符，其他的不到10字符，就会浪费10字符的空间。
+    - 声明`varchar()`时，应考虑长度。
+        - 如果`varchar()`长度超过**255**时，则需要2个字节来存储长度。
+    - 如果不允许存储空值，则应将列声明为NOT NULL。
+    - 如果字符串长度是固定的，则应存储为`char`而不是`varchar`，因为varchar需要1-2个字节存储字符串长度。
+    - 如果值是固定的，则应该使用`ENUM`而不是`varchar`，只需要1-2个字节即可。
+    - 优先选择使用整数类型，而非字符串类型。
+    - 尝试使用前缀索引。
+    - 尝试利用InnoDB压缩。
 
 [返回目录](#目录)
