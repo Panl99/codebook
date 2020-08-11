@@ -1,7 +1,61 @@
-## 一、安装
+> Redis实战
+> Redis设计与实现
+
+# 目录
+- [Redis特性](#Redis特性)
+- [Redis数据结构](#Redis数据结构)
+    - [字符串](#字符串)
+    - [列表](#列表)
+    - [集合](#集合)
+    - [散列](#散列)
+    - [有序集合](#有序集合)
+- [复制](#)
+- [持久化](#)
+- [事务](#)
+- [](#)
+- [](#)
+- [](#)
+- [](#)
+
+[目录](#目录)
+
+# Redis特性
+- 非关系型数据库。
+- 与高性能键值缓存服务器memcached性能相近，但是Redis支持数据类型丰富。
+- 发布/订阅、主从复制、持久化、脚本。
+
+[目录](#目录)
+
+# Redis数据结构
+
+[目录](#目录)
+
+## 字符串
+
+[目录](#目录)
+
+## 列表
+
+[目录](#目录)
+
+## 集合
+
+[目录](#目录)
+
+## 散列
+
+[目录](#目录)
+
+## 有序集合
+
+[目录](#目录)
+
+
+
+# 安装
 想要在 Java 中使用 Redis，我们首先需要安装 redis 服务及 Java redis 驱动。
 
-#### 1. Window 下安装 Redis：
+## Windows下安装Redis
 [下载地址：https://github.com/MSOpenTech/redis/releases](https://github.com/MSOpenTech/redis/releases。)
 
 Redis 支持 32 位和 64 位。这个需要根据你系统平台的实际情况选择，这里我们下载 Redis-x64-xxx.zip压缩包到 C 盘，解压后，将文件夹重新命名为 redis。
@@ -17,7 +71,7 @@ Redis 支持 32 位和 64 位。这个需要根据你系统平台的实际情况
 取出键值对 get myKey  
 ![](https://img-blog.csdnimg.cn/20190414150550348.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
 
-#### 2. Java redis 驱动的安装：
+## Java redis驱动的安装
 [首先你需要下载最新驱动包：https://mvnrepository.com/artifact/redis.clients/jedis](https://mvnrepository.com/artifact/redis.clients/jedis)
 - 在你的 classpath 中包含该驱动包。
 - 连接到 redis 服务：
@@ -33,13 +87,13 @@ public class RedisJava {
    }
 }
 ```
-编译以上 Java 程序，确保驱动包的路径是正确的。
+- 编译以上 Java 程序，确保驱动包的路径是正确的。
 ```
 连接成功
 服务正在运行: PONG
 ```
-## 二、Redis 命令
-#### 1. Redis 键(key)
+# Redis命令
+## Redis键(key)
 ```
 private void KeyOperate() 
    { 
@@ -101,7 +155,7 @@ key001
 查看key001的剩余生存时间：-1
 查看key所储存的值的类型：string
 ```
-#### 2. Redis 字符串(String)
+## Redis字符串(String)
 ```
 private void StringOperate() 
    {  
@@ -219,7 +273,7 @@ key302新值：value302-after-getset
 =============获取子串=============
 获取key302对应值中的子串：302
 ```
-#### 3. Redis 列表(List)
+## Redis列表(List)
 ```
 private void ListOperate() 
    { 
@@ -302,7 +356,7 @@ private void ListOperate() 
 子串-第二个开始到结束：[MapList, LinkedList]
 获取下标为2的元素：LinkedList
 ```
-#### 4. Redis 集合(Set)
+## Redis集合(Set)
 ```
 private void SetOperate() 
    { 
@@ -392,7 +446,7 @@ sets1和sets2交集：[element002, element003]
 sets1和sets2并集：[element001, element002, element003, element004]
 sets1和sets2差集：[element001]
 ```
-#### 5. Redis 有序集合(sorted set)
+## Redis有序集合(sorted set)
 ```
 private void SortedSetOperate() 
    { 
@@ -448,7 +502,7 @@ zset集合中的所有元素：[element003, element004, element001]
 查看下标1到2范围内的元素值：[element004, element001]
 ```
 
-#### 6. Redis 哈希(Hash)
+## Redis哈希(Hash)
 ```
 private void HashOperate() 
    { 
@@ -511,25 +565,25 @@ hashs中的所有值：[value001, value003, 104]
 获取hashs中所有的value：[value001, value003, 104]
 ```
 
-## 三、Redis 常用命令集
-#### 1）连接操作命令
+# Redis常用命令集
+## 连接操作命令
 - quit：关闭连接（connection）
 - auth：简单密码认证
 - help cmd： 查看cmd帮助，例如：help quit
 
-#### 2）持久化
+## 持久化
 - save：将数据同步保存到磁盘
 - bgsave：将数据异步保存到磁盘
 - lastsave：返回上次成功将数据保存到磁盘的Unix时戳
 - shundown：将数据同步保存到磁盘，然后关闭服务
 
-#### 3）远程服务控制
+## 远程服务控制
 - info：提供服务器的信息和统计
 - monitor：实时转储收到的请求
 - slaveof：改变复制策略设置
 - config：在运行时配置Redis服务器
 
-#### 4）对value操作的命令
+## 对value操作的命令
 - exists(key)：确认一个key是否存在
 - del(key)：删除一个key
 - type(key)：返回值的类型
@@ -544,7 +598,7 @@ hashs中的所有值：[value001, value003, 104]
 - flushdb：删除当前选择数据库中的所有key
 - flushall：删除所有数据库中的所有key
 
-#### 5）String
+## String
 - set(key, value)：给数据库中名称为key的string赋予值value
 - get(key)：返回数据库中名称为key的string的value
 - getset(key, value)：给名称为key的string赋予上一次的value
@@ -560,7 +614,7 @@ hashs中的所有值：[value001, value003, 104]
 - append(key, value)：名称为key的string的值附加value
 - substr(key, start, end)：返回名称为key的string的value的子串
 
-#### 6）List
+## List
 - rpush(key, value)：在名称为key的list尾添加一个值为value的元素
 - lpush(key, value)：在名称为key的list头添加一个值为value的 元素
 - llen(key)：返回名称为key的list的长度
@@ -575,7 +629,7 @@ hashs中的所有值：[value001, value003, 104]
 - brpop(key1, key2,… key N, timeout)：rpop的block版本。
 - rpoplpush(srckey, dstkey)：返回并删除名称为srckey的list的尾元素，并将该元素添加到名称为dstkey的list的头部
 
-#### 7）Set
+## Set
 - sadd(key, member)：向名称为key的set中添加元素member
 - srem(key, member) ：删除名称为key的set中的元素member
 - spop(key) ：随机返回并删除名称为key的set中一个元素
@@ -591,7 +645,7 @@ hashs中的所有值：[value001, value003, 104]
 - smembers(key) ：返回名称为key的set的所有元素
 - srandmember(key) ：随机返回名称为key的set的一个元素
 
-#### 8）Hash
+## Hash
 - hset(key, field, value)：向名称为key的hash中添加元素field
 - hget(key, field)：返回名称为key的hash中field对应的value
 - hmget(key, (fields))：返回名称为key的hash中field i对应的value
@@ -604,7 +658,7 @@ hashs中的所有值：[value001, value003, 104]
 - hvals(key)：返回名称为key的hash中所有键对应的value
 - hgetall(key)：返回名称为key的hash中所有的键（field）及其对应的value
 
-#### 9） Redis 发布订阅命令
+## Redis发布订阅命令
 - PSUBSCRIBE pattern [pattern ...] ：订阅一个或多个符合给定模式的频道。
 - PUBSUB subcommand [argument [argument ...]] ：查看订阅与发布系统状态。
 - PUBLISH channel message ：将信息发送到指定的频道。
@@ -612,17 +666,17 @@ hashs中的所有值：[value001, value003, 104]
 - SUBSCRIBE channel [channel ...] ：订阅给定的一个或多个频道的信息。
 - UNSUBSCRIBE [channel [channel ...]] ：指退订给定的频道。
 
-#### 10） Redis 事务命令
+## Redis事务命令
 - DISCARD ：取消事务，放弃执行事务块内的所有命令。
 - EXEC ：执行所有事务块内的命令。
 - MULTI ：标记一个事务块的开始。
 - UNWATCH ：取消 WATCH 命令对所有 key 的监视。
 - WATCH key [key ...] ：监视一个(或多个) key ，如果在事务执行之前这个(或这些) key 被其他命令所改动，那么事务将被打断。
 
-#### 11） 查看keys个数
+## 查看keys个数
 - keys *      // 查看所有keys
 - keys prefix_*     // 查看前缀为"prefix_"的所有keys
 
-#### 12） 清空数据库
+## 清空数据库
 - flushdb   // 清除当前数据库的所有keys
 - flushall    // 清除所有数据库的所有keys
