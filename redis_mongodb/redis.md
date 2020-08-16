@@ -1,5 +1,6 @@
-> Redis实战
-> Redis设计与实现
+> Redis实战  
+> Redis设计与实现  
+> [https://github.com/josiahcarlson/redis-in-action](https://github.com/josiahcarlson/redis-in-action)
 
 # 目录
 - [Redis特性](#Redis特性)
@@ -27,26 +28,58 @@
 [目录](#目录)
 
 # Redis数据结构
-
-[目录](#目录)
-
 ## 字符串
+### 命令
+- `get`：获取给定键的值。
+- `set`：设置给定键的值。
+- `del`：删除给定键的值。（可用于所有数据类型）
+------
+- `incr keyname`：给键keyname存储的值加1。（键要是不存在，值会被当为0处理）
+- `decr keyname`：给键keyname存储的值减1。
+- `incrby keyname amount`：给键keyname存储的值加上整数amount。
+- `decrby keyname amoun`t：给键keyname存储的值减去整数amount。
+- `incrbyfloat keyname amount`：给键keyname存储的值加上浮点数amount。（Redis2.6以上支持）
+------
+- 其他命令TODO
 
 [目录](#目录)
 
 ## 列表
+### 命令
+- `lpush`、`rpush`：添加元素到列表左端、右端。
+- `lpop`、`rpop`：从列表左端、右端取出元素。
+- `lindex`：获取列表在给定位置的元素。
+- `lrange`：获取列表在给定范围所有元素。
+- `ltrim keyname start end`：修剪列表只保留[start,end]内的元素。
+------
+- 其他命令TODO
 
 [目录](#目录)
 
 ## 集合
+### 命令
+- `sadd`：添加元素到集合。
+- `srem`：从集合删除元素。
+- `sismember`：检查一个元素是否存在于集合中。
+- `smembers`：获取集合中所有元素。
 
 [目录](#目录)
 
 ## 散列
+### 命令
+- `hset`：添加键值对到散列。
+- `hget`：获取指定散列键的值。
+- `hgetall`：获取散列中所有键值对。
+- `hdel`：从散列中删除键值对。
 
 [目录](#目录)
 
 ## 有序集合
+### 命令
+- `zadd`：添加成员到有序集合中。
+- `zrange`：从有序集合中获取多个元素。
+- `zrem`：从有序集合中删除指定成员。
+- `zrangebyscore`：获取有序集合在给定分值范围内的所有元素。
 
 [目录](#目录)
 
