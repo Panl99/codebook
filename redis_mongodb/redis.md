@@ -58,10 +58,22 @@
 
 ## 集合
 ### 命令
-- `sadd`：添加元素到集合。
-- `srem`：从集合删除元素。
+- `sadd`：添加元素到集合，返回添加到集合中本不存在的元素数量。
+- `srem`：从集合删除元素，返回移除元素的数量。
 - `sismember`：检查一个元素是否存在于集合中。
 - `smembers`：获取集合中所有元素。
+- `scard keyname`：返回集合keyname包含的元素数量。
+- `srandmember keyname [count]`：从集合中随机返回一个或多个元素。count为正数时，返回的随机元素不会重复；count为负数时，返回的随机元素可能重复。
+- `spop keyname`：随机移除集合中一个匀速，并返回被移除元素。
+- `smove source—key dest-key item`：将集合source—key中的元素item移除，并添加到集合dest-key中；如果item被成功移除，返回1，否则返回0。
+------
+- `sdiff`：`sdiff keyname [keyname ...]`：返回存在于第一个集合、但不存在于其他集合中的元素。
+- `sdiffstore`：`sdiffstore dest-key key-name [key-name ...]`：将存在于第一个集合、但不存在于其他集合中的元素 存储到dest-key键中。
+- `sinter`：`sinter key-name [key-name ...]`：返回存在于所有集合中的元素。
+- `sinterstore`：`sinterstore dest-key key-name [key-name ...]`：将存在于所有集合中的元素存储到dest-key键中。
+- `sunion`：`sunion key-name [key-name ...]`：返回至少存在于一个集合中的元素。
+- `sunionstore`：`sunionstore dest-key key-name [key-name ...]`：将至少存在于一个集合中的元素存储到dest-key键中。
+
 
 [目录](#目录)
 
@@ -71,15 +83,34 @@
 - `hget`：获取指定散列键的值。
 - `hgetall`：获取散列中所有键值对。
 - `hdel`：从散列中删除键值对。
+------
+- `hmget`：`hmget key-name key [key ...]`：从散列获取一个或多个键的值。
+- `hmset`：`hmset key-name key value [key value ...]`：给散列中一个或多个键设置值。
+- `hdel`：`hdel key-name key [key ...]`：删除散列中一个或多个键值对，返回删除成功的数量。
+- `hlen`：`hlen key-name`：返回散列中键值对数量。
+------
+- `hexists key-name key`：检查给定键是否存在于散列中。
+- `hkeys key-name`：获取散列包含的所有键。
+- `hvals key-name`：获取散列包含的所有值。
+- `hgetall key-name`：获取散列包含的所有键值对。
+- `hincrby key-name key increment`：将键key存储的值加上整数increment。
+- `hincrbyfloat key-name key increment`：将键key存储的值加上浮点数increment。
 
 [目录](#目录)
 
 ## 有序集合
 ### 命令
 - `zadd`：添加成员到有序集合中。
-- `zrange`：从有序集合中获取多个元素。
-- `zrem`：从有序集合中删除指定成员。
+- `zrange key-name start end [withscores]`：返回有序集合中排名在start到end之间的成员；可选withscores表示命令会将成员分值一起返回。
+- `zrem`：从有序集合中删除指定成员，返回移除成员数量。
 - `zrangebyscore`：获取有序集合在给定分值范围内的所有元素。
+- `zcrad key-name`：返回有序集合包含的成员数量。
+- `zincrby key-name increment member`：将member成员的分值加上increment。
+- `zount key-name min max`：返回分值介于min到max之间的成员数量。
+- `zrank key-name member`：返回成员member在有序集合中的排名。
+- `zscore key-name member`：返回成员member的分值。
+------
+- 其他命令TODO
 
 [目录](#目录)
 
