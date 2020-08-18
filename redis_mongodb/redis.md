@@ -4,12 +4,14 @@
 
 # 目录
 - [Redis特性](#Redis特性)
-- [Redis数据结构](#Redis数据结构)
-    - [字符串](#字符串)
-    - [列表](#列表)
-    - [集合](#集合)
-    - [散列](#散列)
-    - [有序集合](#有序集合)
+- [Redis命令](#命令)
+    - [字符串命令](#字符串命令)
+    - [列表命令](#列表命令)
+    - [集合命令](#集合命令)
+    - [散列命令](#散列命令)
+    - [有序集合命令](#有序集合命令)
+    - [发布/订阅命令](#发布/订阅命令)
+    - [其他命令](#其他命令)
 - [复制](#)
 - [持久化](#)
 - [事务](#)
@@ -27,9 +29,8 @@
 
 [目录](#目录)
 
-# Redis数据结构
-## 字符串
-### 命令
+# 命令
+## 字符串命令
 - `get`：获取给定键的值。
 - `set`：设置给定键的值。
 - `del`：删除给定键的值。（可用于所有数据类型）
@@ -44,8 +45,7 @@
 
 [目录](#目录)
 
-## 列表
-### 命令
+## 列表命令
 - `lpush`、`rpush`：添加元素到列表左端、右端。
 - `lpop`、`rpop`：从列表左端、右端取出元素。
 - `lindex`：获取列表在给定位置的元素。
@@ -56,8 +56,7 @@
 
 [目录](#目录)
 
-## 集合
-### 命令
+## 集合命令
 - `sadd`：添加元素到集合，返回添加到集合中本不存在的元素数量。
 - `srem`：从集合删除元素，返回移除元素的数量。
 - `sismember`：检查一个元素是否存在于集合中。
@@ -74,11 +73,9 @@
 - `sunion`：`sunion key-name [key-name ...]`：返回至少存在于一个集合中的元素。
 - `sunionstore`：`sunionstore dest-key key-name [key-name ...]`：将至少存在于一个集合中的元素存储到dest-key键中。
 
-
 [目录](#目录)
 
-## 散列
-### 命令
+## 散列命令
 - `hset`：添加键值对到散列。
 - `hget`：获取指定散列键的值。
 - `hgetall`：获取散列中所有键值对。
@@ -98,8 +95,7 @@
 
 [目录](#目录)
 
-## 有序集合
-### 命令
+## 有序集合命令
 - `zadd`：添加成员到有序集合中。
 - `zrange key-name start end [withscores]`：返回有序集合中排名在start到end之间的成员；可选withscores表示命令会将成员分值一起返回。
 - `zrem`：从有序集合中删除指定成员，返回移除成员数量。
@@ -114,7 +110,44 @@
 
 [目录](#目录)
 
+## 发布/订阅命令
+- `subscribe`：`subscribe channel [channel ...]`：订阅给定的一个或多个频道。
+- `unsubscribe`：`unsubscribe [channel [channel ...]]`：退订给定的一个或多个频道，没指定则退订所有。
+- `publish`：`publish channel message`：向给定频道发送消息。
+- `psubscribe`：`psubscribe pattern [pattern ...]`：订阅与给定模式相匹配的所有频道。
+- `punsubscribe`：`punsubscribe [pattern [pattern ...]]`：退订给定模式，没指定则退订所有模式。
 
+[目录](#目录)
+
+## 其他命令
+- `sort`：`sort source-key [by pattern] [limit offset count] [get pattern [get pattern ...]] [asc|desc] [alpha] [store dest-key]`：排序
+- `multi`：声明一个事务开始
+- `exec`：声明一个事务结束
+- `persist key-name`：移除键的过期时间。
+- `ttl key-name`：查看给定键还有多少秒过期。
+- `expire key-name seconds`：让给定键在指定秒数后过期。
+- `expireat key-name timestamp`：将给定键的过期时间设置为指定的unix时间戳。
+- `pttl key-name`：查看给定键距离过期时间还有多少毫秒。
+- `pexpire key-name milliseconds`：让给定键在在指定毫秒数后过期。
+- `pexpireat key-name timestamp-milliseconds`：将给定键过期时间设置为指定的毫秒级精度的unix时间戳。
+
+[目录](#目录)
+
+# 可靠的消息传递
+- 规避网络断线
+- 防止Redis因消息积压耗费过多内存
+- 见6.5
+
+# 复制
+
+# 持久化
+
+# 事务
+- 让一个客户端在不被其他客户端打断的情况下执行多个命令。
+- 在redis中，被multi和exec命令包裹的所有命令会一个接一个执行，直到所有执行完。
+    - 当redis从一个客户端收到multi命令开始，会将这个客户端之后发送的命令放到一个队列，直到这个客户端发送exec命令为止。
+
+[目录](#目录)
 
 # 安装
 想要在 Java 中使用 Redis，我们首先需要安装 redis 服务及 Java redis 驱动。
