@@ -18,7 +18,9 @@
 - [](#)
 - [](#)
 - [](#)
-- [](#)
+- [实战](#实战)
+    - [使用Redis管理用户登录会话](#使用Redis管理用户登录会话)
+    - [使用Redis实现购物车](#使用Redis实现购物车)
 
 [目录](#目录)
 
@@ -133,11 +135,6 @@
 
 [目录](#目录)
 
-# 可靠的消息传递
-- 规避网络断线
-- 防止Redis因消息积压耗费过多内存
-- 见6.5
-
 # 复制
 
 # 持久化
@@ -146,6 +143,95 @@
 - 让一个客户端在不被其他客户端打断的情况下执行多个命令。
 - 在redis中，被multi和exec命令包裹的所有命令会一个接一个执行，直到所有执行完。
     - 当redis从一个客户端收到multi命令开始，会将这个客户端之后发送的命令放到一个队列，直到这个客户端发送exec命令为止。
+
+[目录](#目录)
+
+# 
+## 自动补全
+
+[目录](#目录)
+
+## 分布式锁
+
+## 计数信号量
+
+## 任务队列
+
+## 可靠的消息传递
+- 规避网络断线
+- 防止Redis因消息积压耗费过多内存
+- 见6.5
+
+[目录](#目录)
+
+## 文件分发
+
+# 基于搜索
+
+
+# 实战
+- 围绕大型网上商店
+    - 每天500万不同用户
+    - 网站点击数1亿次
+    - 从网站购买10万件商品
+    - 网站负载量：平均写入1200次/s，高峰写入6000次/s
+- 所提供解决方案可以在几GB内存的redis服务器使用
+- 所提供解决方案目的在于提高系统响应实时请求的性能
+- 所提供解决方案简单修改后可用于生产
+## 使用Redis管理用户登录会话
+- 存储登录信息到cookie的两种方法：
+    - 签名(signed)cookie：存储用户名、用户id、用户最后一次登录的时间等信息。
+    - 令牌(token)cookie：在cookie中存储一串随机字节作为令牌，服务器根据令牌在数据库中查找令牌拥有者。
+- 这里使用令牌cookie引用数据库中存储用户登录信息的条目，还可以将用户访问时长、已浏览商品数量等信息存储到数据库。
+- 1、使用一个散列来存储登录cookie令牌和已登录用户之间的映射，检查登录cookie：
+```python
+def check_token(conn, token):
+    return conn.hget('login:', token)
+```
+- 2、大部分工作在于更新令牌，需要对用户每次的浏览信息进行更新：
+    - 使用该方法写入记录20000次/s，性能比数据库提升10-100倍
+```python
+def update_token(conn, token, user, item=None):
+    # 获取当前时间戳
+    timestamp = time.time()
+    # 维持令牌与已登录用户之间的映射
+    conn.hset('login:', token, user)
+    # 记录令牌最后一次出现的时间
+    conn.zadd('recent:', token, timestamp)
+    if item:
+        # 记录用户浏览过的商品
+        conn.zadd('viewed:'+token, item, timestamp)
+        # 移除旧记录，只保留用户最近浏览的25个商品
+        conn.zremrangebyrank('viewed:'+token, 0, -26)
+```
+- 3、限制会话数量，只保存最新的1000万个会话，清除旧会话：
+```python
+QUIT = False
+LIMIT = 10000000
+
+def clean_sessions(conn):
+    while not QUIT:
+        # 找出目前已有的令牌数量
+        size = conn.zcard('recent:')
+        if size <= LIMIT:
+            time.sleep(1)
+            continue
+        # 获取需要移除的令牌
+        end_index = min(size - LIMIT, 100)
+        tokens = conn.zrange('recent:', 0, end_index-1)
+        # 构建将被删除令牌的键
+        session_keys = []
+        for token in tokens:
+            session_keys.append('viewed:'+token)
+        # 移除旧令牌
+        conn.delete(*session_keys)
+        conn.hdel('login:', *tokens)
+        conn.zrem('recent:', *tokens)
+```
+
+[目录](#目录)
+
+## 使用Redis实现购物车
 
 [目录](#目录)
 
