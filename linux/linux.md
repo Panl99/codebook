@@ -1,9 +1,23 @@
 # 目录
+- [linux](#linux)
 - [shell](#shell)
+    - [运算符](#运算符)
     - [while](#while)
     - [字符串截取](#字符串截取)
 
+
+# linux
+```shell script
+
+```
+
 # shell
+## 运算符
+```shell script
+
+```
+[目录](#目录)
+
 ## while
 ```shell script
 #!/bin/bash
