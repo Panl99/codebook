@@ -42,7 +42,7 @@
 - [elasticsearch.md](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)
 
 ## Linux ✔
-- [linux.md 1/n](https://github.com/Panl99/codebook/blob/master/linux/linux.md)
+- [linux.md ✔](https://github.com/Panl99/codebook/blob/master/linux/linux.md)
 
 ## Git,Maven ✔
 - [git.md ✔](https://github.com/Panl99/codebook/blob/master/git_maven/git.md)
