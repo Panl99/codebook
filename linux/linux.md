@@ -19,10 +19,12 @@
     - [输出](#输出)
     - [输入输出重定向](#输入输出重定向)
     - [加载外部脚本](#加载外部脚本)
+    - [awk](#awk)
 - [linux](#linux)
     - [常用命令](#常用命令)
     - [用户-用户组](#用户-用户组)
     - [磁盘管理](#磁盘管理)
+    - [vim](#vim)
 
 [目录](#目录)
 
@@ -86,41 +88,39 @@ echo 'end...'
 ## 字符串截取
 ```shell script
 #!/bin/bash
-echo 'Hello World!'
 
 logpath='home/test/shell/shell-test.log'
 url='https://www.test.com/blog/shell-test'
 # 输出字符串长度
-echo ${#logpath} ${#url}
+echo ${#logpath} ${#url}  #30 36
 
 # 截取最后一个/后的值
 log_suffix=${logpath##*/}
-echo $log_suffix
+echo $log_suffix  #shell-test.log
 # 截取第一个/后的值
 url_suffix=${url#*/}
-echo $url_suffix
+echo $url_suffix  #/www.test.com/blog/shell-test
 
-# 截取最后一个/前的值
-log_prefix=${logpath%%/*}
-echo $log_prefix
 # 截取第一个/前的值
+log_prefix=${logpath%%/*}
+echo $log_prefix  #home
+# 截取最后一个/前的值
 url_prefix=${url%/*}
-echo $url_prefix
+echo $url_prefix  #https://www.test.com/blog
 
 # 自定义截取
 sublogpath=${logpath:0:5}
 suburl=${url:0:8}
-echo $sublogpath $suburl
+echo $sublogpath '***' $suburl  #home/ *** https://
 # 从左边第9个字符开始到最后
 sublogpath=${logpath:8}
 suburl=${url:8}
-echo $sublogpath '***' $suburl
+echo $sublogpath '***' $suburl  #t/shell/shell-test.log *** www.test.com/blog/shell-test
 # 从右边第9个字符开始截取5个字符
 sublogpath=${logpath:0-9:5}
 suburl=${url:0-9:5}
-echo $sublogpath '***' $suburl
+echo $sublogpath '***' $suburl  #-test *** hell-
 
-echo 'end...'
 ```
 [目录](#目录)
 ## 数组
@@ -388,6 +388,142 @@ path：http://www.test1.com
 
 [目录](#目录)
 
+## awk
+```shell script
+# test.log
+2 this is a test
+3 Are you like awk
+This's a test
+10 There are orange,apple,mongo
+```
+- 用法1：`awk '{[pattern] action}' {filenames}`   # 行匹配语句 awk '' 只能用单引号
+```shell script
+# 1、每行按空格或TAB分割，输出文本中的1、4项
+$ awk '{print $1,$4}' test.log
+#-------------------输出--------------------------
+2 a
+3 like
+This's
+10 orange,apple,mongo
+
+# 2、格式化输出
+$ awk '{printf "%-8s %-10s\n",$1,$4}' test.log
+#---------------------输出------------------------
+2        a
+3        like
+This's
+10       orange,apple,mongo
+```
+- 用法2：`awk -F`  #-F相当于内置变量FS, 指定分割字符
+```shell script
+# 1、使用","分割
+$  awk -F, '{print $1,$2}'   test.log
+#--------------------输出-------------------------
+2 this is a test
+3 Are you like awk
+This's a test
+10 There are orange apple
+
+# 2、或者使用内建变量
+$ awk 'BEGIN{FS=","} {print $1,$2}'     test.log
+-----------------------输出----------------------
+2 this is a test
+3 Are you like awk
+This's a test
+10 There are orange apple
+
+# 3、使用多个分隔符.先使用空格分割，然后对分割结果再使用","分割
+$ awk -F '[ ,]'  '{print $1,$2,$5}'   test.log
+#-----------------------输出----------------------
+2 this test
+3 Are awk
+This's a
+10 There apple
+```
+- 用法3：`awk -v`  # 设置变量
+```shell script
+$ awk -va=1 '{print $1,$1+a}' test.log
+#--------------------输出-------------------------
+2 3
+3 4
+This's 1
+10 11
+
+$ awk -va=1 -vb=s '{print $1,$1+a,$1b}' test.log
+#-------------------输出--------------------------
+2 3 2s
+3 4 3s
+This's 1 This'ss
+10 11 10s
+```
+- 用法4：`awk -f {awk脚本} {文件名}`
+```shell script
+$ awk -f cal.awk test.log
+```
+- 过滤第一列大于2的行
+```shell script
+$ awk '$1>2' test.log    #命令
+
+#输出
+3 Are you like awk
+This's a test
+10 There are orange,apple,mongo
+```
+- 过滤第一列等于2的行
+```shell script
+$ awk '$1==2 {print $1,$3}' test.log    #命令
+
+#输出
+2 is
+```
+- 过滤第一列大于2并且第二列等于'Are'的行
+```shell script
+$ awk '$1>2 && $2=="Are" {print $1,$2,$3}' test.log    #命令
+
+#输出
+3 Are you
+```
+- 输出第二列包含 "th"，并打印第二列与第四列
+```shell script
+$ awk '$2 ~ /th/ {print $2,$4}' test.log
+
+#---------------------------------------------
+this a
+```
+- 输出包含 "re" 的行
+```shell script
+$ awk '/re/ ' test.log
+
+# ~ 表示模式开始。// 中是模式。
+#---------------------------------------------
+3 Are you like awk
+10 There are orange,apple,mongo
+```
+- 忽略大小写
+```shell script
+$ awk 'BEGIN{IGNORECASE=1} /this/' test.log
+
+#---------------------------------------------
+2 this is a test
+This's a test
+```
+- 模式取反
+```shell script
+$ awk '$2 !~ /th/ {print $2,$4}' test.log
+#---------------------------------------------
+Are like
+a
+There orange,apple,mongo
+
+$ awk '!/th/ {print $2,$4}' test.log
+#---------------------------------------------
+Are like
+a
+There orange,apple,mongo
+```
+
+[目录](#目录)
+
 # linux
 ## 常用命令
 - `ls`: 列出目录及文件名
@@ -537,4 +673,10 @@ path：http://www.test1.com
     - `-f` ：强制卸除！可用在类似网络文件系统 (NFS) 无法读取到的情况下；
     - `-n` ：不升级 /etc/mtab 情况下卸除。
     
+[目录](#目录)
+
+## vim
+- `dd` 删除光标所在行
+- `yy` 复制光标所在行
+
 [目录](#目录)
