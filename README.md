@@ -36,7 +36,7 @@
 - [nginx.md ✔](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.md)
 - [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
 - [lvs.md](https://github.com/Panl99/codebook/blob/master/nginx_lvs/lvs.md)
-- Nginx -> Envoy Proxy
+- Nginx -> Envoy Proxy | APISIX
 
 ## ElasticSearch
 - [elasticsearch.md](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)
