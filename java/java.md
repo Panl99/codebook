@@ -1,3 +1,6 @@
+> [Java 8实战](https://github.com/Panl99/codebook/blob/master/resources/static/books/Java%208%E5%AE%9E%E6%88%98.pdf)
+> [Java 8函数式编程](https://github.com/Panl99/codebook/blob/master/resources/static/books/Java%208%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B.pdf)
+
 # github-toc
 - [1.1、String常用方法](#11string常用方法)
 - [3、流(java.util.stream.Stream)](#3流javautilstreamstream)
