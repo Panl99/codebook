@@ -27,6 +27,9 @@
         - [观察者模式](#观察者模式)
         - [模板方法](#模板方法)
         - [责任链模式](#责任链模式)
+    - [单例模式](https://github.com/Panl99/demo/blob/master/src/main/java/com/outman/demo/leetcode/Singleton.java)
+- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/blob/master/src/main/java/com/outman/demo/leetcode/ScheduledThreadPoolExecutorDemo.java)
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/blob/master/src/main/java/com/outman/demo/leetcode/CompletableFutureDemo.java)
 
 # 目录
 - [一、Java基础](#一、Java基础)
@@ -1167,6 +1170,7 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
 ## 11、函数式编程
 
 ## 12、异步编程
+### CompletableFuture
 
 ## 序列化，反序列化
 
