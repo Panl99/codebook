@@ -3,10 +3,6 @@
 
 # github-toc
 - [1.1、String常用方法](#11string常用方法)
-- [3、流(java.util.stream.Stream)](#3流javautilstreamstream)
-    - [3.1、流的基本操作](#31流的基本操作)
-    - [3.2、用流收集数据](#32用流收集数据)
-    - [3.4、Optional类(java.util.Optional<T>)](#34optional类javautiloptional)
 - [8、JVM、GC](#8jvmgc)
     - [8.1、自己编译jdk](#81自己编译jdk)
     - [8.2、java内存管理机制](#82java内存管理机制)
@@ -14,12 +10,17 @@
     - [8.4、性能调优](#84性能调优)
     - [8.5、类加载机制](#85类加载机制)
     - [8.6、高并发](#86高并发)
-- [10、Lambda](#10lambda)
-    - [10.1、Lambda表达式语法](#101lambda表达式语法)
-    - [10.2、在哪里以及如何使用Lambda](#102在哪里以及如何使用lambda)
-    - [10.4、方法引用](#104方法引用)
+- [函数式编程](#函数式编程)
+    - [Lambda](#lambda)
+        - [Lambda表达式语法](#lambda表达式语法)
+        - [在哪里以及如何使用Lambda](#在哪里以及如何使用lambda)
+    - [方法引用](#方法引用)
         - [构建方法引用](#构建方法引用)
         - [复合Lambda表达式 ](#复合lambda表达式 )
+    - [流(java.util.stream.Stream)](#stream)
+        - [流的基本操作](#流的基本操作)
+        - [用流收集数据](#用流收集数据)
+        - [Optional类(java.util.Optional<T>)](#optional类javautiloptional)     
 - [设计模式](#设计模式)
     - [使用Lambda重构设计模式](#使用lambda重构设计模式)
         - [策略模式](#策略模式)
@@ -38,11 +39,7 @@
         - [1.2、流程控制-×](#1.2、流程控制)
         - [1.3、日期、时间API-×](#1.3、日期、时间API)
     - [2、集合](#2、集合)
-    - [3、流(java.util.stream.Stream)](#3、流(java.util.stream.Stream))
-        - [3.1、流的基本操作](#3.1、流的基本操作)
-        - [3.2、用流收集数据](#3.2、用流收集数据)
-        - [3.3、并行流处理数据-×](#3.3、并行流处理数据)
-        - [3.4、Optional类(java.util.Optional<T>)](#3.4、Optional类(java.util.Optional<T>))
+    - [3、I/O](#3、I/O)
     - [4、面向对象-×](#4、面向对象)
     - [5、异常处理-×](#5、异常处理)
     - [6、多线程-×](#6、多线程)
@@ -55,19 +52,25 @@
         - [8.5、类加载机制](#8.5、类加载机制)
         - [8.6、高并发](#8.6、高并发)
     - [9、正则-×](#9、正则)
-    - [10、Lambda](#10、Lambda)
-        - [10.1、Lambda表达式语法](#10.1、Lambda表达式语法)
-        - [10.2、在哪里以及如何使用Lambda](#10.2、在哪里以及如何使用Lambda)
-        - [10.3、编译器对Lambda做类型检查、类型推断、限制-×](#10.3、编译器对Lambda做类型检查、类型推断、限制)
-        - [10.4、方法引用](#10.4、方法引用)
-            - [构建方法引用](#构建方法引用)
-            - [复合Lambda表达式 ](#复合Lambda表达式 )
-    - [11、函数式编程-×](#11、函数式编程)
-    - [12、异步编程-×](#12、异步编程)
-    - [序列化，反序列化-×](#序列化，反序列化)
-    - [网络-×](#网络)
-    - [数据结构-×](#数据结构)
-    - [反射-×](#反射)
+- [函数式编程](#函数式编程)
+    - [Lambda](#Lambda)
+        - [Lambda表达式语法](#Lambda表达式语法)
+        - [在哪里以及如何使用Lambda](#在哪里以及如何使用Lambda)
+        - [编译器对Lambda做类型检查、类型推断、限制-×](#编译器对Lambda做类型检查、类型推断、限制)
+    - [方法引用](#方法引用)
+        - [构建方法引用](#构建方法引用)
+        - [复合Lambda表达式 ](#复合Lambda表达式 )
+    - [流(java.util.stream.Stream)](#Stream)
+        - [流的基本操作](#流的基本操作)
+        - [用流收集数据](#用流收集数据)
+        - [并行流处理数据-×](#并行流处理数据)
+        - [Optional类(java.util.Optional<T>)](#Optional类(java.util.Optional<T>))
+    
+- [12、异步编程-×](#异步编程)
+- [序列化，反序列化-×](#序列化，反序列化)
+- [网络-×](#网络)
+- [数据结构-×](#数据结构)
+- [反射-×](#反射)
 
 - [设计模式](#设计模式)
     - [使用Lambda重构设计模式](#使用Lambda重构设计模式)
@@ -163,223 +166,7 @@
 
 [返回目录](#目录)
 
-## 3、流(java.util.stream.Stream)
-### 3.1、流的基本操作
-流：从支持数据处理操作的源生成的元素序列  
-流只能消费一次
-```java
-流的使用包含三部分：
-    一个数据源（如集合）来执行一个查询；
-    一个中间操作链，形成一条流的流水线；
-    一个终端操作，执行流水线，并能生成结果。
-
-List<String> names = menu.stream() //获取流
-                         .filter(d -> d.getCalories() > 300) //中间操作(返回Stream)，过滤大于300卡路里的菜
-                         .map(Dish::getName) //中间操作(返回Stream)，获取菜名
-                         .limit(3) //中间操作(返回Stream)，取前3个
-                         .collect(toList()); //终端操作(返回非Stream)，关闭流，生成列表。
-
-List<Dish> menu = Arrays.asList(
-        new Dish("pork", false, 800, Dish.Type.MEAT),
-        new Dish("beef", false, 700, Dish.Type.MEAT),
-        new Dish("chicken", false, 400, Dish.Type.MEAT),
-        new Dish("french fries", true, 530, Dish.Type.OTHER),
-        new Dish("rice", true, 350, Dish.Type.OTHER),
-        new Dish("season fruit", true, 120, Dish.Type.OTHER),
-        new Dish("pizza", true, 550, Dish.Type.OTHER),
-        new Dish("prawns", false, 300, Dish.Type.FISH),
-        new Dish("salmon", false, 450, Dish.Type.FISH) );
-public class Dish {
-    private final String name;
-    private final boolean vegetarian;
-    private final int calories;
-    private final Type type;
-    public Dish(String name, boolean vegetarian, int calories, Type type) {
-        this.name = name;
-        this.vegetarian = vegetarian;
-        this.calories = calories;
-        this.type = type;
-    }
-    public String getName() {
-        return name;
-    }
-    public boolean isVegetarian() {
-        return vegetarian;
-    }
-    public int getCalories() {
-        return calories;
-    }
-    public Type getType() {
-        return type;
-    }
-    @Override
-    public String toString() {
-        return name;
-    }
-    public enum Type { MEAT, FISH, OTHER }
-}
-```
-- **中间操作**
-
-操作|参数|描述  
----|---|---  
-filter|返回boolean的函数|过滤
-map|Function<T, R>|T -> R
-flatmap|Function<T, R>|方法让你把一个流中的每个值都换成另一个流，然后把所有的流连接起来成为一个流。
-limit(n)|int|返回截至前n个元素的流，如果源是一个Set，limit的结果不会以任何顺序排列。
-sorted|Comparator<T>|(T, T) -> int
-distinct|无|去重
-skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个，则返回一个空流。 
-数值流：mapToInt、mapToDouble和mapToLong|IntStream、DoubleStream和LongStream|将流转化为数值流，转回一般流可以使用 数值流.boxed()方法
-构建流：| |①由值创建流：Stream<String> stream = ***Stream.of***("Java 8 ", "Lambdas ", "In ", "Action"); 创建空流：***Stream.empty();***
-| | |②由数组创建流：int[] numbers = {2, 3, 5, 7, 11, 13}; int sum = ***Arrays.stream***(numbers).sum();
-| | |③由文件生成流：java.nio.file.Files中的很多静态方法都会返回一个流，如：Files.lines
-| | |④由函数生成流：创建无限流：Stream.iterate和Stream.generate。如：Stream.iterate(0, n -> n + 2).limit(10).forEach(System.out::println);生成了一个正偶数流，iterate应该在依次生成一系列值的时候使用。Stream.generate(Math::random).limit(5).forEach(System.out::println);生成一个有五个0到1之间的随机双精度数的流
-
-- **终端操作**  
-
-操作|返回类型|目的
----|---|---
-forEach|void|消费流中的每个元素并对其应用Lambda。
-count|long|返回流中元素的个数。
-collect|集合(如List、Map、Integer)|把流归约成一个集合。
-anyMatch|boolean|是否至少匹配一个元素。
-allMatch|boolean|是否匹配所有元素
-noneMatch|boolean|没有匹配任何元素
-findAny|Optional<T>|返回当前流中的任意元素。java.util.Optional是一个容器类，代表一个值存在或不存在。
-findFirst|Optional<T>|返回第一个元素。
-reduce| |归约，接收两个参数：①初始值，②一个BinaryOperator<T>来将两个元素结合起来产生一个新值。如求和操作，①int sum = numbers.stream().reduce(0, (a, b) -> a + b);②int sum = numbers.stream().reduce(0, Integer::sum);
-| | |reduce求最大/最小值，如：Optional<Integer> max = numbers.stream().reduce(Integer::max);  reduce(Integer::min);
-
-[返回目录](#目录)
-
-#### 3.2、用流收集数据
-```java
-//todo
-```
-- **Collectors类的静态工厂方法**  
-
-工厂方法|返回类型|作用|示例
----|---|---|---
-toList|List<T>|把流中所有项目收集到一个List|List<Dish> dishes = menuStream.collect(toList());
-toSet|Set<T>|把流中所有项目收集到一个Set，删除重复项|Set<Dish> dishes = menuStream.collect(toSet());
-toCollection|Collection<T>|把流中所有项目收集到给定的供应源创建的集合|Collection<Dish> dishes = menuStream.collect(toCollection(),ArrayList::new);
-counting|Long|计算流中元素的个数|long howManyDishes = menuStream.collect(counting());
-summingInt|Integer|对流中项目的一个整数属性求和|int totalCalories = menuStream.collect(summingInt(Dish::getCalories));
-averagingInt|Double|计算流中项目Integer 属性的平均值|double avgCalories = menuStream.collect(averagingInt(Dish::getCalories));
-summarizingInt|IntSummaryStatistics|收集关于流中项目Integer 属性的统计值，例如最大、最小、总和与平均值|IntSummaryStatistics menuStatistics = menuStream.collect(summarizingInt(Dish::getCalories));
-joining|String|连接对流中每个项目调用toString 方法所生成的字符串|String shortMenu = menuStream.map(Dish::getName).collect(joining(", "));
-maxBy|Optional<T>|一个包裹了流中按照给定比较器选出的最大元素的Optional，或如果流为空则为Optional.empty()|Optional<Dish> fattest = menuStream.collect(maxBy(comparingInt(Dish::getCalories)));
-minBy|Optional<T>|一个包裹了流中按照给定比较器选出的最小元素的Optional，或如果流为空则为Optional.empty()|Optional<Dish> lightest = menuStream.collect(minBy(comparingInt(Dish::getCalories)));
-reducing|归约操作产生的类型|从一个作为累加器的初始值开始，利用BinaryOperator 与流中的元素逐个结合，从而将流归约为单个值|int totalCalories = menuStream.collect(reducing(0, Dish::getCalories, Integer::sum));
-collectingAndThen|转换函数返回的类型|包裹另一个收集器，对其结果应用转换函数|int howManyDishes = menuStream.collect(collectingAndThen(toList(), List::size));
-groupingBy|Map<K, List<T>>|根据项目的一个属性的值对流中的项目作问组，并将属性值作为结果Map 的键|Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
-partitioningBy|Map<Boolean,List<T>>|根据对流中每个项目应用谓词的结果来对项目进行分区|Map<Boolean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));
-
-[返回目录](#目录)
-
-#### 3.3、并行流处理数据
-```java
-//todo
-```
-
-[返回目录](#目录)
-
-#### 3.4、Optional类(java.util.Optional<T>)
-```
-对存在或缺失(null)的变量值进行建模：
-变量存在时，Optional类只是对类简单封装。
-变量不存在时，缺失的值会被建模成一个“空”的Optional对象，由方法Optional.empty()返回。
-```
-- **声明一个空的Optional**  
-```java
-Optional<Car> optCar = Optional.empty();
-```
-- **依据一个非空值创建Optional**  
-```java
-//如果car是一个null，这段代码会立即抛出一个NullPointerException，而不是等到访问car的属性值时才返回一个错误。
-Optional<Car> optCar = Optional.of(car); 
-```
-- **可接受null的Optional**  
-```java
-//如果car是null，那么得到的Optional对象就是个空对象。
-Optional<Car> optCar = Optional.ofNullable(car);
-```
-- **使用map 从Optional 对象中提取和转换值**  
-```java
-//要从insurance公司对象中提取公司的名称。提取名称之前，你需要检查insurance对象是否为null
-String name = null;
-if(insurance != null){
-    name = insurance.getName();
-}
-
-//使用Optional提供的map方法
-Optional<Insurance> optInsurance = Optional.ofNullable(insurance);
-Optional<String> name = optInsurance.map(Insurance::getName);
-```
-- **使用flatMap 链接Optional 对象**  
-```java
-//使用Optional获取car的Insurance名称
-public String getCarInsuranceName(Optional<Person> person) {
-    return person.flatMap(Person::getCar)
-                 .flatMap(Car::getInsurance)
-                 .map(Insurance::getName)
-                 .orElse("Unknown");
-}
-//使用Optional解引用串接的Person/Car/Insurance对象
-
-```
-- **默认行为及解引用Optional 对象**  
-
-- **使用filter 剔除特定的值**  
-```java
-//需要检查保险公司的名称是否为“Cambridge-Insurance”
-Insurance insurance = ...;
-if(insurance != null && "CambridgeInsurance".equals(insurance.getName())){
-    System.out.println("ok");
-}
-//使用Optional对象的filter方法
-//filter方法接受一个谓词作为参数。如果Optional对象的值存在，并且它符合谓词的条件，filter方法就返回其值；否则它就返回一个空的Optional对象。
-Optional<Insurance> optInsurance = ...;
-optInsurance.filter(insurance -> "CambridgeInsurance".equals(insurance.getName()))
-            .ifPresent(x -> System.out.println("ok"));
-```
-- **Optional类的方法** 
-
-方法|描述
----|---
-empty|返回一个空的Optional 实例
-filter|如果值存在并且满足提供的谓词，就返回包含该值的Optional 对象；否则返回一个空的Optional 对象
-flatMap|如果值存在，就对该值执行提供的mapping 函数调用，返回一个Optional 类型的值，否则就返回一个空的Optional 对象
-get|如果该值存在，将该值用Optional 封装返回，否则抛出一个NoSuchElementException 异常
-ifPresent|如果值存在，就执行使用该值的方法调用，否则什么也不做
-isPresent|如果值存在就返回true，否则返回false
-map|如果值存在，就对该值执行提供的mapping 函数调用
-of|将指定值用Optional 封装之后返回，如果该值为null，则抛出一个NullPointerException异常
-ofNullable|将指定值用Optional 封装之后返回，如果该值为null，则返回一个空的Optional 对象
-orElse|如果有值则将其返回，否则返回一个默认值
-orElseGet|如果有值则将其返回，否则返回一个由指定的Supplier 接口生成的值
-orElseThrow|如果有值则将其返回，否则抛出一个由指定的Supplier 接口生成的异常
-
-- **Optional实战示例**
-```java
-//1、用Optional 封装可能为null 的值
-//假设你有一个Map<String, Object>方法，访问由key索引的值时，如果map中没有与key关联的值，该次调用就会返回一个null。
-Object value = map.get("key");
-//采用Optional.ofNullable方法：
-Optional<Object> value = Optional.ofNullable(map.get("key"));
-
-//2、异常与Optional 的对比
-public static Optional<Integer> stringToInt(String s) {
-    try {
-        return Optional.of(Integer.parseInt(s));
-    } catch (NumberFormatException e) {
-        return Optional.empty();
-    }
-}
-//***可以将多个类似的方法封装到一个工具类OptionalUtility中。通过直接调用OptionalUtility.stringToInt方法，将String转换为一个Optional<Integer>对象，而不再需要用try/catch了。
-
-```
+## 3、I/O
 
 [返回目录](#目录)
 
@@ -952,8 +739,11 @@ Java线程调度： 指系统为线程分配处理器使用权的过程，调度
 ## 9、正则
 pattern
 
-## 10、Lambda
-### 10.1、Lambda表达式语法  
+
+
+# 函数式编程
+## Lambda
+### Lambda表达式语法  
     (parameters) -> expression  
     (parameters) -> { statements; }
 ```
@@ -980,7 +770,7 @@ pattern
 
 [返回目录](#目录)
 
-### 10.2、在哪里以及如何使用Lambda
+### 在哪里以及如何使用Lambda
 1. Lambda表达式可以被赋给一个变量
 2. 传递给一个 接受函数式接口作为参数 的方法  
 - **函数式接口上使用Lambda**  
@@ -1094,9 +884,10 @@ List<Integer> l = map(
 
 [返回目录](#目录)
 
-### 10.3、编译器对Lambda做类型检查、类型推断、限制
+### 编译器对Lambda做类型检查、类型推断、限制
 ~~略~~
-### 10.4、方法引用
+
+## 方法引用
 使用方式：目标引用放在分隔符::前，方法的名称放在后面，方法不需要括号，因为没有实际调用这个方法。  
 针对单一方法的Lambda
 ```java
@@ -1110,14 +901,14 @@ List<Integer> l = map(
 |() -> Thread.currentThread().dumpStack()|Thread.currentThread()::dumpStack|
 |(str, i) -> str.substring(i)|String::substring|
 |(String s) -> System.out.println(s)|System.out::println|
-#### 构建方法引用  
+### 构建方法引用  
     (1) 指向静态方法的方法引用（例如Integer的parseInt方法，写作Integer::parseInt）。  
     (2) 指向任意类型实例方法的方法引用（例如String 的length 方法，写作String::length）。  
     (3) 指向现有对象的实例方法的方法引用（假设你有一个局部变量expensiveTransaction用于存放Transaction类型的对象，它支持实例方法getValue，那么你就可以写expensiveTransaction::getValue）  
 
 [返回目录](#目录)
 
-#### 复合Lambda表达式  
+### 复合Lambda表达式  
 ```java
 1、比较器复合：
     //对库存进行排序，比较苹果的重量
@@ -1167,18 +958,237 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
 
 [返回目录](#目录)
 
-## 11、函数式编程
+## Stream
+### 流的基本操作
+流：从支持数据处理操作的源生成的元素序列  
+流只能消费一次
+```java
+流的使用包含三部分：
+    一个数据源（如集合）来执行一个查询；
+    一个中间操作链，形成一条流的流水线；
+    一个终端操作，执行流水线，并能生成结果。
 
-## 12、异步编程
-### CompletableFuture
+List<String> names = menu.stream() //获取流
+                         .filter(d -> d.getCalories() > 300) //中间操作(返回Stream)，过滤大于300卡路里的菜
+                         .map(Dish::getName) //中间操作(返回Stream)，获取菜名
+                         .limit(3) //中间操作(返回Stream)，取前3个
+                         .collect(toList()); //终端操作(返回非Stream)，关闭流，生成列表。
 
-## 序列化，反序列化
+List<Dish> menu = Arrays.asList(
+        new Dish("pork", false, 800, Dish.Type.MEAT),
+        new Dish("beef", false, 700, Dish.Type.MEAT),
+        new Dish("chicken", false, 400, Dish.Type.MEAT),
+        new Dish("french fries", true, 530, Dish.Type.OTHER),
+        new Dish("rice", true, 350, Dish.Type.OTHER),
+        new Dish("season fruit", true, 120, Dish.Type.OTHER),
+        new Dish("pizza", true, 550, Dish.Type.OTHER),
+        new Dish("prawns", false, 300, Dish.Type.FISH),
+        new Dish("salmon", false, 450, Dish.Type.FISH) );
+public class Dish {
+    private final String name;
+    private final boolean vegetarian;
+    private final int calories;
+    private final Type type;
+    public Dish(String name, boolean vegetarian, int calories, Type type) {
+        this.name = name;
+        this.vegetarian = vegetarian;
+        this.calories = calories;
+        this.type = type;
+    }
+    public String getName() {
+        return name;
+    }
+    public boolean isVegetarian() {
+        return vegetarian;
+    }
+    public int getCalories() {
+        return calories;
+    }
+    public Type getType() {
+        return type;
+    }
+    @Override
+    public String toString() {
+        return name;
+    }
+    public enum Type { MEAT, FISH, OTHER }
+}
+```
+- **中间操作**
 
-## 网络
+操作|参数|描述  
+---|---|---  
+filter|返回boolean的函数|过滤
+map|Function<T, R>|T -> R
+flatmap|Function<T, R>|方法让你把一个流中的每个值都换成另一个流，然后把所有的流连接起来成为一个流。
+limit(n)|int|返回截至前n个元素的流，如果源是一个Set，limit的结果不会以任何顺序排列。
+sorted|Comparator<T>|(T, T) -> int
+distinct|无|去重
+skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个，则返回一个空流。 
+数值流：mapToInt、mapToDouble和mapToLong|IntStream、DoubleStream和LongStream|将流转化为数值流，转回一般流可以使用 数值流.boxed()方法
+构建流：| |①由值创建流：Stream<String> stream = ***Stream.of***("Java 8 ", "Lambdas ", "In ", "Action"); 创建空流：***Stream.empty();***
+| | |②由数组创建流：int[] numbers = {2, 3, 5, 7, 11, 13}; int sum = ***Arrays.stream***(numbers).sum();
+| | |③由文件生成流：java.nio.file.Files中的很多静态方法都会返回一个流，如：Files.lines
+| | |④由函数生成流：创建无限流：Stream.iterate和Stream.generate。如：Stream.iterate(0, n -> n + 2).limit(10).forEach(System.out::println);生成了一个正偶数流，iterate应该在依次生成一系列值的时候使用。Stream.generate(Math::random).limit(5).forEach(System.out::println);生成一个有五个0到1之间的随机双精度数的流
 
-## 数据结构
+- **终端操作**  
 
-## 反射
+操作|返回类型|目的
+---|---|---
+forEach|void|消费流中的每个元素并对其应用Lambda。
+count|long|返回流中元素的个数。
+collect|集合(如List、Map、Integer)|把流归约成一个集合。
+anyMatch|boolean|是否至少匹配一个元素。
+allMatch|boolean|是否匹配所有元素
+noneMatch|boolean|没有匹配任何元素
+findAny|Optional<T>|返回当前流中的任意元素。java.util.Optional是一个容器类，代表一个值存在或不存在。
+findFirst|Optional<T>|返回第一个元素。
+reduce| |归约，接收两个参数：①初始值，②一个BinaryOperator<T>来将两个元素结合起来产生一个新值。如求和操作，①int sum = numbers.stream().reduce(0, (a, b) -> a + b);②int sum = numbers.stream().reduce(0, Integer::sum);
+| | |reduce求最大/最小值，如：Optional<Integer> max = numbers.stream().reduce(Integer::max);  reduce(Integer::min);
+
+[返回目录](#目录)
+
+### 用流收集数据
+```java
+//todo
+```
+- **Collectors类的静态工厂方法**  
+
+工厂方法|返回类型|作用|示例
+---|---|---|---
+toList|List<T>|把流中所有项目收集到一个List|List<Dish> dishes = menuStream.collect(toList());
+toSet|Set<T>|把流中所有项目收集到一个Set，删除重复项|Set<Dish> dishes = menuStream.collect(toSet());
+toCollection|Collection<T>|把流中所有项目收集到给定的供应源创建的集合|Collection<Dish> dishes = menuStream.collect(toCollection(),ArrayList::new);
+counting|Long|计算流中元素的个数|long howManyDishes = menuStream.collect(counting());
+summingInt|Integer|对流中项目的一个整数属性求和|int totalCalories = menuStream.collect(summingInt(Dish::getCalories));
+averagingInt|Double|计算流中项目Integer 属性的平均值|double avgCalories = menuStream.collect(averagingInt(Dish::getCalories));
+summarizingInt|IntSummaryStatistics|收集关于流中项目Integer 属性的统计值，例如最大、最小、总和与平均值|IntSummaryStatistics menuStatistics = menuStream.collect(summarizingInt(Dish::getCalories));
+joining|String|连接对流中每个项目调用toString 方法所生成的字符串|String shortMenu = menuStream.map(Dish::getName).collect(joining(", "));
+maxBy|Optional<T>|一个包裹了流中按照给定比较器选出的最大元素的Optional，或如果流为空则为Optional.empty()|Optional<Dish> fattest = menuStream.collect(maxBy(comparingInt(Dish::getCalories)));
+minBy|Optional<T>|一个包裹了流中按照给定比较器选出的最小元素的Optional，或如果流为空则为Optional.empty()|Optional<Dish> lightest = menuStream.collect(minBy(comparingInt(Dish::getCalories)));
+reducing|归约操作产生的类型|从一个作为累加器的初始值开始，利用BinaryOperator 与流中的元素逐个结合，从而将流归约为单个值|int totalCalories = menuStream.collect(reducing(0, Dish::getCalories, Integer::sum));
+collectingAndThen|转换函数返回的类型|包裹另一个收集器，对其结果应用转换函数|int howManyDishes = menuStream.collect(collectingAndThen(toList(), List::size));
+groupingBy|Map<K, List<T>>|根据项目的一个属性的值对流中的项目作问组，并将属性值作为结果Map 的键|Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
+partitioningBy|Map<Boolean,List<T>>|根据对流中每个项目应用谓词的结果来对项目进行分区|Map<Boolean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));
+
+[返回目录](#目录)
+
+### 并行流处理数据
+```java
+//todo
+```
+
+[返回目录](#目录)
+
+### Optional类(java.util.Optional<T>)
+```
+对存在或缺失(null)的变量值进行建模：
+变量存在时，Optional类只是对类简单封装。
+变量不存在时，缺失的值会被建模成一个“空”的Optional对象，由方法Optional.empty()返回。
+```
+- **声明一个空的Optional**  
+```java
+Optional<Car> optCar = Optional.empty();
+```
+- **依据一个非空值创建Optional**  
+```java
+//如果car是一个null，这段代码会立即抛出一个NullPointerException，而不是等到访问car的属性值时才返回一个错误。
+Optional<Car> optCar = Optional.of(car); 
+```
+- **可接受null的Optional**  
+```java
+//如果car是null，那么得到的Optional对象就是个空对象。
+Optional<Car> optCar = Optional.ofNullable(car);
+```
+- **使用map 从Optional 对象中提取和转换值**  
+```java
+//要从insurance公司对象中提取公司的名称。提取名称之前，你需要检查insurance对象是否为null
+String name = null;
+if(insurance != null){
+    name = insurance.getName();
+}
+
+//使用Optional提供的map方法
+Optional<Insurance> optInsurance = Optional.ofNullable(insurance);
+Optional<String> name = optInsurance.map(Insurance::getName);
+```
+- **使用flatMap 链接Optional 对象**  
+```java
+//使用Optional获取car的Insurance名称
+public String getCarInsuranceName(Optional<Person> person) {
+    return person.flatMap(Person::getCar)
+                 .flatMap(Car::getInsurance)
+                 .map(Insurance::getName)
+                 .orElse("Unknown");
+}
+//使用Optional解引用串接的Person/Car/Insurance对象
+
+```
+- **默认行为及解引用Optional 对象**  
+
+- **使用filter 剔除特定的值**  
+```java
+//需要检查保险公司的名称是否为“Cambridge-Insurance”
+Insurance insurance = ...;
+if(insurance != null && "CambridgeInsurance".equals(insurance.getName())){
+    System.out.println("ok");
+}
+//使用Optional对象的filter方法
+//filter方法接受一个谓词作为参数。如果Optional对象的值存在，并且它符合谓词的条件，filter方法就返回其值；否则它就返回一个空的Optional对象。
+Optional<Insurance> optInsurance = ...;
+optInsurance.filter(insurance -> "CambridgeInsurance".equals(insurance.getName()))
+            .ifPresent(x -> System.out.println("ok"));
+```
+- **Optional类的方法** 
+
+方法|描述
+---|---
+empty|返回一个空的Optional 实例
+filter|如果值存在并且满足提供的谓词，就返回包含该值的Optional 对象；否则返回一个空的Optional 对象
+flatMap|如果值存在，就对该值执行提供的mapping 函数调用，返回一个Optional 类型的值，否则就返回一个空的Optional 对象
+get|如果该值存在，将该值用Optional 封装返回，否则抛出一个NoSuchElementException 异常
+ifPresent|如果值存在，就执行使用该值的方法调用，否则什么也不做
+isPresent|如果值存在就返回true，否则返回false
+map|如果值存在，就对该值执行提供的mapping 函数调用
+of|将指定值用Optional 封装之后返回，如果该值为null，则抛出一个NullPointerException异常
+ofNullable|将指定值用Optional 封装之后返回，如果该值为null，则返回一个空的Optional 对象
+orElse|如果有值则将其返回，否则返回一个默认值
+orElseGet|如果有值则将其返回，否则返回一个由指定的Supplier 接口生成的值
+orElseThrow|如果有值则将其返回，否则抛出一个由指定的Supplier 接口生成的异常
+
+- **Optional实战示例**
+```java
+//1、用Optional 封装可能为null 的值
+//假设你有一个Map<String, Object>方法，访问由key索引的值时，如果map中没有与key关联的值，该次调用就会返回一个null。
+Object value = map.get("key");
+//采用Optional.ofNullable方法：
+Optional<Object> value = Optional.ofNullable(map.get("key"));
+
+//2、异常与Optional 的对比
+public static Optional<Integer> stringToInt(String s) {
+    try {
+        return Optional.of(Integer.parseInt(s));
+    } catch (NumberFormatException e) {
+        return Optional.empty();
+    }
+}
+//***可以将多个类似的方法封装到一个工具类OptionalUtility中。通过直接调用OptionalUtility.stringToInt方法，将String转换为一个Optional<Integer>对象，而不再需要用try/catch了。
+
+```
+
+[返回目录](#目录)
+
+
+# 异步编程
+## CompletableFuture
+
+# 序列化，反序列化
+
+# 网络
+
+# 数据结构
+
+# 反射
 
 [返回目录](#目录)
 
