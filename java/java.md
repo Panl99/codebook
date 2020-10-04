@@ -3,6 +3,9 @@
 
 # github-toc
 - [1.1、String常用方法](#11string常用方法)
+- [日期和时间](#日期和时间)
+    -[标准库API](#标准库api)
+        -[java.util.Date](#javautildate)
 - [8、JVM、GC](#8jvmgc)
     - [8.1、自己编译jdk](#81自己编译jdk)
     - [8.2、java内存管理机制](#82java内存管理机制)
@@ -37,7 +40,11 @@
     - [1、Java基础](#1、Java基础)
         - [1.1、String常用方法](#1.1、String常用方法)
         - [1.2、流程控制-×](#1.2、流程控制)
-        - [1.3、日期、时间API-×](#1.3、日期、时间API)
+        
+- [日期和时间](#日期和时间)
+    -[标准库API](#标准库API)
+        -[java.util.Date](#java.util.Date)
+    
     - [2、集合](#2、集合)
     - [3、I/O](#3、I/O)
     - [4、面向对象-×](#4、面向对象)
@@ -52,6 +59,7 @@
         - [8.5、类加载机制](#8.5、类加载机制)
         - [8.6、高并发](#8.6、高并发)
     - [9、正则-×](#9、正则)
+    
 - [函数式编程](#函数式编程)
     - [Lambda](#Lambda)
         - [Lambda表达式语法](#Lambda表达式语法)
@@ -157,7 +165,28 @@
 
 #### 1.2、流程控制
 
-#### 1.3、日期、时间API
+# 日期和时间
+## 标准库API
+- java.util包：Date、Calendar、TimeZone
+- java.time包(Java 8引入)：LocalDateTime、ZonedDateTime、ZoneId等
+### java.util.Date
+- 实际上存储了一个long类型的以毫秒表示的时间戳。
+```java
+    public static void main(String[] args) {
+        // 获取当前时间:
+        Date date = new Date();
+        System.out.println(date.getYear() + 1900); // 必须加上1900
+        System.out.println(date.getMonth() + 1); // 0~11，必须加上1
+        System.out.println(date.getDate()); // 1~31，不能加1
+        // 转换为GMT时区:
+        System.out.println(date.toGMTString());
+        // 转换为本地时区:
+        System.out.println(date.toLocaleString());
+
+        // 格式化输出：
+        System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
+    }
+```
 
 [返回目录](#目录)
 
