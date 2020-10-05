@@ -2,17 +2,20 @@
 > [Java 8函数式编程](https://github.com/Panl99/codebook/blob/master/resources/static/books/Java%208%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B.pdf)  
 
 # github-toc
-- [1.1、String常用方法](#11string常用方法)
+- [String常用方法](#string常用方法)
 - [日期和时间](#日期和时间)
-    -[标准库API](#标准库api)
-        -[java.util.Date](#javautildate)
-- [8、JVM、GC](#8jvmgc)
-    - [8.1、自己编译jdk](#81自己编译jdk)
-    - [8.2、java内存管理机制](#82java内存管理机制)
-    - [8.3、垃圾回收](#83垃圾回收)
-    - [8.4、性能调优](#84性能调优)
-    - [8.5、类加载机制](#85类加载机制)
-    - [8.6、高并发](#86高并发)
+    - [标准库API](#标准库api)
+        - [java.util.Date](#date)
+- [多线程-×](#多线程)
+    - [异步编程-×](#异步编程)
+        - [CompletableFuture](#CompletableFuture)
+- [JVM、GC](#jvmgc)
+    - [自己编译jdk](#自己编译jdk)
+    - [java内存管理机制](#java内存管理机制)
+    - [垃圾回收](#垃圾回收)
+    - [性能调优](#性能调优)
+    - [类加载机制](#类加载机制)
+    - [高并发](#高并发)
 - [函数式编程](#函数式编程)
     - [Lambda](#lambda)
         - [Lambda表达式语法](#lambda表达式语法)
@@ -36,29 +39,35 @@
 - [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/blob/master/src/main/java/com/outman/demo/leetcode/CompletableFutureDemo.java)
 
 # 目录
-- [一、Java基础](#一、Java基础)
-    - [1、Java基础](#1、Java基础)
-        - [1.1、String常用方法](#1.1、String常用方法)
-        - [1.2、流程控制-×](#1.2、流程控制)
-        
+- [Java基础](#Java基础)
+    - [String常用方法](#string常用方法)
+    - [流程控制-×](#流程控制)
+    - [数组-×](#数组)
+    - [面向对象-×](#面向对象)
+    - [异常处理-×](#异常处理)
+ 
+- [集合-×](#集合)
+- [I/O-×](#IO)
+- [泛型-×](#泛型)
+- [反射-×](#反射)
+- [正则-×](#正则)
+- [注解-×](#注解)
 - [日期和时间](#日期和时间)
-    -[标准库API](#标准库API)
-        -[java.util.Date](#java.util.Date)
-    
-    - [2、集合](#2、集合)
-    - [3、I/O](#3、I/O)
-    - [4、面向对象-×](#4、面向对象)
-    - [5、异常处理-×](#5、异常处理)
-    - [6、多线程-×](#6、多线程)
-    - [7、泛型-×](#7、泛型)
-    - [8、JVM、GC](#8、JVM、GC)
-        - [8.1、自己编译jdk](#8.1、自己编译jdk)
-        - [8.2、java内存管理机制](#8.2、java内存管理机制)
-        - [8.3、垃圾回收](#8.3、垃圾回收)
-        - [8.4、性能调优](#8.4、性能调优)
-        - [8.5、类加载机制](#8.5、类加载机制)
-        - [8.6、高并发](#8.6、高并发)
-    - [9、正则-×](#9、正则)
+    - [标准库API](#标准库API)
+        - [java.util.Date](#date)
+
+- [多线程-×](#多线程)
+    - [异步编程-×](#异步编程)
+        - [CompletableFuture](#CompletableFuture)
+- [网络编程-×](#网络编程)
+
+- [JVM、GC](#JVM、GC)
+    - [自己编译jdk](#自己编译jdk)
+    - [java内存管理机制](#java内存管理机制)
+    - [垃圾回收](#垃圾回收)
+    - [性能调优](#性能调优)
+    - [类加载机制](#类加载机制)
+    - [高并发](#高并发)
     
 - [函数式编程](#函数式编程)
     - [Lambda](#Lambda)
@@ -73,12 +82,6 @@
         - [用流收集数据](#用流收集数据)
         - [并行流处理数据-×](#并行流处理数据)
         - [Optional类(java.util.Optional<T>)](#Optional类(java.util.Optional<T>))
-    
-- [12、异步编程-×](#异步编程)
-- [序列化，反序列化-×](#序列化，反序列化)
-- [网络-×](#网络)
-- [数据结构-×](#数据结构)
-- [反射-×](#反射)
 
 - [设计模式](#设计模式)
     - [使用Lambda重构设计模式](#使用Lambda重构设计模式)
@@ -87,7 +90,8 @@
         - [观察者模式](#观察者模式)
         - [模板方法](#模板方法)
         - [责任链模式](#责任链模式)
-- [N、解析文件-×](#N、解析文件)
+
+- [解析文件-×](#解析文件)
     - [解析json-×](#解析json)
     - [解析xml-×](#解析xml)
     - [解析Excel-×](#解析Excel)
@@ -96,9 +100,8 @@
 
 [github-toc](#github-toc)
 
-# 一、Java基础
-## 1、Java基础
-### 1.1、String常用方法
+# Java基础
+## String常用方法
 方法|返回值类型|描述|实例
 |---|---|---|---|
 |.charAt(int index)|char|||
@@ -162,14 +165,40 @@
 |.wait(long timeout, int nanos)|void|||
 |//todo|||
 
+[返回目录](#目录)
 
-#### 1.2、流程控制
+## 流程控制
+[返回目录](#目录)
 
+## 数组
+[返回目录](#目录)
+
+## 面向对象
+[返回目录](#目录)
+
+## 异常处理
+[返回目录](#目录)
+
+# 集合
+![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
+
+[返回目录](#目录)
+
+# IO
+[返回目录](#目录)
+# 泛型
+[返回目录](#目录)
+# 反射
+[返回目录](#目录)
+# 正则
+[返回目录](#目录)
+# 注解
+[返回目录](#目录)
 # 日期和时间
 ## 标准库API
 - java.util包：Date、Calendar、TimeZone
 - java.time包(Java 8引入)：LocalDateTime、ZonedDateTime、ZoneId等
-### java.util.Date
+### Date
 - 实际上存储了一个long类型的以毫秒表示的时间戳。
 ```java
     public static void main(String[] args) {
@@ -190,33 +219,21 @@
 
 [返回目录](#目录)
 
-## 2、集合
-![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
+# 多线程
+
+## 异步编程
+### CompletableFuture
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/blob/master/src/main/java/com/outman/demo/leetcode/CompletableFutureDemo.java)
 
 [返回目录](#目录)
 
-## 3、I/O
+# 网络编程
 
 [返回目录](#目录)
 
-## 4、面向对象
-### 继承
-### 多态
-### 抽象
-### 封装
 
-[返回目录](#目录)
-
-## 5、异常处理
-
-## 6、多线程
-`//8.6`
-## 7、泛型
-
-[返回目录](#目录)
-
-## 8、JVM、GC
-### 8.1、自己编译jdk 
+# JVM、GC
+## 自己编译jdk 
 - **获取OpenJDK 12源码：** [https://hg.openjdk.java.net/jdk/jdk12/](https://hg.openjdk.java.net/jdk/jdk12/)
 ```
 1、访问网址，点击左边菜单中的“Browse”显示源码根目录
@@ -281,7 +298,7 @@
 
 [返回目录](#目录)
 
-### 8.2、java内存管理机制
+## java内存管理机制
 - **java内存区域划分**
 
 |运行时数据区|用途|生命周期|异常|
@@ -353,7 +370,7 @@
 
 [返回目录](#目录)
 
-### 8.3、垃圾回收
+## 垃圾回收
 - **垃圾回收**
 ```
 1、哪些内存需要回收？
@@ -445,7 +462,7 @@
 
 [返回目录](#目录)
 
-### 8.4、性能调优
+## 性能调优
 
 - **大内存硬件上的程序部署策略**
 ```
@@ -526,7 +543,7 @@
 
 [返回目录](#目录)
 
-### 8.5、类加载机制
+## 类加载机制
 - **类文件结构**
 ```
 //TODO 6.3
@@ -631,7 +648,7 @@
 
 [返回目录](#目录)
 
-### 8.6、高并发
+## 高并发
 系统运行耗费时间项：磁盘IO、网络通信、数据库访问  
 TPS：每秒事务处理数，代表1秒内服务端平均能响应的请求总数
 - **Java内存模型(JMM)**  
@@ -764,10 +781,6 @@ Java线程调度： 指系统为线程分配处理器使用权的过程，调度
 ~~***锁优化***~~
 
 [返回目录](#目录)
-
-## 9、正则
-pattern
-
 
 
 # 函数式编程
@@ -1207,20 +1220,6 @@ public static Optional<Integer> stringToInt(String s) {
 
 [返回目录](#目录)
 
-
-# 异步编程
-## CompletableFuture
-
-# 序列化，反序列化
-
-# 网络
-
-# 数据结构
-
-# 反射
-
-[返回目录](#目录)
-
 # 设计模式
 ## 使用Lambda重构设计模式
 ### 策略模式  
@@ -1445,7 +1444,7 @@ String result = pipeline.apply("Aren't labdas really sexy?!!");
 
 [返回目录](#目录)
 
-# N、解析文件
+# 解析文件
 ## 解析json
 ## 解析xml
 ## 解析Excel
