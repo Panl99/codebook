@@ -1,6 +1,18 @@
-# Spring Boot
-SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监护spring应用开发。
-## 一、起步依赖
+
+# 目录
+- [起步依赖](#起步依赖)
+- [自动配置](#自动配置)
+    - [使用Profile配置](#使用Profile配置)
+- [Actuator：监控与管理](#Actuator：监控与管理)
+- [注解](#注解)
+    - [SpringBoot提供的自动配置中使用的条件化注解](#SpringBoot提供的自动配置中使用的条件化注解)
+
+[返回目录](#目录)
+
+
+**SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监护spring应用开发。**
+
+# 起步依赖
 代码位置：src/main/java  
 资源位置：src/main/resources；静态资源：src/main/resources/static；模板文件：src/main/resources/templates  
 测试代码位置：src/test/java  
@@ -51,7 +63,9 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 </project>
 ```
 
-## 二、自动配置
+[返回目录](#目录)
+
+# 自动配置
 **Spring Boot多属性源加载顺序（优先级高到低）：**  
 (1) 命令行参数  
 (2) java:comp/env里的JNDI属性  
@@ -67,8 +81,11 @@ SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监�
 (2) 外置，在应用程序运行的目录里。  
 (3) 内置，在config包内。  
 (4) 内置，在Classpath根目录。  
-**同一优先级位置同时有application.properties和application.yml，那么application.yml里的属性会覆盖application.properties里的属性。**  
-#### 使用Profile配置：  
+**同一优先级位置同时有application.properties和application.yml，那么application.yml里的属性会覆盖application.properties里的属性。**
+
+[返回目录](#目录)
+  
+## 使用Profile配置
 - 向application.yml里添加spring.profiles.active属性：
 ```
 spring:
@@ -108,7 +125,9 @@ logging:
     root: WARN
 ```
 
-## 三、Actuator：监控与管理
+[返回目录](#目录)
+
+# Actuator：监控与管理
 **添加依赖**  
 ```
 <dependency>
@@ -143,9 +162,9 @@ POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置�
 - scope：Bean的作用域（通常是单例，这也是默认作用域）。
 - type：Bean的Java类型。
 
-## 四、命令行界面
+[返回目录](#目录)
 
-## 注解
+# 注解
 注解 | 位置 | 使用 | 作用  
 -|-|-|-  
 @SpringBootApplication | 类上 |  | 开启Spring的组件扫描和SpringBoot的自动配置功能
@@ -158,8 +177,10 @@ POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置�
 @Conditional | | |
 @ConfigurationProperties | 类上 | @ConfigurationProperties(prefix="amazon") | 说明该Bean的属性应该是（通过setter方法）从配置属性值注入的
 @Profile | 类上 | @Profile("prod") | @Profile注解要求运行时激活prod Profile，从而应用该配置
-  
-#### SpringBoot提供的自动配置中使用的条件化注解：  
+
+[返回目录](#目录)
+
+## SpringBoot提供的自动配置中使用的条件化注解
 条件化注解 | 配置生效条件  
 -|-  
 @ConditionalOnBean | 配置了某个特定Bean
@@ -173,3 +194,5 @@ POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置�
 @ConditionalOnResource | Classpath里有指定的资源
 @ConditionalOnWebApplication | 这是一个Web应用程序
 @ConditionalOnNotWebApplication | 这不是一个Web应用程序
+
+[返回目录](#目录)
