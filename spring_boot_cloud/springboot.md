@@ -3,7 +3,7 @@
 - [起步依赖](#起步依赖)
 - [自动配置](#自动配置)
     - [使用Profile配置](#使用Profile配置)
-- [Actuator：监控与管理](#Actuator：监控与管理)
+- [Actuator：监控与管理](#Actuator监控与管理)
 - [注解](#注解)
     - [SpringBoot提供的自动配置中使用的条件化注解](#SpringBoot提供的自动配置中使用的条件化注解)
 
@@ -127,7 +127,7 @@ logging:
 
 [返回目录](#目录)
 
-# Actuator：监控与管理
+# Actuator监控与管理
 **添加依赖**  
 ```
 <dependency>
