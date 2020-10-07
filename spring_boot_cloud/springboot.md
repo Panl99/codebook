@@ -1,8 +1,14 @@
 
 # 目录
+- [项目构建](#项目构建)
 - [起步依赖](#起步依赖)
 - [自动配置](#自动配置)
-    - [使用Profile配置](#使用Profile配置)
+- [自定义配置](#自定义配置)
+    - [覆盖SpringBoot自动配置-TODO](#覆盖SpringBoot自动配置)
+    - [通过属性文件外置配置](#通过属性文件外置配置)
+        - [自动配置微调](#自动配置微调)
+        - [应用程序Bean的配置外置-TODO](#应用程序Bean的配置外置)
+        - [使用Profile进行配置](#使用Profile进行配置)
 - [Actuator：监控与管理](#Actuator监控与管理)
 - [注解](#注解)
     - [SpringBoot提供的自动配置中使用的条件化注解](#SpringBoot提供的自动配置中使用的条件化注解)
@@ -12,10 +18,14 @@
 
 **SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监护spring应用开发。**
 
+# 项目构建
+- 代码位置：src/main/java
+- 资源位置：src/main/resources
+    - 静态资源：src/main/resources/static
+    - 模板文件：src/main/resources/templates
+- 测试代码位置：src/test/java
+
 # 起步依赖
-代码位置：src/main/java  
-资源位置：src/main/resources；静态资源：src/main/resources/static；模板文件：src/main/resources/templates  
-测试代码位置：src/test/java  
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -66,7 +76,18 @@
 [返回目录](#目录)
 
 # 自动配置
-**Spring Boot多属性源加载顺序（优先级高到低）：**  
+- 每当应用启动时，SpringBoot的自动配置都会自动做出将近200个涵盖安全、集成、持久化、Web开发等方面的配置选择，避免自己写配置。
+
+# 自定义配置
+## 覆盖SpringBoot自动配置
+// TODO
+
+[返回目录](#目录)
+
+## 通过属性文件外置配置
+- SpringBoot自动配置的Bean提供300多个用于微调的属性，调整设置时，只要在环境变量、Java系统属性、JNDI、命令行参数、属性文件中进行指定就可以了。
+    - 比如：命令行禁用Banner`java -jar ***.jar --spring.main.show-banner=false`
+- **SpringBoot多属性源加载顺序(优先级高到低)：**  
 (1) 命令行参数  
 (2) java:comp/env里的JNDI属性  
 (3) JVM系统属性  
@@ -76,16 +97,96 @@
 (7) 打包在应用程序内的application.properties或者appliaction.yml文件  
 (8) 通过@PropertySource标注的属性源  
 (9) 默认属性  
-**application.properties和application.yml文件能放在以下四个位置（优先级高到低）：**  
+- **application.properties和application.yml文件能放在以下四个位置（优先级高到低）：**  
 (1) 外置，在相对于应用程序运行目录的/config子目录里。  
 (2) 外置，在应用程序运行的目录里。  
 (3) 内置，在config包内。  
 (4) 内置，在Classpath根目录。  
-**同一优先级位置同时有application.properties和application.yml，那么application.yml里的属性会覆盖application.properties里的属性。**
+- **同一优先级位置同时有application.properties和application.yml，那么application.yml里的属性会覆盖application.properties里的属性。**
 
 [返回目录](#目录)
+
+### 自动配置微调
+- **禁用模板缓存**：Thymeleaf模板默认缓存可以提升应用性能，应用重启模板配置变更才会生效。
+    - 可以设置命令行参数：`java -jar xxx.jar --spring.thymeleaf.cache=false`
+    - 或者配置application.yml每次运行都会禁用缓存：
+        ```yaml
+        spring:
+          thymeleaf:
+            cache: false
+        ```
+    - 通过环境变量禁用Thymeleaf缓存：`export spring_thymeleaf_cache=false`
+- **配置嵌入式服务器**：运行SpringBoot应用时，应用会启动一个嵌入式的服务器（默认Tomcat），监听8080端口。如果有多个应用同时运行时就要设置监听端口防止冲突。
+    - 命令行：`java -jar xxx.jar --server.port=8000`
+    - application.yml：
+        ```yaml
+        server:
+          port: 8000
+        ```
+- **配置日志**：SpringBoot默认使用Logback记录日志。
+    - 若使用Log4j2：排除默认日志依赖，添加Log4j2依赖
+        ```xml
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+      
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        ```
+    - 在`src/main/resources`下创建文件`logback.xml`：可以控制日志配置
+        ```xml
+        <configuration>
+          <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+              <pattern>
+                %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+              </pattern>
+            </encoder>
+          </appender>
+          <logger name="root" level="INFO" />
+          <root level="INFO">
+            <appender-ref ref="STDOUT" />
+          </root>
+        </configuration>
+        ```
+    - 使用application.yml配置，设置根日志级别WARN、SpringSecurity为DEBUG，输出日志到`var/logs/readinglist.log`，默认10M切分一次：
+        ```yaml
+        logging:
+          path: /var/logs/
+          file: readinglist.log
+          level:
+            root: WARN
+            org:
+              springframework:
+                security: DEBUG
+        ```
+- **配置数据源**：
+    - 使用application.yml配置：
+        ```yaml
+        spring:
+          datasource:
+            url: jdbc:mysql://localhost/readinglist
+            username: dbuser
+            password: dbpass
+            driver-class-name: com.mysql.jdbc.Driver #指定JDBC驱动,一般不需要
+        ```
+
+[返回目录](#目录)
+
+### 应用程序Bean的配置外置
+//TODO
+[返回目录](#目录)
   
-## 使用Profile配置
+### 使用Profile进行配置
 - 向application.yml里添加spring.profiles.active属性：
 ```
 spring:
