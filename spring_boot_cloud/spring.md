@@ -7,6 +7,7 @@
     - [依赖注入](#依赖注入)
 - [AOP](#AOP)
 - [Spring MVC](#SpringMVC)
+    - [SpringMVC流程](#SpringMVC流程)
 - [访问数据库](#访问数据库)
 - [Web应用开发](#Web应用开发)
     - [使用REST](#使用REST)
@@ -42,25 +43,89 @@
 
 ## 依赖注入
 在运行期间，由外部容器动态的将依赖对象注入到组件中  
-**Spring依赖注入方式：**  
-- 构造函数注入  
-- setter注入  
-- 注解方式  
+- **Spring依赖注入方式：**  
+    - 构造函数注入
+    - setter注入
+    - 注解方式
+        - `@Component`+`@Autowired`，@Component注解就相当于定义了一个Bean，它有一个可选的名称，默认是mailService，即小写开头的类名。@Autowired相当于把指定类型的Bean注入到指定的字段中。和XML配置相比，@Autowired大幅简化了注入，因为它不但可以写在set()方法上，还可以直接写在字段上，甚至可以写在构造方法中。
+            ```java
+            @Component
+            public class UserService {
+                @Autowired
+                MailService mailService;
+            
+                ...
+            }
+            ```
 
 [返回目录](#目录)
 
 # AOP
-将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，便于减少系统的重复代码，降低模块间的耦合度，并有利于未来的可拓展性和可维护性。  
-使用动态代理的方式在执行方法前后或出现异常之后加入相关逻辑。  
-**用来：**  
-- 事务处理  
-- 权限控制  
-- 日志管理  
+- 将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，便于减少系统的重复代码，降低模块间的耦合度，并有利于未来的可拓展性和可维护性。  
+- 使用动态代理的方式在执行方法前后或出现异常之后加入相关逻辑。  
+- **用来：**
+    - 事务处理
+    - 权限控制
+    - 日志管理
+        - 引入依赖，依赖会自动引入AspectJ，使用AspectJ实现AOP比较方便。
+            ```xml
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aspects</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            ```
+        - 定义一个LoggingAspect：
+            - `@Before`后面的字符串是告诉AspectJ应该在何处执行该方法，这里写的意思是：执行UserService的每个public方法前执行doAccessCheck()代码。
+            - `@Around`可以决定是否执行目标方法，因此，我们在doLogging()内部先打印日志，再调用方法，最后打印日志后返回结果。
+            - `@Component`表示它本身也是一个Bean。
+            - `@Aspect`表示它的`@Before`标注的方法需要注入到UserService的每个public方法执行前，`@Around`标注的方法需要注入到MailService的每个public方法执行前后。
+            ```java
+            @Aspect
+            @Component
+            public class LoggingAspect {
+                // 在执行UserService的每个方法前执行:
+                @Before("execution(public * com.itranswarp.learnjava.service.UserService.*(..))")
+                public void doAccessCheck() {
+                    System.err.println("[Before] do access check...");
+                }
+            
+                // 在执行MailService的每个方法前后执行:
+                @Around("execution(public * com.itranswarp.learnjava.service.MailService.*(..))")
+                public Object doLogging(ProceedingJoinPoint pjp) throws Throwable {
+                    System.err.println("[Around] start " + pjp.getSignature());
+                    Object retVal = pjp.proceed();
+                    System.err.println("[Around] done " + pjp.getSignature());
+                    return retVal;
+                }
+            }
+            ```
+        - 给@Configuration类加上一个`@EnableAspectJAutoProxy`注解：
+            - Spring的IoC容器看到这个注解，就会自动查找带有`@Aspect`的Bean，然后根据每个方法的`@Before`、`@Around`等注解把AOP注入到特定的Bean中。
+            ```java
+            @Configuration
+            @ComponentScan
+            @EnableAspectJAutoProxy
+            public class AppConfig {
+                ...
+            }
+            ```
+        - 执行代码，我们可以看到以下输出：
+            ```
+            [Before] do access check...
+            [Around] start void com.itranswarp.learnjava.service.MailService.sendRegistrationMail(User)
+            Welcome, test!
+            [Around] done void com.itranswarp.learnjava.service.MailService.sendRegistrationMail(User)
+            [Before] do access check...
+            [Around] start void com.itranswarp.learnjava.service.MailService.sendLoginMail(User)
+            Hi, Bob! You are logged in at 2020-02-14T23:13:52.167996+08:00[Asia/Shanghai]
+            [Around] done void com.itranswarp.learnjava.service.MailService.sendLoginMail(User)
+            ```
 
 [返回目录](#目录)
 
 # SpringMVC
-## Spring MVC流程
+## SpringMVC流程
 - 用户发送请求到前端控制器DispatcherServlet；
 - DispatcherServlet收到请求后调用HandlerMapping处理器映射器；
 - 处理器映射器根据请求url找到具体的处理器，生成处理器对象和处理器拦截器(如果有则生成)，一并返回给DispatcherServlet；
