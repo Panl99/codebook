@@ -65,8 +65,37 @@
 - 使用动态代理的方式在执行方法前后或出现异常之后加入相关逻辑。  
 - **用来：**
     - 事务处理
+        - Spring提供的`@Transactional`可以声明在Bean上，表示希望在一个数据库事务中被调用：
+            ```java
+            @Component
+            public class UserService {
+                // 有事务:
+                @Transactional
+                public User createUser(String name) {
+                    ...
+                }
+                // 无事务:
+                public boolean isValidName(String name) {
+                    ...
+                }
+                // 有事务:
+                @Transactional
+                public void updateUser(User user) {
+                    ...
+                }
+            }
+            ```
+            - 或者直接在class级别注解，表示“所有public方法都被声明”：
+                ```java
+                @Component
+                @Transactional
+                public class UserService {
+                    ...
+                }
+                ```     
     - 权限控制
     - 日志管理
+        - 不推荐使用：无差别全覆盖，即某个包下面的所有Bean的所有方法都会被这个check()方法拦截。
         - 引入依赖，依赖会自动引入AspectJ，使用AspectJ实现AOP比较方便。
             ```xml
             <dependency>
