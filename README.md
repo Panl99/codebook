@@ -96,3 +96,4 @@
 ## 书籍
 - [互联网上的免费书籍:https://github.com/ruanyf/free-books](https://github.com/ruanyf/free-books)
 - [免费的编程中文书籍索引:https://github.com/justjavac/free-programming-books-zh_CN](https://github.com/justjavac/free-programming-books-zh_CN)
+- [pdf大全：https://m.seotest.cn/jishu/31878.html](https://m.seotest.cn/jishu/31878.html)
