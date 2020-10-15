@@ -14,8 +14,8 @@
     - [发布/订阅命令](#发布/订阅命令)
     - [其他命令](#其他命令)
 - [复制](#复制)
-    - [配置](#配置)
-    - [redis复制启动过程](#redis复制启动过程)
+    - [复制功能的实现](#复制功能的实现)
+    - [主从服务器心跳检测机制](#主从服务器心跳检测机制)
 - [持久化](#持久化)
     - [快照持久化](#快照持久化)
         - [使用快照持久化](#使用快照持久化)
@@ -32,11 +32,35 @@
         - [重新分片](#重新分片)
     - [复制与故障转移](#复制与故障转移)
         - [故障转移](#故障转移)
-- [](#)
-- [](#)
 - [实战](#实战)
     - [使用Redis管理用户登录会话](#使用Redis管理用户登录会话)
     - [使用Redis实现购物车-TODO](#使用Redis实现购物车)
+
+------
+- [安装](#安装)
+    - [Windows下安装Redis](#Windows下安装Redis)
+    - [Jedis驱动的安装](#Jedis驱动的安装)
+- [Jedis命令](#Jedis命令)
+    - [Jedis-key](#Jedis-key)
+    - [Jedis-String](#Jedis-String)
+    - [Jedis-List](#Jedis-List)
+    - [Jedis-Set](#Jedis-Set)
+    - [Jedis-sortedSet](#Jedis-sortedSet)
+    - [Jedis-Hash](#Jedis-Hash)
+- [Redis常用命令集](#Redis常用命令集)
+    - [连接操作命令](#连接操作命令)
+    - [持久化命令](#持久化命令)
+    - [远程服务控制](#远程服务控制)
+    - [对value操作的命令](#对value操作的命令)
+    - [String](#String)
+    - [List](#List)
+    - [Set](#Set)
+    - [Hash](#Hash)
+    - [Redis发布订阅命令](#Redis发布订阅命令)
+    - [Redis事务命令](#Redis事务命令)
+    - [查看keys个数](#查看keys个数)
+    - [清空数据库](#清空数据库)
+    
 
 [目录](#目录)
 
@@ -156,13 +180,42 @@
 [目录](#目录)
 
 # 复制
-## 配置
-- 启动redis服务器时，指定配置：`slaveof host port` redis服务器会根据指定的ip地址和端口来连接主服务器。
-## redis复制启动过程
-- 主服务器：等待命令进入。
-    - 从服务器：连接主服务器，发送SYNC命令。
-- 主服务器：开始执行`BGSAVE`，并使用缓冲区记录`BGSAVE`之后执行的所有写命令
+- 用户可以通过`SLAVEOF命令` 或者启动Redis时`slaveof配置`，让一个从服务器去复制主服务器。
+    - `SLAVEOF <master_ip> <master_port>`
+    - 例如：`127.0.0.1:12345> SLAVEOF 127.0.0.1 6379`：12345服务器将成为6379的从服务器。
 
+## 复制功能的实现
+- 版本：2.8+
+- 使用`PSYNC`命令代替旧版SYNC命令来执行复制时的同步操作。
+    - `PSYNC`命令分为两种模式：完整重同步、部分重同步。
+        - 完整重同步：用于处理初次复制的情况(与SYNC命令步骤相同)。
+            - 从服务器向主服务器发送SYNC命令。
+            - 收到SYNC命令后，主服务器执行BGSAVE命令，在后台生成一个RDB文件，并使用一个缓冲区记录从现在开始执行的所有写命令。
+            - 主服务器BGSAVE执行完后，将生成的RDB文件发给从服务器，从服务器接收并更新自己数据库状态 到主服务器执行BGSAVE命令时的数据库状态。
+            - 主服务器将记录在缓冲区的所有写命令发给从服务器，从服务器执行这些写命令，并更新自己数据库状态。
+        - 部分重同步：用于处理断线后重复制情况：当从服务器断线后重连主服务器时，如果条件允许，主服务器会将主从服务器断开期间执行的写命令发送给从服务器，从服务器只要接收并执行这些写命令就可以更新数据库与当前主服务器的数据一致。
+- 复制的实现：
+    - 设置主服务器的地址和端口：`127.0.0.1:12345> SLAVEOF 127.0.0.1 6379`
+    - 建立套接字连接：从服务器根据命令的ip+port创建连向主服务器的套接字连接。（“从服务器是主服务器的客户端”）
+    - 发送PING命令：从服务器12345向主服务器6379发送PING命令。
+    - 身份验证：从服务器12345收到主服务器6379的PONG回复后 决定是否进行身份验证(取决于从服务器是否设置了`masterauth`选项)。
+    - 发送端口信息：身份验证后，从服务器执行命令`REPLCONF listening-port <port-number>`向主服务器发送自己的监听端口。
+    - 同步：从服务器向主服务器发送`PSYNC`命令将自己的数据库同步到主服务器数据库当前状态。
+    - 命令传播：完成同步后，主服务器进入命令传播阶段，将自己执行的写命令发给从服务器，从服务器一直接受就可以与主服务器保持一致了。
+
+[目录](#目录)
+
+## 主从服务器心跳检测机制
+- 在命令传播阶段，从服务器默认1秒1次向主服务器发送命令：`REPLCONF ACK <replication_offset>`
+    - `replication_offset`为从服务器当前的复制偏移量。
+    - 作用：
+        - 检测主服务器的网络连接状态。
+            - 主服务器超过1秒没有收到从服务器的`REPLCONF ACK`命令，就会知道主从之间的连接出问题了。
+        - 辅助实现`min-slaves`选项。
+            - `min-slaves-to-write`和`min-slaves-max-lag`可以防止主服务器在不安全的情况下执行写命令。
+            - 例如：`min-slaves-to-write 3`和`min-slaves-max-lag 10`：表示从服务器数量少于3个，或者3个从服务器的延迟值(lag)都大于等于10秒时，主服务器拒绝执行写命令。
+        - 检测命令丢失。
+            - 如果网络故障，主服务器发给从服务器的写命令中途丢失，那么当从服务器向主服务器发送`REPLCONF ACK`命令时，主服务器会发现从服务器当前的复制偏移量少于自己的复制偏移量，就会在复制积压缓冲区里找到从服务器缺少的数据，并重新发给从服务器。
 
 [目录](#目录)
 
@@ -467,7 +520,9 @@ Redis 支持 32 位和 64 位。这个需要根据你系统平台的实际情况
 取出键值对 get myKey  
 ![](https://img-blog.csdnimg.cn/20190414150550348.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
 
-## Java redis驱动的安装
+[目录](#目录)
+
+## Jedis驱动的安装
 [首先你需要下载最新驱动包：https://mvnrepository.com/artifact/redis.clients/jedis](https://mvnrepository.com/artifact/redis.clients/jedis)
 - 在你的 classpath 中包含该驱动包。
 - 连接到 redis 服务：
@@ -488,8 +543,11 @@ public class RedisJava {
 连接成功
 服务正在运行: PONG
 ```
-# Redis命令
-## Redis键(key)
+
+[目录](#目录)
+
+# Jedis命令
+## Jedis-key
 ```
 private void KeyOperate() 
    { 
@@ -551,7 +609,10 @@ key001
 查看key001的剩余生存时间：-1
 查看key所储存的值的类型：string
 ```
-## Redis字符串(String)
+
+[目录](#目录)
+
+## Jedis-String
 ```
 private void StringOperate() 
    {  
@@ -669,7 +730,10 @@ key302新值：value302-after-getset
 =============获取子串=============
 获取key302对应值中的子串：302
 ```
-## Redis列表(List)
+
+[目录](#目录)
+
+## Jedis-List
 ```
 private void ListOperate() 
    { 
@@ -752,7 +816,10 @@ private void ListOperate() 
 子串-第二个开始到结束：[MapList, LinkedList]
 获取下标为2的元素：LinkedList
 ```
-## Redis集合(Set)
+
+[目录](#目录)
+
+## Jedis-Set
 ```
 private void SetOperate() 
    { 
@@ -842,7 +909,10 @@ sets1和sets2交集：[element002, element003]
 sets1和sets2并集：[element001, element002, element003, element004]
 sets1和sets2差集：[element001]
 ```
-## Redis有序集合(sorted set)
+
+[目录](#目录)
+
+## Jedis-sortedSet
 ```
 private void SortedSetOperate() 
    { 
@@ -898,7 +968,9 @@ zset集合中的所有元素：[element003, element004, element001]
 查看下标1到2范围内的元素值：[element004, element001]
 ```
 
-## Redis哈希(Hash)
+[目录](#目录)
+
+## Jedis-Hash
 ```
 private void HashOperate() 
    { 
@@ -960,6 +1032,8 @@ hashs中的所有值：[value001, value003, 104]
 获取hashs中所有的key：[key004, key003, key001]
 获取hashs中所有的value：[value001, value003, 104]
 ```
+
+[目录](#目录)
 
 # Redis常用命令集
 ## 连接操作命令
@@ -1076,3 +1150,5 @@ hashs中的所有值：[value001, value003, 104]
 ## 清空数据库
 - flushdb   // 清除当前数据库的所有keys
 - flushall    // 清除所有数据库的所有keys
+
+[目录](#目录)
