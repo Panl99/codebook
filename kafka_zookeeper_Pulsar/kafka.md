@@ -1,16 +1,24 @@
-# 一、了解kafka #
+# 目录
 
-## kafka ##
+- [toc]
+
+[返回目录](#目录)
+
+# 了解kafka
+
 一个高性能的发布-订阅消息系统。  
 broker：一个独立的kafka服务器被称为broker。broker接收来自生产者的消息，为消息设置偏移量，并提交消息到磁盘保存。broker为消费者提供服务，对读取分区的请求作出响应，返回已经提交到磁盘上的消息。
-## 为什么选kafka ##
+
+## 为什么选kafka
 - **支持多个生产者**：适合从多个前端系统收集数据，并以统一的格式对外提供数据。
 - **支持多个消费者**：支持多个消费者从一个单独的消息流上读取数据，且消费者之间互不影响。（其他队列系统的消息一旦被一个客户端读取，其他客户端就无法在读取它）
 - **可持久化数据，实现非实时地读取消息**：kafka根据主题设置保留规则，将数据保存到磁盘。消费者可从上次处理中断的地方继续处理消息。
 - **可伸缩性**：kafka具有灵活的伸缩性，对在线集群进行扩展不会影响整体系统的可用性。
 - **高性能**：通过横向扩展生产者、消费者、broker，kafka可以轻松的处理巨大的消息流。且能保证亚秒级的消息延迟。
 
-# 二、安装kafka #
+[返回目录](#目录)
+
+# 二、安装kafka
 1. **选择系统**：Linux
 2. **安装Java**：/usr/java/jdk1.8.0_51
 3. **安装Zookeeper**：kafka使用zookeeper保存集群的元数据信息和消费者信息。（kafka发行版自带zookeeper，可直接从脚本启动）  
@@ -20,7 +28,10 @@ broker：一个独立的kafka服务器被称为broker。broker接收来自生产
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190612232716776.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
 4. **安装Kafka Broker**  
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190612232747159.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
-#### broker配置 ####
+
+[返回目录](#目录)
+
+## broker配置
 - **常规配置**：  
 **broker.id**：可设为任意整数，默认0，在kafka集群中唯一，建议设置成与机器名相关的整数便于维护。  
 **port**：默认9092端口，可设置为其他可用的端口（注意：若设为1024以下端口，需使用root权限启动kafka，不建议）  
@@ -46,17 +57,22 @@ broker：一个独立的kafka服务器被称为broker。broker接收来自生产
 **log.segment.ms**：日志片段关闭时间。  
 **message.max.bytes**：单个消息大小（压缩后）。默认1000000（即1MB），超过后消息丢失且返回错误。  
 
-## 选择硬件 ##
+[返回目录](#目录)
+
+## 选择硬件
 - **磁盘吞吐量**：
 - **磁盘容量**：
 - **内存**：
 - **网络**：
 - **CPU**：
 
-## kafka集群 ##
-	跨服务器进行负载均衡 
-	可以使用复制功能避免单节点故障造成数据丢失
-#### 配置kafka集群 ####
+[返回目录](#目录)
+
+## kafka集群
+- 跨服务器进行负载均衡 
+- 可以使用复制功能避免单节点故障造成数据丢失
+
+### 配置kafka集群
 - **需要broker数量**：影响因素：  
 1、需要多少磁盘空间保留数据，以及单个broker有多少空间可用；  
 2、集群处理请求的能力。
@@ -67,13 +83,18 @@ broker：一个独立的kafka服务器被称为broker。broker接收来自生产
 **虚拟内存**：  
 **磁盘**：  
 **网络**：
-## 生产环境注意事项 ##
+
+[返回目录](#目录)
+
+## 生产环境注意事项
 - **垃圾回收器选项**：  
 - **数据中心布局**：  
 - **共享zookeeper**：
 
-# 三、kafka生产者 #
-## 1、消息发送流程 ##
+[返回目录](#目录)
+
+# 三、kafka生产者
+## 消息发送流程
  - 创建一个ProducerRecord对象，包含topic和消息内容（还可指定键和分区）；
  - 序列化器对键和值对象进行序列化，然后发送ProducerRecord对象到分区器；
  - 如果在第1步指定了分区，则直接返回分区；如果未指定分区，分区器会根据ProducerRecord对象的键指定一个分区；
@@ -81,8 +102,11 @@ broker：一个独立的kafka服务器被称为broker。broker接收来自生产
  - 有一个独立的线程负责将这些记录批次发送到broker上；
  - broker收到消息返回一个响应，写入成功返回一个RecordMetaData对象（包含topic、分区信息、消息在分区中的偏移量），写入失败返回一个错误，生产者收到错误后会重新发送，如果接连失败将会返回错误信息。
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616171635916.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
-## 2、创建kafka生产者 ##
-#### kafka生产者3个必选属性： 
+
+[返回目录](#目录)
+
+## 创建kafka生产者
+### kafka生产者3个必选属性
 - **bootstrap.servers**：指定broker的地址清单（地址格式：host:port）。  
 不必包含所有broker地址，生产者会从给定的broker中查找其他broker信息，建议至少设置两个（其中一个宕机不会影响生产者继续连接到集群）。
 - **key.serializer**：指定一个实现org.apache.kafka.common.serialization.Serializer接口的类，该类会将键对象序列化成字节数组。kafka客户端默认提供：ByteArraySerializer、StringSerializer、IntegerSerializer。
@@ -98,8 +122,11 @@ kafkaProps.put("value.serializer", "org.apache.kafka.common.serialization.String
 //创建一个生产者对象，为键、值设置类型为String，将属性对象传给进去。
 producer = new KafkaProducer<String, String>(kafkaProps);
 ```
-## 3、发送消息到kafka
-#### 发送消息的三种方式：
+
+[返回目录](#目录)
+
+## 发送消息到kafka
+### 发送消息的三种方式
 - **发送并忘记（fire-and-forget）**：将消息发送给服务器，但不关心它是否正常到达。（一般消息会正常到达，因为kafka高可用，且生产者有重试机制。偶尔会丢失消息）
 ```
 //创建一个ProducerRecord对象，指定topic、键、值。（键、值类型要和序列化器以及生产者对象一直）
@@ -137,8 +164,11 @@ ProducerRecord<String, String> record = new ProducerRecord<> ("CustomerCountry",
 //发送消息，并传入回调对象
 producer.send(record, new DemoProducerCallback());
 ```
-## 4、生产者配置
-#### 生产者的其他配置参数：
+
+[返回目录](#目录)
+
+## 生产者配置
+### 生产者的其他配置参数
  - **acks**：指定必须有多少个分区副本收到消息，生产者才会认为消息写入成功。  
  **asks=0**，生产者不知道服务器有没有收到消息，不会等待服务器响应，因此吞吐量较大。
  **asks=1**，集群leader节点收到消息会返回成功，若leader节点挂掉会返回错误。
@@ -158,8 +188,10 @@ producer.send(record, new DemoProducerCallback());
  - **receive.buffer.bytes**：指定TCP socket接收数据包的缓冲区大小。
  **send.buffer.bytes**：指定TCP socket发送数据包的缓冲区大小。
 
-## 5、序列化器
-#### 自定义序列化器：
+[返回目录](#目录)
+
+## 序列化器
+### 自定义序列化器
 ```
 //创建一个客户类
 public class Customer {
@@ -226,7 +258,10 @@ public class CustomerSerializer implements Serializer<Customer> {
     }
 }
 ```
-#### 其它序列化框架
+
+[返回目录](#目录)
+
+### 其它序列化框架
  - **Avro**：编程语言无关的序列化格式。数据会被序列化成二进制文件或json文件。  
  Avro通过schema定义，schema通过json描述。  
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214255789.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
@@ -234,7 +269,9 @@ public class CustomerSerializer implements Serializer<Customer> {
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214445154.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
  - **Thrift**
 
-## 6、分区
+[返回目录](#目录)
+
+## 分区
 **键的两个作用：**
  - 作为消息的附加信息；
  - 可以用来决定消息应该被写到topic的哪个分区（键相同的消息将被写到同一分区）。
@@ -242,7 +279,9 @@ public class CustomerSerializer implements Serializer<Customer> {
 **键可以为null**，加上使用默认分区器，消息会被分区器使用轮询的方法随机均衡的发送到topic的任意可用分区。
 **键不为空**，并且使用默认分区器，kafka会使用散列算法对键进行散列，将散列值映射到特定分区（一般同一个键会被映射到同一分区（即使分区不可用，这种情况较少），但要保证topic分区数不变）。
 
-#### 自定义分区：
+[返回目录](#目录)
+
+### 自定义分区
 ```
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.Cluster;
@@ -271,12 +310,14 @@ public class BananaPartitioner implements Partitioner {
 }
 ```
 
-# 四、kafka消费者 #
-## 1、KafkaConsumer
+[返回目录](#目录)
+
+# 四、kafka消费者
+## KafkaConsumer
  - **消费者群组**：kafka消费者从属于消费者群组，一个群组里的消费者订阅的是同一个主题，每个消费者接收主题一部分分区的消息。
  - **再均衡**：分区的所有权从一个消费者转移到另一个消费者。
 
-## 2、创建Kafka消费者
+## 创建Kafka消费者
 ```
 //创建一个属性对象
 Properties kafkaProps = new Properties();
@@ -295,7 +336,10 @@ KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(kafka
 consumer.subscribe(Collections.singletonList("customerCountries"));
 //如订阅test相关主题：consumer.subscribe("test.*");
 ```
-#### 轮询：群组协调、分区再均衡、发送心跳、获取数据
+
+[返回目录](#目录)
+
+### 轮询：群组协调、分区再均衡、发送心跳、获取数据
 ```
 //通过简单的消息轮询向服务器请求数据
 try {
@@ -320,8 +364,11 @@ try {
    consumer.close();
 }
 ```
-## 3、消费者的配置
-#### 消费者其它配置参数
+
+[返回目录](#目录)
+
+## 消费者的配置
+### 消费者其它配置参数
 
  - **fetch.min.bytes**：指定消费者从服务器获取记录的最小字节数（数据量达到时才返回给消费者）。
  - **fetch.max.wait.ms**：指定broker的等待时间（默认500ms）。
@@ -335,16 +382,24 @@ try {
  - **client.id**：任意字符串，broker用来识别从客户端发来的消息。
  - **max.poll.records**：用于控制单次调用call()方法能返回的记录数量，可以控制轮询需要处理的数据量。
  - **receive.buffer.bytes | send.buffer.bytes**：设置TCP缓冲区大小。
-## 4、提交和偏移量
+ 
+ [返回目录](#目录)
+ 
+## 提交和偏移量
  - **提交**：更新分区当前位置的操作。
  - **自动提交**：enable.auto.commit=true
  - **提交当前偏移量**：consumer.commitSync();
  - **异步提交**：consumer.commitAsync();
  - **提交特定偏移量**
-## 5、再均衡监听器
+ 
+ [返回目录](#目录)
+ 
+## 再均衡监听器
 消费者在退出和进行分区再均衡前会做一些清理工作。在调用subscribe()方法时传入ConsumerRebalanceListener对象。
-## 6、退出
+## 退出
 调用**consumer.wakeup()**
-## 7、反序列化器
-## 8、独立消费者（没有群组的消费者）
+## 反序列化器
+## 独立消费者（没有群组的消费者）
+
+[返回目录](#目录)
 
