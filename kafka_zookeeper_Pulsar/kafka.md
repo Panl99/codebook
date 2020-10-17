@@ -19,7 +19,7 @@
         - [自定义分区](#自定义分区)
 - [四、kafka消费者](#四、kafka消费者)
     - [创建Kafka消费者](#创建Kafka消费者)
-        - [轮询：群组协调、分区再均衡、发送心跳、获取数据](#轮询：群组协调、分区再均衡、发送心跳、获取数据)
+        - [消息轮询请求数据](#消息轮询请求数据)
     - [消费者的配置](#消费者的配置)
     - [提交和偏移量](#提交和偏移量)
     - [再均衡监听器](#再均衡监听器)
@@ -33,8 +33,8 @@
 
 - 一个高性能的发布-订阅消息系统。  
 - **`broker`**：一个独立的kafka服务器被称为broker。
-    - broker接收来自生产者的消息，为消息设置偏移量，并提交消息到磁盘保存。
-    - broker为消费者提供服务，对读取分区的请求作出响应，返回已经提交到磁盘上的消息。
+    - `broker` 接收来自生产者的消息，为消息设置偏移量，并提交消息到磁盘保存。
+    - `broker` 为消费者提供服务，对读取分区的请求作出响应，返回已经提交到磁盘上的消息。
 
 [返回目录](#目录)
 
@@ -62,16 +62,16 @@
 
 ## broker配置
 - **常规配置**：
-    - **broker.id**：可设为任意整数，默认0，在kafka集群中唯一，建议设置成与机器名相关的整数便于维护。  
-    - **port**：默认9092端口，可设置为其他可用的端口（注意：若设为1024以下端口，需使用root权限启动kafka，不建议）  
-    - **zookeeper.connect**：指定保存broker元数据的zookeeper地址。（如localhost:2181 表示zookeeper运行在本地2181端口上），参数格式：hostname:port/path，hostname表示zookeeper服务器的机器名或IP地址；port表示zookeeper客户端连接端口；/path表示可选的zookeeper路径，作为集群的chroot环境，若不指定默认为根路径。  
-    - **log.dirs**：消息日志目录。用逗号分隔的本地文件系统路径。如果指定多个路径，broker会根据“最少使用”原则把同一分区的日志片段保存在同一路径下。  
-    - **num.recovery.threads.per.data.dir**：配置线程池处理日志，用于如下情况：  
+    - **`broker.id`**：可设为任意整数，默认0，在kafka集群中唯一，建议设置成与机器名相关的整数便于维护。  
+    - **`port`**：默认9092端口，可设置为其他可用的端口（注意：若设为1024以下端口，需使用root权限启动kafka，不建议）  
+    - **`zookeeper.connect`**：指定保存broker元数据的zookeeper地址。（如localhost:2181 表示zookeeper运行在本地2181端口上），参数格式：hostname:port/path，hostname表示zookeeper服务器的机器名或IP地址；port表示zookeeper客户端连接端口；/path表示可选的zookeeper路径，作为集群的chroot环境，若不指定默认为根路径。  
+    - **`log.dirs`**：消息日志目录。用逗号分隔的本地文件系统路径。如果指定多个路径，broker会根据“最少使用”原则把同一分区的日志片段保存在同一路径下。  
+    - **`num.recovery.threads.per.data.dir`**：配置线程池处理日志，用于如下情况：  
         - 服务器正常启动，用于打开每个分区的日志片段；  
         - 服务器崩溃后重启，用于检查和截断每个分区的日志片段；  
         - 服务器正常关闭，用于关闭日志片段。  
         - 注意：举例：若此参数设为8，log.dir指定了3个路径，则总共需要24个线程。  
-    - **auto.create.topics.enable**：自动创建主题（设为true），用于如下情况：  
+    - **`auto.create.topics.enable`**：自动创建主题（设为true），用于如下情况：  
         - 当一个生产者开始往主题写入消息时；  
         - 当一个消费者开始从主题读取消息时；  
         - 当任一个客户端向主题发送元数据请求时。  
@@ -79,12 +79,14 @@
 
 - **主题的默认配置**  
 新版本kafka需要使用管理工具对默认参数进行重置。  
-    - **num.partitions**：主题包含的分区数。默认是1，可以增加主题分区数量，但不能减少。可以估算出主题吞吐量和消费者吞吐量，用主题吞吐量除以消费者吞吐量来计算分区个数。  
-    - **log.retention.ms**：消息保留时间。默认使用**log.retention.hours配置时间**，默认168小时（即一周），还有log.retention.minutes。  
-    - **log.retention.bytes**：消息保留大小。作用于每个分区（如设置为1GB，有8个分区，则可以保留8GB数据）  
-    - **log.segment.bytes**：日志片段关闭大小，关闭后重新创建新的日志片段。  
-    - **log.segment.ms**：日志片段关闭时间。  
-    - **message.max.bytes**：单个消息大小（压缩后）。默认1000000（即1MB），超过后消息丢失且返回错误。  
+    - **`num.partitions`**：主题包含的分区数。默认是1，可以增加主题分区数量，但不能减少。可以估算出主题吞吐量和消费者吞吐量，用主题吞吐量除以消费者吞吐量来计算分区个数。  
+    - **`log.retention.ms`**：消息保留时间。
+        - 默认**`log.retention.hours`配置时间**，默认168小时（即一周）
+        - 还有`log.retention.minutes`。  
+    - **`log.retention.bytes`**：消息保留大小。作用于每个分区（如设置为1GB，有8个分区，则可以保留8GB数据）  
+    - **`log.segment.bytes`**：日志片段关闭大小，关闭后重新创建新的日志片段。  
+    - **`log.segment.ms`**：日志片段关闭时间。  
+    - **`message.max.bytes`**：单个消息大小（压缩后）。默认1000000（即1MB），超过后消息丢失且返回错误。  
 
 [返回目录](#目录)
 
@@ -104,12 +106,12 @@
 [返回目录](#目录)
 
 ### 配置kafka集群
-- **需要broker数量**：影响因素：  
+- **需要`broker`数量**：影响因素：  
     - 需要多少磁盘空间保留数据，以及单个broker有多少空间可用；  
     - 集群处理请求的能力。
-- **broker配置**：broker加集群需要配置两个参数：  
-    - 所有broker配置相同的zookeeper.connect，该参数指定保存元数据的zookeeper群组和路径；  
-    - 每个broker设置唯一broker.id。
+- **`broker`配置**：broker加集群需要配置两个参数：  
+    - 所有`broker`配置相同的`zookeeper.connect`，该参数指定保存元数据的zookeeper群组和路径；  
+    - 每个`broker`设置唯一`broker.id`。
 - **操作系统调优**：  
     - **虚拟内存**：  
     - **磁盘**：  
@@ -138,10 +140,10 @@
 
 ## 创建kafka生产者
 - kafka生产者3个必选属性:
-    - **bootstrap.servers**：指定broker的地址清单（地址格式：host:port）。  
+    - **`bootstrap.servers`**：指定broker的地址清单（地址格式：host:port）。  
     不必包含所有broker地址，生产者会从给定的broker中查找其他broker信息，建议至少设置两个（其中一个宕机不会影响生产者继续连接到集群）。
-    - **key.serializer**：指定一个实现org.apache.kafka.common.serialization.Serializer接口的类，该类会将键对象序列化成字节数组。kafka客户端默认提供：ByteArraySerializer、StringSerializer、IntegerSerializer。
-    - **value.serializer**：指定的类会将值序列化。
+    - **`key.serializer`**：指定一个实现`org.apache.kafka.common.serialization.Serializer`接口的类，该类会将键对象序列化成字节数组。kafka客户端默认提供：`ByteArraySerializer`、`StringSerializer`、`IntegerSerializer`。
+    - **`value.serializer`**：指定的类会将值序列化。
 ```
 //创建一个属性对象
 private Properties kafkaProps = new Properties();
@@ -202,25 +204,26 @@ producer = new KafkaProducer<String, String>(kafkaProps);
 
 ## 生产者配置
 生产者的其他配置参数：  
-- **acks**：指定必须有多少个分区副本收到消息，生产者才会认为消息写入成功。  
-    - **asks=0**，生产者不知道服务器有没有收到消息，不会等待服务器响应，因此吞吐量较大。
-    - **asks=1**，集群leader节点收到消息会返回成功，若leader节点挂掉会返回错误。
-    - **asks=all**，所有参与复制的节点收到消息才会返回成功。这种模式最安全，但延迟高。
-- **buffer.memory**：指定生产者内存缓冲区大小，生产者用来缓冲要发到服务器的消息。
-- **compression.type**：指定消息发送给broker之前使用的压缩方法。默认不压缩，可以设置为**snappy（占cpu少，较好的性能和压缩比）、gzip（占cpu大，更高的压缩比）、lz4**。
-- **retries**：指定生产者重发消息次数。
-    - **retry.backoff.ms**可设置重试间隔（默认100ms）。
-- **batch.size**：指定一个批次占内存大小（大小指字节数非消息数。多个消息被发往同一分区，生产者会将他们放在同一批次中）。批次被填满，所有消息就会被发送，但生产者不一定都会等批次填满才发送消息。
-- **linger.ms**：指定发送批次之前等待更多消息加入批次的时间（KafkaProducer会在批次填满或linger.ms达到上限时将消息发送出去）。
-- **client.id**：任意字符串，服务器通过它识别消息来源。
-- **max.in.flight.requests.per.connection**：指定生产者在收到服务器响应前能发送多少消息。值越高，占内存越高，但吞吐量会提升，设为1可以保证往服务器写消息的顺序跟发送的顺序一致。
-- **timeout.ms**：指定broker等待同步副本返回消息确认的时间，与**asks**的配置对应。
-- **request.timeout.ms**：指定生产者在发送数据时等待服务器返回响应的时间。
-- **metadata.fetch.timeout.ms**：指定生产者在获取元数据时等待服务器返回响应的时间。
-- **max.block.ms**：指定在调用send()方法或使用partitionsFor()方法获取元数据时 生产者的阻塞时间。（当生产者缓冲区已满、或者没有可用的元数据时，这些方法会阻塞，达到阻塞时间会抛超时异常）。
-- **max.request.size**：指定生产者发送的请求大小。
-- **receive.buffer.bytes**：指定TCP socket接收数据包的缓冲区大小。
-- **send.buffer.bytes**：指定TCP socket发送数据包的缓冲区大小。
+- **`acks`**：指定必须有多少个分区副本收到消息，生产者才会认为消息写入成功。  
+    - **`asks=0`**，生产者不知道服务器有没有收到消息，不会等待服务器响应，因此吞吐量较大。
+    - **`asks=1`**，集群leader节点收到消息会返回成功，若leader节点挂掉会返回错误。
+    - **`asks=all`**，所有参与复制的节点收到消息才会返回成功。这种模式最安全，但延迟高。
+- **`buffer.memory`**：指定生产者内存缓冲区大小，生产者用来缓冲要发到服务器的消息。
+- **`compression.type`**：指定消息发送给broker之前使用的压缩方法。默认不压缩。
+    - 可以设置为**snappy（占cpu少，较好的性能和压缩比）、gzip（占cpu大，更高的压缩比）、lz4**。
+- **`retries`**：指定生产者重发消息次数。
+    - **`retry.backoff.ms`**可设置重试间隔（默认100ms）。
+- **`batch.size`**：指定一个批次占内存大小（大小指字节数非消息数。多个消息被发往同一分区，生产者会将他们放在同一批次中）。批次被填满，所有消息就会被发送，但生产者不一定都会等批次填满才发送消息。
+- **`linger.ms`**：指定发送批次之前等待更多消息加入批次的时间（KafkaProducer会在批次填满或linger.ms达到上限时将消息发送出去）。
+- **`client.id`**：任意字符串，服务器通过它识别消息来源。
+- **`max.in.flight.requests.per.connection`**：指定生产者在收到服务器响应前能发送多少消息。值越高，占内存越高，但吞吐量会提升，设为1可以保证往服务器写消息的顺序跟发送的顺序一致。
+- **`timeout.ms`**：指定broker等待同步副本返回消息确认的时间，与**asks**的配置对应。
+- **`request.timeout.ms`**：指定生产者在发送数据时等待服务器返回响应的时间。
+- **`metadata.fetch.timeout.ms`**：指定生产者在获取元数据时等待服务器返回响应的时间。
+- **`max.block.ms`**：指定在调用send()方法或使用partitionsFor()方法获取元数据时 生产者的阻塞时间。（当生产者缓冲区已满、或者没有可用的元数据时，这些方法会阻塞，达到阻塞时间会抛超时异常）。
+- **`max.request.size`**：指定生产者发送的请求大小。
+- **`receive.buffer.bytes`**：指定TCP socket接收数据包的缓冲区大小。
+- **`send.buffer.bytes`**：指定TCP socket发送数据包的缓冲区大小。
 
 [返回目录](#目录)
 
@@ -300,9 +303,9 @@ public class CustomerSerializer implements Serializer<Customer> {
 ### 其它序列化框架
 - **Avro**：编程语言无关的序列化格式。数据会被序列化成二进制文件或json文件。  
     - Avro通过schema定义，schema通过json描述。  
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214255789.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214332178.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214445154.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214255789.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)  
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214332178.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)  
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190616214445154.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)  
 
 - **Thrift**
 
@@ -363,10 +366,9 @@ kafkaProps.put("group.id", "CountryCounter");
 //设置键、值的反序列化类
 kafkaProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 kafkaProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
 //创建一个消费者对象，为键、值设置类型为String，将属性对象传给进去。
 KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(kafkaProps);
-```
-```java
 //订阅Topic，简单创建一个只包含单个元素的列表，topic为"customerCountries"。（也可以传入正则）
 consumer.subscribe(Collections.singletonList("customerCountries"));
 //如订阅test相关主题：consumer.subscribe("test.*");
@@ -374,7 +376,8 @@ consumer.subscribe(Collections.singletonList("customerCountries"));
 
 [返回目录](#目录)
 
-### 轮询：群组协调、分区再均衡、发送心跳、获取数据
+### 消息轮询请求数据
+- 群组协调、分区再均衡、发送心跳、获取数据
 ```java
 //通过简单的消息轮询向服务器请求数据
 try {
@@ -404,26 +407,26 @@ try {
 
 ## 消费者的配置
 - 消费者其它配置参数
-    - **fetch.min.bytes**：指定消费者从服务器获取记录的最小字节数（数据量达到时才返回给消费者）。
-    - **fetch.max.wait.ms**：指定broker的等待时间（默认500ms）。
-    - **max.partition.fetch.bytes**：指定服务器从每个分区返回给消费者的最大字节数（默认1MB）。
-    - **session.timeout.ms**：指定消费者被认为死亡之前可以与服务器断开连接的时间，（默认3s）。
-    - **auto.offset.reset**：指定消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该如何处理（默认latest，消费者从最新的记录开始读取数据。earliest表示消费者从起始位置开始读取分区记录）。
-    - **enable.auto.commit**：指定消费者是否自动提交偏移量（默认true）。
-    - **partition.assignment.strategy**：设置分区策略，哪些分区会被分配给哪些消费者。
-    - **Range**：把主题若干连续分区分给消费者。
-    - **RoundRobin**：把主题所有分区逐个分配给消费者。
-    - **client.id**：任意字符串，broker用来识别从客户端发来的消息。
-    - **max.poll.records**：用于控制单次调用call()方法能返回的记录数量，可以控制轮询需要处理的数据量。
-    - **receive.buffer.bytes | send.buffer.bytes**：设置TCP缓冲区大小。
+    - **`fetch.min.bytes`**：指定消费者从服务器获取记录的最小字节数（数据量达到时才返回给消费者）。
+    - **`fetch.max.wait.ms`**：指定broker的等待时间（默认500ms）。
+    - **`max.partition.fetch.bytes`**：指定服务器从每个分区返回给消费者的最大字节数（默认1MB）。
+    - **`session.timeout.ms`**：指定消费者被认为死亡之前可以与服务器断开连接的时间，（默认3s）。
+    - **`auto.offset.reset`**：指定消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该如何处理（默认latest，消费者从最新的记录开始读取数据。earliest表示消费者从起始位置开始读取分区记录）。
+    - **`enable.auto.commit`**：指定消费者是否自动提交偏移量（默认true）。
+    - **`partition.assignment.strategy`**：设置分区策略，哪些分区会被分配给哪些消费者。
+    - **`Range`**：把主题若干连续分区分给消费者。
+    - **`RoundRobin`**：把主题所有分区逐个分配给消费者。
+    - **`client.id`**：任意字符串，broker用来识别从客户端发来的消息。
+    - **`max.poll.records`**：用于控制单次调用call()方法能返回的记录数量，可以控制轮询需要处理的数据量。
+    - **`receive.buffer.bytes` | `send.buffer.bytes`**：设置TCP缓冲区大小。
 
  [返回目录](#目录)
 
 ## 提交和偏移量
 - **提交**：更新分区当前位置的操作。
-- **自动提交**：enable.auto.commit=true
-- **提交当前偏移量**：consumer.commitSync();
-- **异步提交**：consumer.commitAsync();
+- **自动提交**：`enable.auto.commit=true`
+- **提交当前偏移量**：`consumer.commitSync();`
+- **异步提交**：`consumer.commitAsync();`
 - **提交特定偏移量**
 
  [返回目录](#目录)
