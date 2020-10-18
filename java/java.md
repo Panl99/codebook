@@ -161,6 +161,19 @@
         - 需要通过网络发送对象，或者对象的状态需要被持久化到数据库或者文件。
         - 序列化实现深复制，即复制引用的对象。
 
+- HashMap、ConcurrentHashMap、HashTable、TreeMap
+
+    区别|key=null|value=null|有序|线程安全
+    ---|---|---|---|---
+    HashMap|√|√|×|×
+    ConcurrentHashMap|×|×|×|√
+    HashTable|×|×|×|√
+    TreeMap|×|×|√|×
+
+- ConcurrentHashMap：
+    - 底层结构是散列表(数组+链表)+红黑树
+    - ConcurrentHashMap作为一个高并发的容器，它是通过部分锁定+CAS算法来进行实现线程安全的。CAS算法也可以认为是乐观锁的一种
+
 [返回目录](#目录)
 
 # Java基础
