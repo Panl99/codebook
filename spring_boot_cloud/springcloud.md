@@ -1,23 +1,23 @@
 
 # 目录
-- [Spring Cloud](#Spring Cloud)
-- [Spring Cloud Config](#Spring Cloud Config)
+- [Spring Cloud](#SpringCloud)
+- [Spring Cloud Config](#SpringCloudConfig)
 - [Eureka-2.0已闭源](#Eureka)
 - [Consul](#Consul)
 - [Hystrix](#Hystrix)
 - [Zuul](#Zuul)
 - [Ribbon](#Ribbon)
-- [Spring Cloud Bus](#Spring Cloud Bus)
-- [Spring Cloud Cluster](#Spring Cloud Cluster)
-- [Spring Cloud Stream](#Spring Cloud Stream)
+- [Spring Cloud Bus](#SpringCloudBus)
+- [Spring Cloud Cluster](#SpringCloudCluster)
+- [Spring Cloud Stream](#SpringCloudStream)
 
 [目录](#目录)
 
-# Spring Cloud
+# SpringCloud
 - SpringCloud是一个解决微服务架构实施的综合性解决框架，它整合了许多被广泛实践和证明过的框架作为实施的基础部件，并在该体系基础上创建了一些优秀的边缘组件。通过一些简单的注解，就可以快速的在应用中配置一下常用模块并构建庞大的分布式系统。  
 - SpringCloud是一个基于SpringBoot实现的微服务架构开发工具，为微服务架构中涉及的配置管理、服务治理、断路器、智能路由、微代理、控制总线、全局锁、决策竞选、分布式会话、集群状态管理等操作提供一种简单的开发方式。
 
-# Spring Cloud Config
+# SpringCloudConfig
 - 配置管理工具
 
 # Eureka
@@ -44,16 +44,16 @@
 
 [目录](#目录)
 
-# Spring Cloud Bus
+# SpringCloudBus
 - 事件、消息总线，用于传播集群中的状态变化或事件，以触发后续的处理
 
 [目录](#目录)
 
-# Spring Cloud Cluster
+# SpringCloudCluster
 - 针对ZooKeeper、Redis、Hazelcast、Consul的选举算法和通用状态模式的实现
 
 [目录](#目录)
 
-# Spring Cloud Stream
+# SpringCloudStream
 
 [目录](#目录)
