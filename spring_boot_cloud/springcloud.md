@@ -7,8 +7,11 @@
 - [Hystrix](#Hystrix)
     - [客户端负载均衡模式](#客户端负载均衡模式)
     - [断路器模式](#断路器模式)
+        - [断路器实现](#断路器实现)
     - [后备模式](#后备模式)
+        - [构建后备策略](#构建后备策略)
     - [舱壁模式](#舱壁模式)
+        - [舱壁模式实现](#舱壁模式实现)
 - [Zuul](#Zuul)
 - [Ribbon](#Ribbon)
 - [Spring Cloud Bus](#SpringCloudBus)
@@ -40,6 +43,23 @@
     - 断路器模式
     - 后备模式
     - 舱壁模式
+- 依赖：
+    ```xml
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    <!--下依赖停更，不建议使用-->
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-hystrix</artifactId>
+        <version>1.4.7.RELEASE</version>
+    </dependency>
+    ```
+- 启动注解：`@EnableCircuitBreaker`（用于启动类Application.java）
+
+[目录](#目录)
     
 ## 客户端负载均衡模式
 - 让客户端从服务注册中心查找服务所有实例，然后缓存服务实例的物理位置。
@@ -51,15 +71,64 @@
 - 远程服务被调用时间时间过长，断路器会中断此次调用。
 - 断路器会监视所有对远程资源的调用，如果对某一远程资源调用失败过多，断路器会快速断开调用，并阻止再次调用失败的远程资源。
 
+### 断路器实现
+- 标记方法由Hystrix断路器管理的注解：`@HystrixCommand`
+    - 该注解会标示Spring生成一个动态代理包装该方法，并会通过专门用于处理远程调用的线程池来管理对该方法的所有调用。
+    - 当调用被`@HystrixCommand`标注的方法超过`1000ms`（默认1秒）时，断路器会中断对该方法的调用。
+- 自定义断路器超时时间：`@HystrixCommand(commandProperties = {@HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "3000")})`
+    - 设置最大超时时间`3s`。
+
+[目录](#目录)
+
 ## 后备模式
 - 远程调用失败时，消费者会使用替代方式来执行操作，而不是生成异常。
 - 通常涉及，从另一数据源查询数据，或将请求排队后续再来处理。
 
+### 构建后备策略
+- 添加属性`fallbackMethod`：`@HystrixCommand(fallbackMethod = "buildFallbackLicenseList")`
+    - 当调用该方法失败时，就会调用后备方法。
+- 实现后备方法（必须与原始方法位于同一类中，并且与原始方法的参数一致：原始方法的参数都会传递给后备方法），例如：
+    ```java
+    private List<License> buildFallbackLicenseList(String organizationId){
+        List<License> fallbackList = new ArrayList<>();
+        License license = new License()
+                .withId("0000000-00-00000")
+                .withOrganizationId( organizationId )
+                .withProductName("Sorry no licensing information currently available");
+    
+        fallbackList.add(license);
+        return fallbackList;
+    }
+    ```
+
+[目录](#目录)
+
 ## 舱壁模式
 - 应用于必须与多个远程资源交互的服务。
-- 使用舱壁模式：可以把远程资源的调用分别分配到各资源线程池中，降低了一个缓慢的远程资源调用拖垮整个应用程序的风险。
+- 使用舱壁模式：可以把远程资源的调用分别分配到各自线程池中，降低了一个缓慢的远程资源调用拖垮整个应用程序的风险。
+    - 默认，所有Hystrix命令会共享同一线程池来处理请求。
     - 每个远程资源都是隔离的，并分配给线程池。
     - 一个服务响应缓慢，那么这种服务调用的线程池会饱和并停止处理请求，但其他服务的调用会被分配给其他线程池而不受影响。
+
+### 舱壁模式实现
+- 解决：在大量请求下，一个服务出现性能问题导致Java容器所有线程被刷爆，无法再继续处理请求，导致Java容器崩溃。
+- 实现隔离的线程池：
+    ```java
+    @HystrixCommand(//fallbackMethod = "buildFallbackLicenseList",
+            threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
+            threadPoolProperties = {
+                 @HystrixProperty(name = "coreSize",value="30"),    //线程池中最大线程数
+                 @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
+            },
+            commandProperties = {
+                 @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+                 @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
+                 @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
+                 @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
+                 @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")
+            }
+    )
+    ```
 
 [目录](#目录)
 
