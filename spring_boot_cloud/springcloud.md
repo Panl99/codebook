@@ -8,6 +8,7 @@
     - [客户端负载均衡模式](#客户端负载均衡模式)
     - [断路器模式](#断路器模式)
         - [断路器实现](#断路器实现)
+        - [调用远程资源失败过多断路器设置](#调用远程资源失败过多断路器设置)
     - [后备模式](#后备模式)
         - [构建后备策略](#构建后备策略)
     - [舱壁模式](#舱壁模式)
@@ -77,6 +78,37 @@
     - 当调用被`@HystrixCommand`标注的方法超过`1000ms`（默认1秒）时，断路器会中断对该方法的调用。
 - 自定义断路器超时时间：`@HystrixCommand(commandProperties = {@HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "3000")})`
     - 设置最大超时时间`3s`。
+- 类级属性设置注解：`@DefaultProperties`
+    - 例如：类中所有资源超时时间均为10s
+```java
+@DefaultProperties(
+    commandProperties = {
+        @HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "10000")
+    }
+)
+public class MyService {   }
+```
+    
+### 调用远程资源失败过多断路器设置
+```java
+@HystrixCommand(
+    fallbackMethod = "buildFallbackLicenseList",
+    threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
+    threadPoolProperties = {
+         @HystrixProperty(name = "coreSize", value="30"),    //线程池中最大线程数
+         @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
+    },
+    commandProperties = {
+         @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"), //断路器跳闸之前，10s之内连续调用数量
+         @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),  //断路器跳闸之前，调用失败百分比
+         @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),   //断路器跳闸之后，Hystrix尝试进行服务调用之前的等待时间
+         @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),   //Hystrix监视服务调用问题的窗口大小，默认10000ms(10s)
+         @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")    //Hystrix在一个监控窗口中维护的度量桶的数量，监视窗口内桶数越多，监控故障时间越低
+    }
+)
+// 如上最后两个配置，Hystrix使用15s的窗口，将统计数据收集到长度为3s的5个桶中。
+// 注意：检查的统计窗口越小 且窗口中保留的桶的数量越多，就越会加剧高请求服务的CPU利用率 和内存利用率。
+```
 
 [目录](#目录)
 
@@ -114,19 +146,13 @@
 - 解决：在大量请求下，一个服务出现性能问题导致Java容器所有线程被刷爆，无法再继续处理请求，导致Java容器崩溃。
 - 实现隔离的线程池：
     ```java
-    @HystrixCommand(//fallbackMethod = "buildFallbackLicenseList",
-            threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
-            threadPoolProperties = {
-                 @HystrixProperty(name = "coreSize",value="30"),    //线程池中最大线程数
-                 @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
-            },
-            commandProperties = {
-                 @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
-                 @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
-                 @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
-                 @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
-                 @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")
-            }
+    @HystrixCommand(
+        fallbackMethod = "buildFallbackLicenseList",  //后备方法
+        threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
+        threadPoolProperties = {
+             @HystrixProperty(name = "coreSize", value="30"),    //线程池中最大线程数
+             @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
+        }
     )
     ```
 
