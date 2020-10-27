@@ -14,6 +14,7 @@
     - [舱壁模式](#舱壁模式)
         - [舱壁模式实现](#舱壁模式实现)
 - [Zuul](#Zuul)
+- [Feign](#Feign)
 - [Ribbon](#Ribbon)
 - [Spring Cloud Bus](#SpringCloudBus)
 - [Spring Cloud Cluster](#SpringCloudCluster)
@@ -66,7 +67,7 @@
 - 让客户端从服务注册中心查找服务所有实例，然后缓存服务实例的物理位置。
 - 当消费者调用该服务实例时，客户端负载均衡器将从它维护的服务实例池中返回实例的一个位置。
 - 客户端负载均衡器位于服务客户端和服务消费者之间，可以检测服务实例的健康状态，当检测到服务实例不健康时，会将它从服务实例池中移除，并禁止服务调用访问该实例。
-- **`Ribbon`** 提供客户端负载均衡功能。
+- **[Ribbon](#Ribbon)** 提供客户端负载均衡功能。
 
 ## 断路器模式
 - 远程服务被调用时间时间过长，断路器会中断此次调用。
@@ -80,14 +81,14 @@
     - 设置最大超时时间`3s`。
 - 类级属性设置注解：`@DefaultProperties`
     - 例如：类中所有资源超时时间均为10s
-```java
-@DefaultProperties(
-    commandProperties = {
-        @HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "10000")
-    }
-)
-public class MyService {   }
-```
+        ```java
+        @DefaultProperties(
+            commandProperties = {
+                @HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "10000")
+            }
+        )
+        public class MyService {   }
+        ```
     
 ### 调用远程资源失败过多断路器设置
 ```java
@@ -160,6 +161,21 @@ public class MyService {   }
 
 # Zuul
 - 网关组件，提供智能路由、访问过滤等功能
+
+[目录](#目录)
+
+# Feign
+- 声明式REST客户端，
+- 启动注解：`@EnableFeignClients`
+- 依赖：
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+    <version>2.2.5.RELEASE</version>
+</dependency>
+```
+- [官方文档：https://docs.spring.io/spring-cloud-openfeign/docs/2.2.5.RELEASE/reference/html/](https://docs.spring.io/spring-cloud-openfeign/docs/2.2.5.RELEASE/reference/html/)
 
 [目录](#目录)
 
