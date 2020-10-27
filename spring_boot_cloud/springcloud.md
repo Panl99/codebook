@@ -13,12 +13,12 @@
         - [构建后备策略](#构建后备策略)
     - [舱壁模式](#舱壁模式)
         - [舱壁模式实现](#舱壁模式实现)
-- [Zuul](#Zuul)
+- [Zuul -TODO](#Zuul)
 - [Feign](#Feign)
 - [Ribbon](#Ribbon)
-- [Spring Cloud Bus](#SpringCloudBus)
-- [Spring Cloud Cluster](#SpringCloudCluster)
-- [Spring Cloud Stream](#SpringCloudStream)
+- [Spring Cloud Bus -TODO](#SpringCloudBus)
+- [Spring Cloud Cluster -TODO](#SpringCloudCluster)
+- [Spring Cloud Stream -TODO](#SpringCloudStream)
 
 [目录](#目录)
 
@@ -165,7 +165,10 @@
 [目录](#目录)
 
 # Feign
-- 声明式REST客户端，
+- 声明式、模板化的REST客户端，可以更加便捷、优雅的调用HTTP API
+- 使用简单：
+    - 创建一个接口
+    - 给接口添加一些注解
 - 启动注解：`@EnableFeignClients`
 - 依赖：
 ```xml
@@ -180,7 +183,8 @@
 [目录](#目录)
 
 # Ribbon
-- 客户端负载均衡的服务调用组件
+- 客户端负载均衡器。
+- 为Ribbon配置服务提供者地址列表后，Ribbon就会基于设置的负载均衡算法，自动的帮助服务消费者去请求。
 
 [目录](#目录)
 
