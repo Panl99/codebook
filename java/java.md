@@ -300,6 +300,70 @@
 # 集合
 ![集合框架](https://www.runoob.com/wp-content/uploads/2014/01/2243690-9cd9c896e0d512ed.gif)
 
+## List
+- 接口，继承Collection接口
+- 有序，可重复
+### ArrayList
+- 底层：数组，查询快，增删慢
+- 线程不安全，效率高
+
+### LinkedList
+- 底层：链表，查询慢，增删块
+- 线程不安全，效率高
+
+### Vector
+- 底层：数组，查询快，增删慢
+- 线程安全，效率低
+
+## Set
+- 接口，继承Collection接口
+- 无序，唯一
+### HashSet
+- 无序，唯一
+- 底层：哈希表
+- 唯一性保证：hashCode()和equals()
+
+#### LinkedHashSet
+- FIFO时有序，唯一
+- 底层：链表 + 哈希表
+- 有序性：由链表保证
+- 唯一性：由哈希表保证
+
+### TreeSet
+- 有序，唯一
+- 底层：红黑树
+- 有序性：自然排序、比较器排序
+- 唯一性：根据比较的返回值是否为0来决定
+
+## Map
+- 接口
+### HashMap
+- 无序
+- 非线程安全
+- 效率高
+- key、value可为null
+    - key只能1个为null，value可多个
+
+#### LinkedHashMap
+- FIFO时有序
+- 底层：双向链表 + 哈希表
+
+### ConcurrentHashMap
+- 线程安全
+- key、value不能为null
+
+### HashTable
+- 无序
+- 线程安全
+- 效率低
+
+### TreeMap
+- 有序
+- 非线程安全
+
+## Queue
+- 接口，继承Collection接口
+
 [返回目录](#目录)
 
 # IO
