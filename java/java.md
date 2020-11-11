@@ -108,7 +108,9 @@
 - [日期和时间](#日期和时间)
     - [标准库API](#标准库API)
         - [java.util.Date](#date)
-
+- [锁](#锁)
+    - [synchronized](#synchronized)
+    - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
 - [多线程-×](#多线程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
@@ -429,6 +431,25 @@
         System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
     }
 ```
+
+[返回目录](#目录)
+
+# 锁
+## synchronized
+- 是Java中的关键字。
+- 是不公平锁：随机线程获得锁。
+- 阻塞的，同一时刻只有一个线程获得资源，线程不可中断。
+- 线程执行完释放锁，或者出现异常JVM会释放锁。
+- 锁代码块或整个方法。
+- **简单使用**
+
+## ReentrantReadWriteLock
+- 读读共享、读写互斥、写写同步。
+- 默认不公平锁，可设置为公平锁`ReadWriteLock rwLock = new ReentrantReadWriteLock(true);`。
+- 需要手动释放锁。
+- 可以获取当前锁的信息
+- `lock`与`unlock`数量不一致时，会导致死锁。
+- **复杂多线程场景，读操作远多于写操作场景**
 
 [返回目录](#目录)
 
