@@ -448,7 +448,22 @@
 - `private final Object lock2 = new Object();`
     - 每个实例对象都有自己的lock2变量，**不同实例同步lock2** 时只需要获取自己内部的lock2变量即可。
     - 如果**多线程调用同一对象的方法** 时，需要竞争同一个lock2，同一时刻只能有1个线程得到lock1变量。
-- 在synchronized中，锁对象的`wait()`跟它的`notify()`或者`notifyAll()`方法配合可以实现一个隐含的条件，如果要和多于一个的条件关联的时候，就要额外添加一个锁。
+- 在synchronized中，锁对象的`wait()`跟`notify()`等待和唤醒线程。
+```java
+private static final Object OBJ = new Object();
+private final Object obj = new Object();
+
+public synchronized void setInfo() {
+    //TODO
+}
+
+public void setInfo() {
+    //TODO
+    synchronized (obj) {
+        //TODO
+    }
+}
+```
     
 [返回目录](#目录)    
     
@@ -468,6 +483,31 @@
     - 同 `wait()、notify()`
 - **复杂多线程场景，读多写少场景**
 - 锁的灵活度更高，粒度更细。
+```java
+ReadWriteLock rwLock = new ReentrantReadWriteLock();
+Lock readLock = rwLock.readLock();
+Lock writeLock = rwLock.writeLock();
+
+//读锁
+public List<String> getInfo() {
+    readLock.lock();
+    try {
+        //TODO
+    } finally {
+        readLock.unlock();
+    }
+}
+
+//写锁
+public List<String> setInfo() {
+    writeLock.lock();
+    try {
+        //TODO
+    } finally {
+        writeLock.unlock();
+    }
+}
+```
 
 [返回目录](#目录)
 
