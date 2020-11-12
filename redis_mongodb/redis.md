@@ -120,7 +120,7 @@
 [目录](#目录)
 
 ## 缓存淘汰策略
-- Redis作为缓存时，需要考虑内存消耗问题，Redis会删除过期键释放空间。
+Redis作为缓存时，需要考虑内存消耗问题，Redis会删除过期键释放空间。
 - **`lru`**：挑选最近最少使用的数据淘汰。（less recently used）
     - `allkeys-lru`: 所有key通用，优先删除最近最少使用的 key。
     - `volatile-lru`: 只限于设置了过期时间的key，优先删除最近最少使用的 key。
@@ -132,7 +132,7 @@
 - **`random`**：任意选择数据淘汰。
     - `allkeys-random`: 所有key通用，随机删除一部分 key。
     - `volatile-random`: 只限于设置了过期时间的key， 随机删除一部分key。
-- `noeviction`: 不删除策略, 达到最大内存限制时，直接返回错误。
+- **`noeviction`**: 不删除策略, 达到最大内存限制时，直接返回错误。
 
 [目录](#目录)
 
