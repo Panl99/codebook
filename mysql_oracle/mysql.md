@@ -133,20 +133,20 @@
 [返回目录](#目录)
 ### 表操作
 - 数据类型：
-    - 数字：TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT、BIT
-    - 浮点数：DECIMAL、FLOAT、DOUBLE
-    - 字符串：CHAR、VARCHAR、BINARY、VARBINARY、BLOB、TEXT、ENUM、SET
+    - 数字：`TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT、BIT`
+    - 浮点数：`DECIMAL、FLOAT、DOUBLE`
+    - 字符串：`CHAR、VARCHAR、BINARY、VARBINARY、BLOB、TEXT、ENUM、SET`
     - JSON数据类型
 - 创建表：
-```mysql
-CREATE TABLE IF NOT EXISTS `company`.`customers` (
-  `id` int unsigned AUTO_INCREMENT,
-  `first_name` varchar(20) DEFAULT NULL COMMENT '名',
-  `last_name` varchar(20) DEFAULT NULL COMMENT '姓',
-  `country` varchar(20) DEFAULT NULL COMMENT '国家',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COMMENT='用户表';
-```
+    ```mysql
+    CREATE TABLE IF NOT EXISTS `company`.`customers` (
+      `id` int unsigned AUTO_INCREMENT,
+      `first_name` varchar(20) DEFAULT NULL COMMENT '名',
+      `last_name` varchar(20) DEFAULT NULL COMMENT '姓',
+      `country` varchar(20) DEFAULT NULL COMMENT '国家',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COMMENT='用户表';
+    ```
 - 查看所有存储引擎：`show engines\G`
 - 列出所有表：`show tables;`
 - 查看表结构：`show create table customers\G` 或者：`desc customers;`
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `company`.`customers` (
 
 [返回目录](#目录)
 ## 数据操作语言DML
-insert、update、delete、select表数据操作
+- `insert、update、delete、select`表数据操作
 ### 插入
 ```mysql
 insert ignore into `company`.`customers`(first_name,last_name,country)
@@ -164,12 +164,12 @@ values
 {'Ravi','Vedantam','India'},
 {'Rajiv','Perera','Sri Lanka'};
 ```
-- ignore：如果该行已经存在，并给出了ignore子句，则新数据将被忽略。
+- `ignore`：如果该行已经存在，并给出了`ignore`子句，则新数据将被忽略。
 - 处理重复项：
     - `replace`：行存在则删除行并插入新行，行不存在则replace<=>insert。
-    `replace into customers values {1,'mike','Christensen','Australia'};`
+        - `replace into customers values {1,'mike','Christensen','Australia'};`
     - 使用`on duplicate key update`：行已存在，并且主键重复，则更新已有行。
-    `insert into customers values {1,'mike','Christensen','India'} on duplicate key update country=country+values(country);`
+        - `insert into customers values {1,'mike','Christensen','India'} on duplicate key update country=country+values(country);`
 
 - **全部插入**
     ```mysql
@@ -497,20 +497,20 @@ delete from customers where id=4 and first_name='Rajiv';
 
 # 性能优化
 ## explain
-- 使用explain计划
-```mysql
-explain select dept_name from dept_tmp 
-join employees on dept_emp.emp_no=employees.emp_no
-join departments on departments.dept_no=dept_emp.dept_no
-where employees.first_name='Aamer';
-```
+- 使用explain查看执行计划
+    ```mysql
+    explain select dept_name from dept_tmp 
+    join employees on dept_emp.emp_no=employees.emp_no
+    join departments on departments.dept_no=dept_emp.dept_no
+    where employees.first_name='Aamer';
+    ```
 - 使用explain json，以json格式显示
-```mysql
-explain format=json select dept_name from dept_tmp 
-join employees on dept_emp.emp_no=employees.emp_no
-join departments on departments.dept_no=dept_emp.dept_no
-where employees.first_name='Aamer';
-```
+    ```mysql
+    explain format=json select dept_name from dept_tmp 
+    join employees on dept_emp.emp_no=employees.emp_no
+    join departments on departments.dept_no=dept_emp.dept_no
+    where employees.first_name='Aamer';
+    ```
 - 使用explain连接正在进行的会话，需要指定connection ID。
     - 获取connection ID：`select CONNECTION_ID();`
     - 连接：`explain format=json for CONNECTION 778;`
