@@ -125,7 +125,8 @@
 ## 数据定义语言DDL
 操作数据库和表
 ### 库操作
-- 创建数据库：`create database company`,名称包含特殊字符：`create database \`my.contacts\``
+- 创建数据库：`create database company`
+    - 名称包含特殊字符：```create database `my.contacts` ```
 - 切换数据库：`use company`
 - 列出所有库：`show databases;`
 - 查看链接到了哪个库：`select database();`
