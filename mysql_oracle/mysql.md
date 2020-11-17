@@ -44,10 +44,10 @@
 - **左填充[lpad]，右填充[rpad]：**  
 `SELECT RPAD(LPAD('abc',5,'*'),8,'*') FROM DUAL; => **abc***`
 - **去除字符串两端空格[trim]，去除左边[ltrim]，去除右边[rtim]：**  
-`SELECT TRIM(' ABC ') FROM DUAL; => 'ABC' ; `
-`SELECT TRIM('s' FROM 'strings') FROM DUAL; => tring`
-`SELECT LTRIM(' ABC ') FROM DUAL; => 'ABC ' ; `
-`SELECT RTRIM(' ABC ') FROM DUAL; => ' ABC' ; `
+`SELECT TRIM(' ABC ') FROM DUAL; => 'ABC' ; `  
+`SELECT TRIM('s' FROM 'strings') FROM DUAL; => tring`  
+`SELECT LTRIM(' ABC ') FROM DUAL; => 'ABC ' ; `  
+`SELECT RTRIM(' ABC ') FROM DUAL; => ' ABC' ; `  
 - **获取子字符串[substr]：**  
 `SELECT SUBSTR('ABCDEF',2,3) FROM DUAL; => BCD  --从第2个位置开始取3个`
 - **字符串替换[replace]：**  
@@ -55,17 +55,17 @@
 - **绝对值[abs]：**  
 `SELECT ABS(100),ABS(-100) FROM DUAL; => 100 100`
 - **平均值[avg]：**  
-`SELECT AVG(DISTINCT age) FROM tableName;  --对不同的值求平均值`
-`SELECT AVG(ALL age) FROM tableName;  --对所有值求平均值`
+`SELECT AVG(DISTINCT age) FROM tableName;  --对不同的值求平均值`  
+`SELECT AVG(ALL age) FROM tableName;  --对所有值求平均值`  
 - **最大值[max]，最小值[min]：**  
-`SELECT MAX(DISTINCT age) FROM tableName;` 
-`SELECT MAX(ALL age) FROM tableName; `
-`SELECT MIN(DISTINCT age) FROM tableName;` 
-`SELECT MIN(ALL age) FROM tableName;`
+`SELECT MAX(DISTINCT age) FROM tableName;`  
+`SELECT MAX(ALL age) FROM tableName; `  
+`SELECT MIN(DISTINCT age) FROM tableName;`  
+`SELECT MIN(ALL age) FROM tableName;`  
 - **四舍五入[round],按照指定精度截取[trunc]：**  
-`SELECT ROUND(5.5),ROUND(-5.5) FROM DUAL; => 6,-6`
-`SELECT TRUNC(5.5),TRUNC(-5.5) FROM DUAL; => 5,-5`
-`SELECT trunc(123.4567,-2) trunc1,trunc(123.4567,2) from dual; => 100,123.45`
+`SELECT ROUND(5.5),ROUND(-5.5) FROM DUAL; => 6,-6`  
+`SELECT TRUNC(5.5),TRUNC(-5.5) FROM DUAL; => 5,-5`  
+`SELECT trunc(123.4567,-2) trunc1,trunc(123.4567,2) from dual; => 100,123.45`  
 - **判断正负[sign]：**  
 `SELECT SIGN(10),SIGN(-10),SIGN(0) FROM DUAL;  => 1,-1,0`
 - **向上取整[ceil]，向下取整[floor]：**  
@@ -76,9 +76,9 @@
 - **返回根[sqrt]：**  
 `SELECT SQRT(9) FROM DUAL; => 3`
 - **增加/减去月份[PERIOD_ADD]/返回两个月份差值[PERIOD_DIFF]：**  
-`SELECT PERIOD_ADD('201801',2) from dual; => 201803`
-`SELECT PERIOD_ADD('201801',-2) from dual; => 201711`
-`SELECT PERIOD_DIFF('201801','201805') from dual; => -4`
+`SELECT PERIOD_ADD('201801',2) from dual; => 201803`  
+`SELECT PERIOD_ADD('201801',-2) from dual; => 201711`  
+`SELECT PERIOD_DIFF('201801','201805') from dual; => -4`  
 - **返回当前时间[NOW()]：**  
 `SELECT NOW() from dual;  => 2018-07-26 20:13:44`
 - **返回日期最后一天[last_day]：**  
@@ -86,11 +86,11 @@
 - **时间转换为字符串[date_format]：**  
 `select date_format(now(), '%Y%m%d') from dual;  => 20180102`
 - **字符串转换为日期格式[str_to_date]：**  
-`SELECT str_to_date('20171226','%Y%m%d') from dual; => 2017-12-26`
-`SELECT CAST("2017-08-29" AS DATE); => 2017-08-29`
+`SELECT str_to_date('20171226','%Y%m%d') from dual; => 2017-12-26`  
+`SELECT CAST("2017-08-29" AS DATE); => 2017-08-29`  
 - **将字符转换为数字[to_number]：**  
-`SELECT '2018'+0 from dual; => 2018`
-`SELECT CONVERT('2018',SIGNED); => 2018`
+`SELECT '2018'+0 from dual; => 2018`  
+`SELECT CONVERT('2018',SIGNED); => 2018`  
 - **格式化数字[FORMAT(x,n)],将 x 保留到小数点后 n 位，最后一位四舍五入：**  
 `SELECT FORMAT(250500.5634, 2) from dual; => 250,500.56`
 - **排序[order by]：**  
@@ -100,9 +100,9 @@
 - **返回指定字符的ASCII值[ascii]，返回指定数字对应字符[char]：**  
 `SELECT ascii('A'), ascii('a'), char(66) from dual; =>65,97,B`
 - **返回指定字符的位置[LOCATE、instr、find_in_set]：**  
-`SELECT LOCATE('d','abcdefgd',5); =>8 (第5位后 d 的位置)`
-`SELECT instr('abcdefgd','d') from dual; =>4`
-`SELECT find_in_set('d','a,b,c,d,e,f,g,d'); =>4`
+`SELECT LOCATE('d','abcdefgd',5); =>8 (第5位后 d 的位置)`  
+`SELECT instr('abcdefgd','d') from dual; =>4`  
+`SELECT find_in_set('d','a,b,c,d,e,f,g,d'); =>4`  
 - **字符串翻转[REVERSE ]：**  
 `SELECT REVERSE('abcdefgd'); =>dgfedcba`
 - **case when:**  
