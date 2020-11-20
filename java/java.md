@@ -72,9 +72,9 @@
         - [观察者模式](#观察者模式)
         - [模板方法](#模板方法)
         - [责任链模式](#责任链模式)
-    - [单例模式](https://github.com/Panl99/demo/tree/master/demo-client/src/main/java/com/outman/democlient/leetcode/Singleton.java)
-- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/tree/master/demo-client/src/main/java/com/outman/democlient/leetcode/ScheduledThreadPoolExecutorDemo.java)
-- [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/tree/master/demo-client/src/main/java/com/outman/democlient/leetcode/CompletableFutureDemo.java)
+    - [单例模式](https://github.com/Panl99/leetcode/tree/master/java/src/designpattern/Singleton.java)
+- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
 
 # 目录
 - [Java基础](#Java基础)
@@ -517,7 +517,7 @@ public List<String> setInfo() {
 
 ## 异步编程
 ### CompletableFuture
-- [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/tree/master/demo-client/src/main/java/com/outman/democlient/leetcode/CompletableFutureDemo.java)
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
 
 [返回目录](#目录)
 
