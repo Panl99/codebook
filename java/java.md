@@ -26,6 +26,7 @@
 - [多线程-×](#多线程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
+    - [ThreadPoolExecutor](#ThreadPoolExecutor)
 - [JVM、GC](#jvmgc)
     - [自己编译jdk](#自己编译jdk)
     - [java内存管理机制](#java内存管理机制)
@@ -114,6 +115,7 @@
 - [多线程-×](#多线程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
+    - [ThreadPoolExecutor](#ThreadPoolExecutor)
 - [网络编程-×](#网络编程)
 
 - [JVM、GC](#JVM、GC)
@@ -518,6 +520,16 @@ public List<String> setInfo() {
 ## 异步编程
 ### CompletableFuture
 - [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
+
+[返回目录](#目录)
+
+## ThreadPoolExecutor
+- ThreadPoolExecutor 的内部工作原理  
+    - 如果当前池大小 poolSize 小于 corePoolSize ，则创建新线程执行任务。 
+    - 如果当前池大小 poolSize 大于 corePoolSize ，且等待队列未满，则进入等待队列 
+    - 如果当前池大小 poolSize 大于 corePoolSize 且小于 maximumPoolSize ，且等待队列已满，则创建新线程执行任务。 
+    - 如果当前池大小 poolSize 大于 corePoolSize 且大于 maximumPoolSize ，且等待队列已满，则调用拒绝策略来处理该任务。 
+    - 线程池里的每个线程执行完任务后不会立刻退出，而是会去检查下等待队列里是否还有线程任务需要执行，如果在 keepAliveTime 里等不到新的任务了，那么线程就会退出。
 
 [返回目录](#目录)
 
