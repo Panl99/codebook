@@ -9,6 +9,7 @@
 > > - [缓存穿透](#缓存穿透)
 > > - [降低Redis内存占用](#降低Redis内存占用)
 > > - [缓存淘汰策略](#缓存淘汰策略)
+> > - [如何保证缓存与数据库的数据一致性](#缓存一致性)
 - [Redis特性](#Redis特性)
 - [Redis命令](#命令)
     - [字符串命令](#字符串命令)
@@ -18,6 +19,10 @@
     - [有序集合命令](#有序集合命令)
     - [发布/订阅命令](#发布/订阅命令)
     - [其他命令](#其他命令)
+- [跳跃表](#跳跃表)
+    - [跳跃表的实现](#跳跃表的实现)
+    - [跳跃表API](#跳跃表API)
+- [压缩列表](#压缩列表)
 - [复制](#复制)
     - [复制功能的实现](#复制功能的实现)
     - [主从服务器心跳检测机制](#主从服务器心跳检测机制)
@@ -25,6 +30,7 @@
     - [快照持久化](#快照持久化)
         - [使用快照持久化](#使用快照持久化)
     - [AOF持久化](#AOF持久化)
+- [缓存一致性](#缓存一致性)
 - [事务](#事务)
 - [Redis哨兵-Redis高可用性解决方案](#Redis哨兵)
     - [Sentinel初始化](#Sentinel初始化)
@@ -247,6 +253,78 @@ Redis作为缓存时，需要考虑内存消耗问题，Redis会删除过期键�
 
 [目录](#目录)
 
+# 跳跃表
+- `skiplist` 是一种有序数据结构，通过在每个节点中维持多个指向其他节点的指针，从而达到快速访问节点的目的。
+    - Redis使用跳跃表作为有序集合键的底层实现之一。如果一个有序集合包含的元素数量较多，或者有序集合中元素的成员是比较长的字符串，Redis就会使用跳跃表作为有序集合键的底层实现。
+    - Redis只有两个地方用到跳跃表：
+        - 实现有序集合键
+        - 集群节点中用作内部数据结构
+- 平均复杂度：`O(logN)`、最坏复杂度：`O(N)`
+
+## 跳跃表的实现
+- Redis的跳跃表由`redis.h/zskiplistNode` 和`redis.h/zskiplist`两个结构定义。
+- `zskiplistNode` 用于表示跳跃表节点。
+    - `层（level）` 
+        - 每层带两个属性：前进指针、跨度。
+            - `前进指针`：访问位于表尾方向的其他节点。
+            - `跨度`：前进指针指向节点 和当前节点的距离。（指向NULL的所有前进指针的跨度都为0）
+        - 层的数量越多，访问其他节点的速度越快。
+        - 每个跳跃表层高都是1-32之间随机数。
+    - `后退指针（backward）` 指向位于当前节点的前一个节点。
+    - `分值（score）` double类型的浮点数，跳跃表中，节点按各自保存的分值从小到大排列。
+    - `成员对象（obj）` 一个指针，指向一个字符串对象（字符串对象保存一个SDS值）。
+        - 在同一跳跃表中，多个节点可以包含相同分值，但每个节点成员对象必须唯一。
+    ```
+    //redis.h/zskiplistNode 结构定义：
+    typedef struct zskiplistNode {
+        // 层
+        struct zskiplistLevel {
+            struct zskiplistNode *forward; //前进指针
+            unsigned int span; //跨度
+        } level[];
+        struct zskiplistNode *backward; //后退指针
+        double score; //分值
+        robj *obj; //成员对象
+    } zskiplistNode;
+    ```
+
+- `zskiplist` 用于保存跳跃表节点的相关信息。
+    - `header` 指向跳跃表的表头节点。
+    - `tail` 指向跳跃表的表尾节点。
+    - `level` 记录目前跳跃表内，层数最大的节点的层数。
+    - `length` 记录跳跃表包含节点的数量。
+    ```
+    //redis.h/zskiplist 结构定义：
+    typedef struct zskiplist {
+        struct zskiplistNode *header, *tail; //表头节点、表尾节点
+        unsigned long length; //节点数量
+        int level; //表中层数最大的节点层数
+    } zskiplist;
+    ```        
+[目录](#目录)
+  
+## 跳跃表API
+
+函数|作用|时间复杂度
+---|---|---
+zslCreate|创建一个新跳跃表|O(1)
+zslFree|释放给定跳跃表，及表中所有节点|O(N)，N为跳跃表长度
+zslInsert|添加新节点(包含给定成员和分值)到跳跃表|平均O(logN)，最坏O(N)
+zslDelete|删除包含给定成员和分值的节点|平均O(logN)，最坏O(N)
+zslGetRank|返回节点在跳跃表中的排位|平均O(logN)，最坏O(N)
+zslGetElementByBank|返回跳跃表中指定排位的节点|平均O(logN)，最坏O(N)
+zslIsInRange|跳跃表中至少一个节点的分值在给定的分值范围内，返回1；否则返回0|O(1)
+zslFirstInRange|返回跳跃表中第一个符合给定分值范围的节点|平均O(logN)，最坏O(N)
+zslLastInRange|返回跳跃表中最后一个符合给定分值范围的节点|平均O(logN)，最坏O(N)
+zslDeleteRangeByScore|删除跳跃表中所有在给定分值范围内的节点|O(N)，N为被删除节点数量
+zslDeleteRangeByRank|删除跳跃表中所有在给定排位范围内的节点|O(N)，N为被删除节点数量
+
+[目录](#目录)
+
+# 压缩列表
+
+[目录](#目录)
+
 # 复制
 - 用户可以通过`SLAVEOF命令` 或者启动Redis时`slaveof配置`，让一个从服务器去复制主服务器。
     - `SLAVEOF <master_ip> <master_port>`
@@ -333,6 +411,10 @@ Redis作为缓存时，需要考虑内存消耗问题，Redis会删除过期键�
         - 可以设置`auto-aof-rewrite-percentage`和`auto-aof-rewrite-min-size`来自动执行`BGREWRITEAOF`。
             - 例如：`auto-aof-rewrite-percentage 100`和`auto-aof-rewrite-min-size 64mb`并开启AOF持久化：表示当AOF文件大于64MB，且体积比上一次重写之后大了至少一倍（100%），Redis将执行`BGREWRITEAOF`。
     - Redis重启后，需要重新执行AOF文件记录的所有写命令来还原数据集，如果AOF文件体积很大，还原操作的时间可能会很长。
+
+[目录](#目录)
+
+# 缓存一致性
 
 [目录](#目录)
 
