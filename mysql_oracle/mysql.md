@@ -28,10 +28,15 @@
 - [性能优化](#性能优化)
     - [explain](#explain)
     - [索引](#索引)
+        - [什么时候使用索引](#什么时候使用索引)
         - [添加索引](#添加索引)
         - [删除索引](#删除索引)
     - [使用pt-query-digest分析慢查询](#使用pt-query-digest分析慢查询)
     - [优化数据类型](#优化数据类型)
+    - [分库分表](#分库分表)
+        - [分表](#分表)
+        - [分库](#分库)
+        - [分库分表中间件](#分库分表中间件)
 
 [返回目录](#目录)
 
@@ -519,6 +524,12 @@ delete from customers where id=4 and first_name='Rajiv';
 [返回目录](#目录)
 
 ## 索引
+### 什么时候使用索引 
+- 经常出现在`group by`、`order by`、`distinc`关键字后面的字段 
+- 经常与其他表进行连接的表，在连接字段上应该建立索引 
+- 经常出现在 Where 子句中的字段 
+- 经常出现用作查询选择的字段
+
 ### 添加索引
 - 给last_name添加索引：`alter table employees add index index_last_name (last_name);`
 - **唯一索引**：`alter table employees add unique index unique_index_name (last_name,first_name);`
@@ -580,7 +591,7 @@ delete from customers where id=4 and first_name='Rajiv';
     - 如果存储员工名字，可能最大值为20字节，则最好声明为`varchar(20)`。如果是`char(20)`，但只有几个员工名字为20字符，其他的不到10字符，就会浪费10字符的空间。
     - 声明`varchar()`时，应考虑长度。
         - 如果`varchar()`长度超过**255**时，则需要2个字节来存储长度。
-    - 如果不允许存储空值，则应将列声明为NOT NULL。
+    - 避免存储空值，应将列声明为NOT NULL。
     - 如果字符串长度是固定的，则应存储为`char`而不是`varchar`，因为varchar需要1-2个字节存储字符串长度。
     - 如果值是固定的，则应该使用`ENUM`而不是`varchar`，只需要1-2个字节即可。
     - 优先选择使用整数类型，而非字符串类型。
@@ -588,3 +599,29 @@ delete from customers where id=4 and first_name='Rajiv';
     - 尝试利用InnoDB压缩。
 
 [返回目录](#目录)
+
+## 分库分表
+
+### 分表
+- 单表数据量过大时，就得分表了。
+- 单表几百万数据的时候，性能就会变差。
+- 如何分：
+    - 比如：按照用户id分表，一个用户的数据放到一个表中，对一个用户的操作只要操作那张表。这样可以控制每张表的数据量在可控范围（比如单表200万以内）。
+
+### 分库
+- 用户过多，数据量、请求量过大，就需要分库。
+- 一般，单库最多支撑并发量 2000 QPS（最好在1000左右）。
+
+
+- 水平拆分：把一个表的数据分到多个库多个表中
+    - 数据存放均匀，多个库可以抗住更高的并发，多个库的存储容量扩容。
+- 垂直拆分：把一个有多个字段的表拆成多个表 或者库
+    - 每个库表结构不一样，包含部分字段，可以将高频字段 和低频字段分开存放。
+    
+
+### 分库分表中间件
+- [mycat](https://github.com/MyCATApache/Mycat-Server?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
+- [sharding-jdbc](https://github.com/apache/incubator-shardingsphere?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
+
+[返回目录](#目录)
+
