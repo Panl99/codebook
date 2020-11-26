@@ -361,7 +361,8 @@ zlend|uint8_t|1字节|特殊值0xFF(十进制255)，用于标记压缩列表的�
 
 - 压缩列表示例：
 
-![redis压缩列表示例](https://github.com/Panl99/codebook/tree/master/resources/static/images/redis压缩列表示例.PNG)
+![](../resources/static/images/redis压缩列表示例.PNG)
+<img src="../resources/static/images/redis压缩列表示例.PNG" />
 
 [目录](#目录)
 
