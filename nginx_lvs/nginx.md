@@ -3,7 +3,9 @@
 > [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
 - [Nginx特点](#Nginx特点)-√
-- [Nginx配置-nginx.conf](#Nginx配置-nginx.conf)-9.3-9.4
+- [Nginx配置-nginx.conf](#Nginx配置文件)-9.3-9.4
+    - [Nginx配置文件详解](https://www.cnblogs.com/dongye95/p/11096785.html)
+    - [Nginx配置文件详解](https://www.cnblogs.com/hunttown/p/5759959.html)
 - [Nginx负载均衡原理](#Nginx负载均衡原理)
 - [Nginx反向代理原理](#Nginx反向代理原理)
 - [Nginx正向代理原理](#Nginx正向代理原理)
@@ -517,7 +519,7 @@ Nginx的反向代理模块还提供了很多种配置，如设置连接的超时
    
 ## 定义一个HTTP模块
 #### Nginx-HTTP模块调用的简要流程  
-![Nginx-HTTP模块调用的简化流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/Nginx-HTTP模块调用简化流程.gif)
+![Nginx-HTTP模块调用的简化流程](../resources/static/images/Nginx-HTTP模块调用简化流程.gif)
 
 worker进程会在一个for循环语句里反复调用事件模块检测网络事件。当事件模块检测到某个客户端发起的TCP请求时（接收到SYN包），将会为它建立TCP连接，成功建立连接后根据nginx.conf文件中的配置会交由HTTP框架处理。HTTP框架会试图接收完整的HTTP头部，并在接收到完整的HTTP头部后将请求分发到具体的HTTP模块中处理。  
 HTTP模块在处理请求的结束时，大多会向客户端发送响应，此时会自动地依次调用所有的HTTP过滤模块，每个过滤模块可以根据配置文件决定自己的行为。例如，gzip过滤模块根据配置文件中的gzip on|off来决定是否压缩响应。HTTP处理模块在返回时会将控制权交还给HTTP框架，如果在返回前设置了subrequest，那么HTTP框架还会继续异步地调用适合的HTTP模块处理子请求。  
@@ -1233,14 +1235,14 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 14. 启动`cache_loader` 进程
 15. 调用所有模块的`init_process` 方法 -> 结束
 
-![Nginx启动流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/Nginx启动流程.PNG)
+![Nginx启动流程](../resources/static/images/Nginx启动流程.PNG)
 
 [返回目录](#目录)
 
 ## Nginx管理进程的工作流程
 //TODO
 
-![管理进程的工作流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/管理进程的工作流程.PNG)
+![管理进程的工作流程](../resources/static/images/管理进程的工作流程.PNG)
 
 ## 工作进程的工作流程
 - worker进程是通过工作进程协调各模块组件完成任务的。工作进程由管理进程管理，它们之间的工作机制是通过信号实现的，worker进程关注的4个信号对应4个全局变量：
@@ -1249,7 +1251,7 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
     - `ngx_reopen` : USR1 信号，重新打开文件。
     - `ngx_quit`: QUIT 信号，"优雅"地退出。
 
-![工作进程的工作流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/工作进程的工作流程.PNG)
+![工作进程的工作流程](../resources/static/images/工作进程的工作流程.PNG)
 
 [返回目录](#目录)
 
@@ -1300,7 +1302,7 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
     - 调用所有核心模块的init_conf方法，解析对应的配置块
 - **HTTP配置块解析** 
 
-![HTTP配置项解析过程](https://github.com/Panl99/codebook/tree/master/resources/static/images/HTTP配置项解析过程.PNG)
+![HTTP配置项解析过程](../resources/static/images/HTTP配置项解析过程.PNG)
 
 [返回目录](#目录)
 
@@ -1339,7 +1341,7 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
     - 如可调用gzip 模块根据nginx.conf 中`gzip on|off;`决定是否将响应压缩。
     - 如果设置了子请求调用，在返回前还会执行异步的子请求调用。
 
-![HTTP模块调用流程](https://github.com/Panl99/codebook/tree/master/resources/static/images/HTTP模块调用流程.PNG)
+![HTTP模块调用流程](../resources/static/images/HTTP模块调用流程.PNG)
 
 [返回目录](#目录)
 
