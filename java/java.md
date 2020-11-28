@@ -253,6 +253,22 @@
     - 底层结构是散列表(数组+链表)+红黑树
     - ConcurrentHashMap作为一个高并发的容器，它是通过部分锁定+CAS算法来进行实现线程安全的。CAS算法也可以认为是乐观锁的一种
 
+- wait与sleep区别
+    - `wait()`方法属于Object类，`sleep()`方法属于Thread类。
+    - `Thread.sleep()` 会暂停线程，但不会释放锁，睡眠时间到后会自动恢复运行状态。
+    - `obj.wait()` 会释放对象锁，同时休眠本线程，直到其他线程调用`obj.notify()`唤醒线程，才会继续获取对象锁继续执行。
+    - `obj.notify()` 唤醒时并不是马上释放锁，在`synchronized(obj)`块执行完后，JVM会在执行`obj.wait()`的线程中随机选一个线程，赋给其对象锁。
+    - `obj.wait()` 、`obj.notify()` 要和`synchronized(obj){}` 一起使用。
+        ```java
+        synchronized(obj) {
+          ...
+          while (!locked) {
+              obj.wait(); //要放到循环中调用，否则可能在没有notify()的时候醒过来
+          }
+          ...
+        }
+        ```
+    
 [返回目录](#目录)
 
 # Java基础
