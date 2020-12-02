@@ -36,6 +36,7 @@
         - [访问定位](#访问定位)
         - [内存溢出](#内存溢出)
         - [JVM性能监控、故障处理工具](#JVM性能监控故障处理工具)
+        - [一次内存溢出的排查](#一次内存溢出的排查)
     - [垃圾回收](#垃圾回收)
         - [哪些内存需要回收](#哪些内存需要回收)
         - [回收时间和方式](#回收时间和方式)
@@ -127,6 +128,7 @@
         - [访问定位](#访问定位)
         - [内存溢出](#内存溢出)
         - [JVM性能监控、故障处理工具](#JVM性能监控、故障处理工具)
+        - [一次内存溢出的排查](#一次内存溢出的排查)
     - [垃圾回收](#垃圾回收)
         - [哪些内存需要回收](#哪些内存需要回收)
         - [回收时间和方式](#回收时间和方式)
@@ -276,6 +278,7 @@
     - 每个叶子节点都是黑色的空节点（NIL节点）
     - 从根节点到叶节点或空子节点的每条路径，必须包含相同数目的黑色节点（即相同的黑色高度）
     - ![红黑树](../resources/static/images/redblackTree.PNG)
+<img src="../resources/static/images/redblackTree.PNG" />   
     
 [返回目录](#目录)
 
@@ -709,6 +712,36 @@ public List<String> setInfo() {
 |jmap|Memory Map for Java：用于生成堆转储快照（一般称为heapdump或dump文件），还可以查询finalize执行队列、Java堆和方法区的详细信息，如空间使用率、当前用的是哪种收集器等。|jmap [ option ] vmid|-dump，-finalizerinfo，-heap，-histo，-permstat，-F|
 |jhat|JVM Heap Analysis Tool：与jmap搭配使用，来分析jmap生成的堆转储快照。|||
 |jstack|Stack Trace for Java：用于生成虚拟机当前时刻的线程快照（一般称为threaddump或者javacore文件）|jstack [ option ] vmid|-F，-l，-m|
+
+[返回目录](#目录)
+
+### 一次内存溢出的排查
+现象:当程序出现缓慢  
+主要排查堆内存溢出情况  
+
+1. 使用命令：`jstat -gcutil <pid> <period>` 打印进程的状态信息。
+    - **O列** 表示老年代内存使用率；**FGC列** 表示FullGC次数。
+    - 如：`jstat -gcutil 1100 3s` 打印进程号为1100的GC情况，每3s输出一条信息。
+    - 看到 O列 一直是100%；FGC列 一直在增长，表示FullGC后 堆内存一直无法释放。这种情况大概率是内存泄漏导致。
+2. 进一步排查是否因为堆内存过小，导致业务请求无法被满足。
+    - 查看最大堆内存是多少：`jinfo -flag MaxHeapSize <pid>`。
+    - 假设查出来是4G，我们可以将堆最大内存扩容到8G：`java -Xmx8G -version`。
+    - 增大堆内存后，可以使用`jstat -gcutil ..`查看 O列是都还是满负荷，如果是，基本可以确定存在内存泄漏。
+3. 使用命令：`jmap -histo` 定位内存泄漏的具体对象
+    - ①`jmap -histo <pid>` 输出当前进程所有存活对象的堆内存占用情况。
+    - 该命令显示所有类的实例个数及内存用量，按内存使用量降序输出，一般自己写的代码有内存泄漏的话，引起内存泄漏的类名会比较靠前。
+    - ②再加上live参数打印一次：`jmap -histo:live <pid>` live参数会先触发一次FullGC，回收掉无用对象后再输出存活对象的堆内存占用情况。
+    - 例如：`jmap -histo:live 1200 | head -n 20` 对比观察① ② 执行后 实例数量不减的类。
+4. 使用命令：`jmap -dump:file` 导出堆内存数据
+    - 通过第3步 可以定位到内存泄漏的类，但是如果代码中很多地方引用了这个类，可能还无法具体定位到内存泄漏位置。
+    - 这时 需要导出dump文件，进一步分析内存泄漏对象的GC Root。
+    - 使用：`jmap -dump:file=<app.dump> <pid>`导出dump文件。dump文件过大时不好分析，可以先将Xmx设置小一些（比如2G）。
+    - 其实dump文件就是java进程的内存快照，包含所有对象的引用关系 及成员变量具体的取值。
+5. 分析dump文件，寻找GC Root
+    - 可以使用JDK自带工具：`jhat、jvisualvm` 或其他工具分析。
+    - 如jhat：`jhat -J-Xmx2G -Port <port> <dump文件>`。
+    - 一般查看堆异常情况主要看这个两个部分： Show instance counts for all classes (excluding platform)，平台外的所有对象信息。Show heap histogram 以树状图形式展示堆情况。
+    - 观察是否大量应该被回收的对象在一直被引用或者是否有占用内存特别大的对象无法被回收。
 
 [返回目录](#目录)
 
