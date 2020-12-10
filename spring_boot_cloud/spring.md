@@ -176,9 +176,9 @@
 事务的传播性一般用在事务嵌套的场景，比如一个事务方法里面调用了另外一个事务方法，那么两个方法是各自作为独立的方法提交还是内层的事务合并到外层的事务一起提交，这就是需要事务传播机制的配置来确定怎么样执行。  
 常用的事务传播机制如下：  
 - `PROPAGATION_REQUIRED` Spring默认的传播机制，能满足绝大部分业务需求，如果外层有事务，则当前事务加入到外层事务，一块提交，一块回滚。如果外层没有事务，新建一个事务执行
-- `PROPAGATION_REQUES_NEW` 该事务传播机制是每次都会新开启一个事务，同时把外层事务挂起，当当前事务执行完毕，恢复上层事务的执行。如果外层没有事务，执行当前新开启的事务即可
-- `PROPAGATION_SUPPORT` 如果外层有事务，则加入外层事务，如果外层没有事务，则直接使用非事务方式执行。完全依赖外层的事务
-- `PROPAGATION_NOT_SUPPORT` 该传播机制不支持事务，如果外层存在事务则挂起，执行完当前代码，则恢复外层事务，无论是否异常都不会回滚当前的代码
+- `PROPAGATION_REQUIRES_NEW` 该事务传播机制是每次都会新开启一个事务，同时把外层事务挂起，当当前事务执行完毕，恢复上层事务的执行。如果外层没有事务，执行当前新开启的事务即可
+- `PROPAGATION_SUPPORTS` 如果外层有事务，则加入外层事务，如果外层没有事务，则直接使用非事务方式执行。完全依赖外层的事务
+- `PROPAGATION_NOT_SUPPORTED` 该传播机制不支持事务，如果外层存在事务则挂起，执行完当前代码，则恢复外层事务，无论是否异常都不会回滚当前的代码
 - `PROPAGATION_NEVER` 该传播机制不支持外层事务，即如果外层有事务就抛出异常
 - `PROPAGATION_MANDATORY` 与NEVER相反，如果外层没有事务，则抛出异常
 - `PROPAGATION_NESTED` 该传播机制的特点是可以保存状态保存点，当前事务回滚到某一个点，从而避免所有的嵌套事务都回滚，即各自回滚各自的，如果子事务没有把异常吃掉，基本还是会引起全部回滚的。
@@ -222,6 +222,40 @@
 - 回滚：
     - 指定单一异常类：`@Transactional(rollbackFor=RuntimeException.class)`
     - 指定多个异常类：`@Transactional(rollbackFor={RuntimeException.class, Exception.class})`
+
+## 事务配置
+```xml
+<!--  
+     事务管理： Spring声明式事务管理 。
+     spring默认的事务隔离级别是用的数据库的默认事务隔离级别，不同数据库级别也不尽相同。
+     使用事务，要引入aop和tx的命名空间 ：即文件头第4行。
+    (开启注解事务，使用时在方法上加上注解@Transactional(...)即可 )
+-->
+<!-- 事务管理器 -->
+<bean id="transactionManager"
+    class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource" />
+</bean>
+
+<!-- 通知传播行为 -->
+<tx:advice id="txAdvice" transaction-manager="transactionManager">
+    <tx:attributes>
+        <tx:method name="insert*" propagation="REQUIRED" />
+        <tx:method name="delete*" propagation="REQUIRED" />
+        <tx:method name="upd*" propagation="REQUIRED" />
+        <!-- 只读表示对数据的操作是读取，报异常后不用回滚（不是只读的数据出异常，事务会回滚）。 -->
+        <tx:method name="select*" propagation="SUPPORTS" read-only="true" />
+        <tx:method name="get" propagation="SUPPORTS" read-only="true" />
+    </tx:attributes>
+</tx:advice>
+
+<!-- 配置事务切入点 -->
+<aop:config>
+    <aop:pointcut id="servicePointcut" expression="execution(* com.service.impl..*ServiceImpl.*(..))"/>
+    <aop:advisor advice-ref="txAdvice" pointcut-ref="servicePointcut"/>
+</aop:config>
+```
+
 [返回目录](#目录)
 
 # 访问数据库
@@ -286,9 +320,62 @@
 [返回目录](#目录)
 
 # Spring注解
-注解 | 位置 | 使用 | 作用  
----|---|---|---  
-@SpringBootApplication | 类上 |  | 开启Spring的组件扫描和SpringBoot的自动配置功能
+## Spring注解使用
+1. 在`applicationContext.xml`配置文件**导入命名空间及规范**
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+</beans>
+```
+2. 在`applicationContext.xml`配置文件**配置扫描包**
+```xml
+<!-- 指定Spring IoC容器扫描的包，自动扫描代码中的注解 -->
+<context:component-scan base-package="com.outman.spring" />
+```
+3. 使用注解
+```java
+@Controller
+public class TestController {
+    @Autowired
+    RestTemplate rest;
+    @RequestMapping(value="/rest")
+    public String rest() {
+        return "test";
+    }
+}
+```
+
+[返回目录](#目录)
+
+## Spring常用注解
+
+类别 | 注解 | 位置 | 使用 | 作用  
+---|---|---|---|---  
+| Bean声明| @Component | |  | 定义基础层的通用组件，没有明确角色
+|         | @Service | |  | 定义业务逻辑层的服务组件
+|         | @Repository | |  | 在数据访问层定义数据资源服务
+|         | @Controller | |  | 定义控制器，表现层使用
+| Bean注入| @Autowired | |  | 服务依赖注入，一般用于注入@Component、@Service定义的组件
+|         | @Resource | |  | 服务依赖注入，一般用于注入@Repository定义的组件
+| 配置类注解 | @Configuration | |  | 声明该类为配置类，其中@Value 属性可以直接和配置文件属性映射
+|           | @Bean | |  | 注解在方法上，声明该方法返回值为一个Bean示例
+| AOP注解 | @EnableAspectJAutoProxy | |  | 开启Spring对AspectJ代理的支持
+|         | @ | |  | 
+|         | @ | |  | 
+|         | @ | |  | 
+
 
 [返回目录](#目录)
 
