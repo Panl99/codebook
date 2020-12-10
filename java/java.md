@@ -4,7 +4,7 @@
 # github-toc
 - [Java常见问题](#Java常见问题)
 - [String常用方法](#string常用方法)
-- [集合-×](#集合)
+- [集合](#集合)
     - [List](#List)
         - [ArrayList](#ArrayList)
         - [LinkedList](#LinkedList)
@@ -23,10 +23,21 @@
 - [日期和时间](#日期和时间)
     - [标准库API](#标准库api)
         - [java.util.Date](#date)
-- [多线程-×](#多线程)
+
+- [Java并发编程](#Java并发编程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
     - [ThreadPoolExecutor](#ThreadPoolExecutor)
+    - [线程池](#线程池)
+    - [锁](#锁)
+        - [synchronized](#synchronized)
+        - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
+- [网络](#网络)
+    - [OSI七层网络模型](#OSI七层网络模型)
+    - [TCP/IP四层网络模型](#TCPIP四层网络模型)
+    - [TCP三次握手](#TCP三次握手)
+    - [TCP四次挥手](#TCP四次挥手)
+    - [HTTP原理](#HTTP原理)
 - [JVM、GC](#jvmgc)
     - [自己编译jdk](#自己编译jdk)
     - [java内存管理机制](#java内存管理机制)
@@ -67,6 +78,15 @@
         - [流的基本操作](#流的基本操作)
         - [用流收集数据](#用流收集数据)
         - [Optional类(java.util.Optional<T>)](#optional类javautiloptional)     
+- [数据结构](#数据结构)
+    - [栈](#栈)
+    - [队列](#队列)
+    - [链表](#链表)
+    - [散列表](#散列表)
+    - [二叉树](#二叉树)
+    - [红黑树](#红黑树)
+    - [图](#图)
+    - [位图](#位图)
 - [设计模式](#设计模式)
     - [使用Lambda重构设计模式](#使用lambda重构设计模式)
         - [策略模式](#策略模式)
@@ -110,14 +130,22 @@
 - [日期和时间](#日期和时间)
     - [标准库API](#标准库API)
         - [java.util.Date](#date)
-- [锁](#锁)
-    - [synchronized](#synchronized)
-    - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
-- [多线程-×](#多线程)
+
+- [Java并发编程](#Java并发编程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
     - [ThreadPoolExecutor](#ThreadPoolExecutor)
-- [网络编程-×](#网络编程)
+    - [线程池](#线程池)
+    - [锁](#锁)
+        - [synchronized](#synchronized)
+        - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
+   
+- [网络](#网络)
+    - [OSI七层网络模型](#OSI七层网络模型)
+    - [TCP/IP四层网络模型](#TCP/IP四层网络模型)
+    - [TCP三次握手](#TCP三次握手)
+    - [TCP四次挥手](#TCP四次挥手)
+    - [HTTP原理](#HTTP原理)
 
 - [JVM、GC](#JVM、GC)
     - [自己编译jdk](#自己编译jdk)
@@ -162,7 +190,15 @@
         - [用流收集数据](#用流收集数据)
         - [并行流处理数据-×](#并行流处理数据)
         - [Optional类(java.util.Optional<T>)](#Optional类(java.util.Optional<T>))
-
+- [数据结构](#数据结构)
+    - [栈](#栈)
+    - [队列](#队列)
+    - [链表](#链表)
+    - [散列表](#散列表)
+    - [二叉树](#二叉树)
+    - [红黑树](#红黑树)
+    - [图](#图)
+    - [位图](#位图)
 - [设计模式](#设计模式)
     - [使用Lambda重构设计模式](#使用Lambda重构设计模式)
         - [策略模式](#策略模式)
@@ -370,14 +406,22 @@
 ### ArrayList
 - 底层：数组，查询快，增删慢
 - 线程不安全，效率高
+- ArrayList的缺点：
+    - 元素必须连续存储，在ArrayList的中间插入/删除元素时，需要将待插入或者删除的节点后的所有元素进行移动，其修改代价较高，因此，ArrayList不适合随机插入和删除的操作，更适合随机查找和遍历的操作。
+- ArrayList**不需要在定义时指定数组的长度** ，在数组长度不能满足存储要求时，ArrayList会创建一个新的更大的数组并将数组中已有的数据复制到新的数组中。
+- **怎样保证安全** 
+    - `List list = Collections.synchronizedList(new ArrayList<>());`
+    - `CopyOnWriteArrayList`
+    - 使用Vector
 
 ### LinkedList
 - 底层：链表，查询慢，增删块
 - 线程不安全，效率高
+- LinkedList采用双向链表结构存储元素，在对LinkedList进行插入和删除操作时，**只需在对应的节点上插入或删除元素，并将上一个节点元素的下一个节点的指针指向该节点即可**，数据改动较小，因此随机插入和删除效率很高。
 
 ### Vector
 - 底层：数组，查询快，增删慢
-- 线程安全，效率低
+- 线程安全，效率低(保证多线程环境下数据的一致性，需要频繁地对Vector实例进行加锁和释放锁操作)
 
 ## Set
 - 接口，继承Collection接口
@@ -386,6 +430,9 @@
 - 无序，唯一
 - 底层：哈希表
 - 唯一性保证：hashCode()和equals()
+- **线程安全HashSet**
+    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/leetcode/tree/master/java/src/util/ConcurrentHashSet.java)
+    - `CopyOnWriteArraySet`
 
 #### LinkedHashSet
 - FIFO时有序，唯一
@@ -402,19 +449,32 @@
 ## Map
 - 接口
 ### HashMap
-- 无序
-- 非线程安全
-- 效率高
+- 无序、非线程安全、效率高
 - key、value可为null
     - key只能1个为null，value可多个
+- HashMap在查找数据时，根据Hash值快速定位到数组的具体下标，但是在找到数组下标后需要对链表进行顺序遍历直到找到需要的数据，时间复杂度为`O(n)`。
+- 1.8底层是：**数组 + 链表或红黑树**
+    - 原因：为了减少链表遍历的开销。
+    - 在链表中的元素超过**8**个以后，HashMap会将链表结构转换为**红黑树**结构以提高查询效率，因此其时间复杂度为`O(log N)`
+- `capacity`：当前数组的容量，默认为 **16**，可以扩容，扩容后数组的大小为当前的两倍，因此该值始终为`2^n`。
+- `loadFactor`：负载因子，默认为**0.75**。
+- `threshold`：扩容的阈值，其值等于`capacity * loadFactor`。
+
+### ConcurrentHashMap
+- 线程安全（1.7采用分段锁实现并发操作，1.8引入红黑树）
+    - ConcurrentHashMap由多个Segment组成（Segment的数量也是锁的并发度），每个Segment 均继承自ReentrantLock并单独加锁，所以每次进行加锁操作时锁住的都是一个Segment，这样只要保证每个Segment都是线程安全的，也就实现了全局的线程安全。
+- 在ConcurrentHashMap中有个concurrencyLevel参数表示并行级别，默认是 16，也就是说ConcurrentHashMap默认由 16个Segments组成，在这种情况下最多同时支持 16个线程并发执行写操作，只要它们的操作分布在不同的Segment上即可。
+    - 并行级别concurrencyLevel可以在初始化时设置，一旦初始化就不可更改。
+    - ConcurrentHashMap的每个Segment内部的数据结构都和HashMap相同。
+    
+- key、value不能为null
+
+- ConcurrentHashMap1.8数据结构
+![ConcurrentHashMap1.8数据结构](../resources/static/images/ConcurrentHashMap1.8数据结构.PNG)
 
 #### LinkedHashMap
 - FIFO时有序
 - 底层：双向链表 + 哈希表
-
-### ConcurrentHashMap
-- 线程安全
-- key、value不能为null
 
 ### HashTable
 - 无序
@@ -465,9 +525,31 @@
 
 [返回目录](#目录)
 
-# 锁
+# Java并发编程
+
+## 异步编程
+### CompletableFuture
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
+
+[返回目录](#目录)
+
+## ThreadPoolExecutor
+- ThreadPoolExecutor 的内部工作原理  
+    - 如果当前池大小 poolSize 小于 corePoolSize ，则创建新线程执行任务。 
+    - 如果当前池大小 poolSize 大于 corePoolSize ，且等待队列未满，则进入等待队列 
+    - 如果当前池大小 poolSize 大于 corePoolSize 且小于 maximumPoolSize ，且等待队列已满，则创建新线程执行任务。 
+    - 如果当前池大小 poolSize 大于 corePoolSize 且大于 maximumPoolSize ，且等待队列已满，则调用拒绝策略来处理该任务。 
+    - 线程池里的每个线程执行完任务后不会立刻退出，而是会去检查下等待队列里是否还有线程任务需要执行，如果在 keepAliveTime 里等不到新的任务了，那么线程就会退出。
+
+[返回目录](#目录)
+
+## 线程池
+
+[返回目录](#目录)
+
+## 锁
 - [Java线程](#Java线程)
-## synchronized
+### synchronized
 - 是Java中的关键字。
 - 是不公平锁：随机线程获得锁。
 - 阻塞式同步，写操作必须要同步，同一时刻只有一个线程获得资源，线程不可中断。
@@ -498,7 +580,7 @@ public void setInfo() {
     
 [返回目录](#目录)    
     
-## ReentrantReadWriteLock
+### ReentrantReadWriteLock
 - 读读共享、读写互斥、写写同步。
     - 写的时候不能读，写完后才能读。
     - 写的时候只能1个线程写。
@@ -542,25 +624,81 @@ public List<String> setInfo() {
 
 [返回目录](#目录)
 
-# 多线程
+# 网络
+## OSI七层网络模型
+- 应用层：基于网络构建具体应用，例如FTP 文件上传下载服务、Telnet服务、HTTP服务、DNS服务、SNMP邮件服务等。
+- 表示层：主要对接收的数据进行解释、加密、解密、压缩、解压缩等，即把计算机能够识别的内容转换成人能够识别的内容（图片、声音、文字等）。
+- 会话层：在传输层的基础上建立连接和管理会话，具体包括登录验证、断点续传、数据粘包与分包等。在设备之间需要互相识别的可 以是IP，也可以是MAC 或者主机名。
+- 传输层：定义了传输数据的协议和端口号，主要用于数据的分段、传输和重组。在这一层工作的协议有TCP和UDP 等。TCP 是传输控制协议，传输效率低，可靠性强，用于传输对可靠性要求高、数据量大的数据，比如支付宝转账使用的就是TCP；UDP 是用户数据报协议，与TCP 的特性恰恰相反，用于传输可靠性要求不高、数据量小的数据，例如抖音等视频服务就使用了UDP。
+- 网络层：主要用于对数据包中的IP 地址进行封装和解析，这一层的数据叫作数据包。在这一层工作的设备有路由器、交换机、防火墙等。
+- 数据链路层：主要用于对数据包中的MAC 地址进行解析和封装。这一层的数据叫作帧。在这一层工作的设备是网卡、网桥、交换机。
+- 物理层：主要定义物理设备标准，它的主要作用是传输比特流，具体做法是在发送端将1、0转化为电流强弱来进行传输，在到达目的地后再将电流强弱转化为 1、0，也就是我们常说的模数转换与数模转换，这一层的数据叫作比特。
 
-## 异步编程
-### CompletableFuture
-- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
+ ![OSI-7层网络模型](../resources/static/images/OSI7层模型.PNG)
+
+## TCP/IP四层网络模型
+- TCP/IP不是指TCP和IP这两个协议的合称，而是指因特网的整个TCP/IP协议簇。
+- 从协议分层模型方面来讲，TCP/IP由 4个层次组成：
+    - 应用层：负责具体应用层协议的定义，包括Telnet（TELecommunications NETwork，虚拟终端协议）、 FTP （ File Transfer Protocol ， 文件传输协议） 、SMTP （ Simple Mail Transfer Protocol，电子邮件传输协议）、DNS（Domain Name Service，域名服务）、NNTP（Net News Transfer Protocol，网上新闻传输协议）和HTTP（HyperText Transfer Protocol，超文本传输协议）等。
+    - 传输层：使源端和目的端机器上的对等实体可以基于会话相互通信。在这一层定义了两个端到端的协议TCP和UDP。TCP 是面向连接的协议，提供可靠的报文传输和对上层应用的连接服务，除了基本的数据传输，它还有可靠性保证、流量控制、多路复用、优先权和安全性控制等功能。UDP 是面向无连接的不可靠传输的协议，主要用于不需要TCP 的排序和流量控制等功能的应用程序。
+    - 网络层：主要用于数据的传输、路由及地址的解析，以保障主机可以把数据发送给任何网络上的目标。数据经过网络传输，发送的顺序和到达的顺序可能发生变化。在网络层使用IP（Internet Protocol）和地址解析协议（ARP）。
+    - 网络接口层：定义了主机间网络连通的协议，具体包括Echernet、FDDI、ATM等通信协议。
+    
+![tcp/ip四层网络模型](../resources/static/images/tcpip网络模型.PNG)
 
 [返回目录](#目录)
 
-## ThreadPoolExecutor
-- ThreadPoolExecutor 的内部工作原理  
-    - 如果当前池大小 poolSize 小于 corePoolSize ，则创建新线程执行任务。 
-    - 如果当前池大小 poolSize 大于 corePoolSize ，且等待队列未满，则进入等待队列 
-    - 如果当前池大小 poolSize 大于 corePoolSize 且小于 maximumPoolSize ，且等待队列已满，则创建新线程执行任务。 
-    - 如果当前池大小 poolSize 大于 corePoolSize 且大于 maximumPoolSize ，且等待队列已满，则调用拒绝策略来处理该任务。 
-    - 线程池里的每个线程执行完任务后不会立刻退出，而是会去检查下等待队列里是否还有线程任务需要执行，如果在 keepAliveTime 里等不到新的任务了，那么线程就会退出。
+## TCP三次握手
+- TCP数据在传输之前会建立连接需要进行 3次沟通，一般被称为“三次握手”。
+    - （1）客户端发送`SYN（seq=x）` 报文给服务器端，进入SYN_SEND状态。
+    - （2）服务器端收到SYN 报文，回应一个`SYN（seq=y） 和 ACK（ack=x+1）` 报文，进入SYN_RECV状态。
+    - （3）客户端收到服务器端的SYN报文，回应一个`ACK（ack=y+1）` 报文，进入Established状态。
+
+![tcp三次握手](../resources/static/images/tcp三次握手.PNG)
+
+## TCP四次挥手
+- TCP在数据传输完成断开连接的时候要进行4次沟通，一般被称为“四次挥手”。
+- TCP断开连接既可以是由客户端发起的（客户端主动断开连接），也可以是由服务器端发起的（服务端主动断开连接）。
+    - （1）客户端应用进程调用断开连接的请求，向服务器端发送一个终止标志位`FIN=1,seq=u` 的消息，表示在客户端关闭链路前要发送的数据已经安全发送完毕，可以开始关闭链路操作，并请求服务器端确认关闭客户端到服务器的链路操作。此时客户端处于FIN-WAIT-1状态。
+    - （2）服务器在收到这个FIN消息后返回一个`ACK=1,ack=u+1,seq=v` 的消息给客户端，表示接收到客户端断开链路的操作请求，这时TCP服务器端进程通知高层应用进程释放客户端到服务器端的链路，服务器处于CLOSE-WAIT状态，即半关闭状态。客户端在收到消息后处于FINWAIT-2状态。
+    - （3）服务器端将关闭链路前需要发送给客户端的消息发送给客户端，在等待该数据发送完成后， 发送一个终止标志位`FIN=1,ACK=1,seq=w,ack=u+1` 的消息给客户端，表示关闭链路前服务器需要向客户端发送的消息已经发送完毕，请求客户端确认关闭从服务器到客户端的链路操作，此时服务器端处于LAST-ACK状态，等待客户端最终断开链路。
+    - （4）客户端在接收到这个最终FIN 消息后，发送一个`ACK=1,seq=u+1,ack=w+1`的消息给服务器端，表示接收到服务器端的断开连接请求并准备断开服务器端到客户端的链路。此时客户端处于TIM-WAIT状态，TCP连接还没有释放，然后经过等待计时器（2MSL）设置的时间后，客户端将进入CLOSE状态。
+
+![tcp四次挥手](../resources/static/images/tcp四次挥手.PNG)
+
+- 为什么要四次挥手
+    - 这是由于TCP的半关闭造成的。
+    - 因为TCP连接是全双工的（即数据可在两个方向上同时传递），所以在进行关闭时对每个方向都要单独进行关闭，这种单方向的关闭叫作半关闭。
+    - 在一方完成它的数据发送任务时，就发送一个FIN来向另一方通告将要终止这个方向的连接。
 
 [返回目录](#目录)
 
-# 网络编程
+## HTTP原理
+- HTTP是一个无状态的协议，无状态指在客户端（Web浏览器）和服务器之间不需要建立持久的连接，在一个客户端向服务器端发出请求且服务器收到该请求并返回响应（response）后，本次通信结束，HTTP连接将被关闭，服务器不保留连接的相关信息。
+
+### HTTP传输流程
+- （1）地址解析：地址解析通过域名系统DNS解析服务器域名从而获得主机的IP 地址。例如， 用客户端的浏览器请求http://localhost.com:8080/index.htm，则可从中分解出协议名、主机名、端口、对象路径等部分结果如下。
+    - 协议名：HTTP。
+    - 主机名：localhost.com。
+    - 端口：8080。
+    - 对象路径：/index.htm。
+- （2）封装HTTP数据包：解析协议名、主机名、端口、对象路径等并结合本机自己的信息封装成一个HTTP请求数据包。
+- （3）封装TCP包：将HTTP请求数据包进一步封装成TCP数据包。
+- （4）建立TCP连接：基于TCP的三次握手机制建立TCP连接。
+- （5）客户端发送请求：在建立连接后，客户端发送一个请求给服务器。
+- （6）服务器响应：服务器在接收到请求后，结合业务逻辑进行数据处理，然后向客户端返回相应的响应信息。在响应信息中包含状态行、协议版本号、成功或错误的代码、消息体等内容。
+- （7）服务器关闭TCP连接：服务器在向浏览器发送请求响应数据后关闭TCP 连接。但如果浏览器或者服务器在消息头中加入了Connection：keep-alive，则TCP连接在请求响应数据发送后仍然保持连接状态，在下一次请求中浏览器可以继续使用相同的连接发送请求。采用keep-alive方式不但减少了请求响应的时间，还节约了网络带宽和系统资源。
+
+### HTTPS
+- HTTPS在HTTP中加入SSL层以提高数据传输的安全性，SSL依靠证书来验证服务器的身份，并对浏览器和服务器之间的通信进行数据加密，以保障数据传输的安全性，其端口一般是443。
+- **HTTP的加密流程**
+    - （1）发起请求：客户端在通过TCP和服务器建立连接之后（443端口），发出一个请求证书的消息给服务器，在该请求消息里包含自己可实现的算法列表和其他需要的消息。
+    - （2）证书返回：服务器端在收到消息后回应客户端并返回证书，在证书中包含服务器信息、域名、申请证书的公司、公钥、数据加密算法等。
+    - （3）证书验证：客户端在收到证书后，判断证书签发机构是否正确，并使用该签发机构的公钥确认签名是否有效，客户端还会确保在证书中列出的域名就是它正在连接的域名。如果客户端确认证书有效，则生成对称密钥，并使用公钥将对称密钥加密。
+    - （4）密钥交换：客户端将加密后的对称密钥发送给服务器，服务器在接收到对称密钥后使用私钥解密。
+    - （5）数据传输：经过上述步骤，客户端和服务器就完成了密钥对的交换，在之后的数据传输过程中，客户端和服务端就可以基于对称加密（加密和解密使用相同密钥的加密算法）对数据加密后在网络上传输，保证了网络数据传输的安全性。
+
+![HTTP加密](../resources/static/images/HTTP加密.PNG)
 
 [返回目录](#目录)
 
@@ -1611,6 +1749,33 @@ public static Optional<Integer> stringToInt(String s) {
 //***可以将多个类似的方法封装到一个工具类OptionalUtility中。通过直接调用OptionalUtility.stringToInt方法，将String转换为一个Optional<Integer>对象，而不再需要用try/catch了。
 
 ```
+
+[返回目录](#目录)
+
+# 数据结构
+## 栈
+
+## 队列
+
+## 链表
+
+## 散列表
+
+## 二叉树
+
+## 红黑树
+- Red-Black Tree，是一种自平衡二叉查找树。在红黑树每个节点上都多出一个存储位表示节点的颜色，颜色只能是**红** 或者 **黑**。
+- **红黑树特性**：
+    - 每个节点非黑即红。
+    - 根节点是黑色的。
+    - 每个叶子结点(NIL)都是黑色的。
+    - 如果一个节点是红色的，那它的子节点必须为黑色的。
+    - 从一个节点到它的子孙节点的所有路径上都包含相同数量的黑色节点。
+    - ![红黑树](../resources/static/images/redblackTree.PNG)
+
+## 图
+
+## 位图
 
 [返回目录](#目录)
 
