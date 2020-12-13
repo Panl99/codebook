@@ -1,9 +1,16 @@
 > [Java 8实战](https://github.com/Panl99/codebook/blob/master/resources/static/books/Java%208%E5%AE%9E%E6%88%98.pdf)  
 > [Java 8函数式编程](https://github.com/Panl99/codebook/blob/master/resources/static/books/Java%208%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B.pdf)  
 
-# github-toc
+
+# 目录
 - [Java常见问题](#Java常见问题)
-- [String常用方法](#string常用方法)
+- [Java基础](#Java基础)
+    - [String常用方法](#string常用方法)
+    - [流程控制-×](#流程控制)
+    - [数组-×](#数组)
+    - [面向对象-×](#面向对象)
+    - [异常处理-×](#异常处理)
+ 
 - [集合](#集合)
     - [List](#List)
         - [ArrayList](#ArrayList)
@@ -15,30 +22,38 @@
         - [TreeSet](#TreeSet)
     - [Map](#Map)
         - [HashMap](#HashMap)
-            - [LinkedHashMap](#LinkedHashMap)
         - [ConcurrentHashMap](#ConcurrentHashMap)
+        - [LinkedHashMap](#LinkedHashMap)
         - [HashTable](#HashTable)
         - [TreeMap](#TreeMap)
     - [Queue](#Queue)
+- [I/O-×](#IO)
+- [泛型-×](#泛型)
+- [反射-×](#反射)
+- [正则-×](#正则)
+- [注解-×](#注解)
 - [日期和时间](#日期和时间)
-    - [标准库API](#标准库api)
+    - [标准库API](#标准库API)
         - [java.util.Date](#date)
 
 - [Java并发编程](#Java并发编程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
-    - [ThreadPoolExecutor](#ThreadPoolExecutor)
     - [线程池](#线程池)
+        - [ThreadPoolExecutor](#ThreadPoolExecutor)
+        - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
     - [锁](#锁)
         - [synchronized](#synchronized)
         - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
+   
 - [网络](#网络)
     - [OSI七层网络模型](#OSI七层网络模型)
     - [TCP/IP四层网络模型](#TCPIP四层网络模型)
     - [TCP三次握手](#TCP三次握手)
     - [TCP四次挥手](#TCP四次挥手)
     - [HTTP原理](#HTTP原理)
-- [JVM、GC](#jvmgc)
+
+- [JVM、GC](#JVMGC)
     - [自己编译jdk](#自己编译jdk)
     - [java内存管理机制](#java内存管理机制)
         - [java内存区域划分](#java内存区域划分)
@@ -67,129 +82,20 @@
     - [高并发](#高并发)
         - [Java内存模型(JMM)](#Java内存模型JMM)
         - [Java线程](#Java线程)
-- [函数式编程](#函数式编程)
-    - [Lambda](#lambda)
-        - [Lambda表达式语法](#lambda表达式语法)
-        - [在哪里以及如何使用Lambda](#在哪里以及如何使用lambda)
-    - [方法引用](#方法引用)
-        - [构建方法引用](#构建方法引用)
-        - [复合Lambda表达式 ](#复合lambda表达式 )
-    - [流(java.util.stream.Stream)](#stream)
-        - [流的基本操作](#流的基本操作)
-        - [用流收集数据](#用流收集数据)
-        - [Optional类(java.util.Optional<T>)](#optional类javautiloptional)     
-- [数据结构](#数据结构)
-    - [栈](#栈)
-    - [队列](#队列)
-    - [链表](#链表)
-    - [散列表](#散列表)
-    - [二叉树](#二叉树)
-    - [红黑树](#红黑树)
-    - [图](#图)
-    - [位图](#位图)
-- [设计模式](#设计模式)
-    - [使用Lambda重构设计模式](#使用lambda重构设计模式)
-        - [策略模式](#策略模式)
-        - [工厂模式](#工厂模式)
-        - [观察者模式](#观察者模式)
-        - [模板方法](#模板方法)
-        - [责任链模式](#责任链模式)
-    - [单例模式](https://github.com/Panl99/leetcode/tree/master/java/src/designpattern/Singleton.java)
-- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
-- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
-
-# 目录
-- [Java基础](#Java基础)
-    - [String常用方法](#string常用方法)
-    - [流程控制-×](#流程控制)
-    - [数组-×](#数组)
-    - [面向对象-×](#面向对象)
-    - [异常处理-×](#异常处理)
- 
-- [集合-×](#集合)
-    - [List](#List)
-        - [ArrayList](#ArrayList)
-        - [LinkedList](#LinkedList)
-        - [Vector](#Vector)
-    - [Set](#Set)
-        - [HashSet](#HashSet)
-            - [LinkedHashSet](#LinkedHashSet)
-        - [TreeSet](#TreeSet)
-    - [Map](#Map)
-        - [HashMap](#HashMap)
-            - [LinkedHashMap](#LinkedHashMap)
-        - [ConcurrentHashMap](#ConcurrentHashMap)
-        - [HashTable](#HashTable)
-        - [TreeMap](#TreeMap)
-    - [Queue](#Queue)
-- [I/O-×](#IO)
-- [泛型-×](#泛型)
-- [反射-×](#反射)
-- [正则-×](#正则)
-- [注解-×](#注解)
-- [日期和时间](#日期和时间)
-    - [标准库API](#标准库API)
-        - [java.util.Date](#date)
-
-- [Java并发编程](#Java并发编程)
-    - [异步编程-×](#异步编程)
-        - [CompletableFuture](#CompletableFuture)
-    - [ThreadPoolExecutor](#ThreadPoolExecutor)
-    - [线程池](#线程池)
-    - [锁](#锁)
-        - [synchronized](#synchronized)
-        - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
-   
-- [网络](#网络)
-    - [OSI七层网络模型](#OSI七层网络模型)
-    - [TCP/IP四层网络模型](#TCP/IP四层网络模型)
-    - [TCP三次握手](#TCP三次握手)
-    - [TCP四次挥手](#TCP四次挥手)
-    - [HTTP原理](#HTTP原理)
-
-- [JVM、GC](#JVM、GC)
-    - [自己编译jdk](#自己编译jdk)
-    - [java内存管理机制](#java内存管理机制)
-        - [java内存区域划分](#java内存区域划分)
-        - [对象的创建](#对象的创建)
-        - [内存分布](#内存分布)
-        - [访问定位](#访问定位)
-        - [内存溢出](#内存溢出)
-        - [JVM性能监控、故障处理工具](#JVM性能监控、故障处理工具)
-        - [一次内存溢出的排查](#一次内存溢出的排查)
-    - [垃圾回收](#垃圾回收)
-        - [哪些内存需要回收](#哪些内存需要回收)
-        - [回收时间和方式](#回收时间和方式)
-        - [内存分配](#内存分配)
-    - [性能调优](#性能调优)
-        - [大内存硬件上的程序部署策略](#大内存硬件上的程序部署策略)
-        - [集群间同步导致内存溢出](#集群间同步导致内存溢出)
-        - [堆外内存导致内存溢出](#堆外内存导致内存溢出)
-        - [外部命令导致系统缓慢](#外部命令导致系统缓慢)
-        - [服务器虚拟机进程崩溃](#服务器虚拟机进程崩溃)
-        - [不恰当的数据结构导致内存占用过大](#不恰当的数据结构导致内存占用过大)
-        - [由安全点导致长时间停顿](#由安全点导致长时间停顿)
-    - [类加载机制](#类加载机制)
-        - [类加载时机](#类加载时机)
-        - [类加载过程](#类加载过程)
-        - [类加载器](#类加载器)
-    - [高并发](#高并发)
-        - [Java内存模型(JMM)](#Java内存模型(JMM))
-        - [Java线程](#Java线程)
     
 - [函数式编程](#函数式编程)
     - [Lambda](#Lambda)
         - [Lambda表达式语法](#Lambda表达式语法)
         - [在哪里以及如何使用Lambda](#在哪里以及如何使用Lambda)
-        - [编译器对Lambda做类型检查、类型推断、限制-×](#编译器对Lambda做类型检查、类型推断、限制)
+        - [编译器对Lambda做类型检查、类型推断、限制-×](#编译器对Lambda做类型检查类型推断限制)
     - [方法引用](#方法引用)
         - [构建方法引用](#构建方法引用)
-        - [复合Lambda表达式 ](#复合Lambda表达式 )
+        - [复合Lambda表达式 ](#复合Lambda表达式)
     - [流(java.util.stream.Stream)](#Stream)
         - [流的基本操作](#流的基本操作)
         - [用流收集数据](#用流收集数据)
         - [并行流处理数据-×](#并行流处理数据)
-        - [Optional类(java.util.Optional<T>)](#Optional类(java.util.Optional<T>))
+        - [Optional类(java.util.Optional<T>)](#Optional类javautilOptional)
 - [数据结构](#数据结构)
     - [栈](#栈)
     - [队列](#队列)
@@ -206,6 +112,7 @@
         - [观察者模式](#观察者模式)
         - [模板方法](#模板方法)
         - [责任链模式](#责任链模式)
+    - [单例模式](https://github.com/Panl99/leetcode/tree/master/java/src/designpattern/Singleton.java)
 
 - [解析文件-×](#解析文件)
     - [解析json-×](#解析json)
@@ -216,9 +123,7 @@
 
 [返回目录](#目录)
 
-[github-toc](#github-toc)
-
-> # Java常见问题
+# Java常见问题
 - Java程序初始化顺序：
     - 父类静态变量 -> 父类静态代码块 -> 子类静态变量 -> 子类静态代码块 -> 父类非静态变量 -> 父类非静态代码块 -> 父类构造函数 -> 子类非静态变量 -> 子类非静态代码块 -> 子类构造函数。
 - Java作用域：
@@ -472,7 +377,7 @@
 - ConcurrentHashMap1.8数据结构
 ![ConcurrentHashMap1.8数据结构](../resources/static/images/ConcurrentHashMap1.8数据结构.PNG)
 
-#### LinkedHashMap
+### LinkedHashMap
 - FIFO时有序
 - 底层：双向链表 + 哈希表
 
@@ -533,7 +438,8 @@
 
 [返回目录](#目录)
 
-## ThreadPoolExecutor
+## 线程池
+### ThreadPoolExecutor
 - ThreadPoolExecutor 的内部工作原理  
     - 如果当前池大小 poolSize 小于 corePoolSize ，则创建新线程执行任务。 
     - 如果当前池大小 poolSize 大于 corePoolSize ，且等待队列未满，则进入等待队列 
@@ -541,9 +447,7 @@
     - 如果当前池大小 poolSize 大于 corePoolSize 且大于 maximumPoolSize ，且等待队列已满，则调用拒绝策略来处理该任务。 
     - 线程池里的每个线程执行完任务后不会立刻退出，而是会去检查下等待队列里是否还有线程任务需要执行，如果在 keepAliveTime 里等不到新的任务了，那么线程就会退出。
 
-[返回目录](#目录)
-
-## 线程池
+- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
 
 [返回目录](#目录)
 
