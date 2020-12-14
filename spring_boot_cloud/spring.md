@@ -372,9 +372,39 @@ public class TestController {
 | 配置类注解 | @Configuration | |  | 声明该类为配置类，其中@Value 属性可以直接和配置文件属性映射
 |           | @Bean | |  | 注解在方法上，声明该方法返回值为一个Bean示例
 | AOP注解 | @EnableAspectJAutoProxy | |  | 开启Spring对AspectJ代理的支持
-|         | @ | |  | 
-|         | @ | |  | 
-|         | @ | |  | 
+|         | @Aspect | |  | 声明一个切面，使用@After、@Before、@Around定义通知(Advice)，可直接将拦截规则(切点)作为参数
+|         | @After | |  | 在方法执行之后执行
+|         | @Before | |  | 在方法执行之前执行
+|         | @Around | |  | 在方法执行之前 和执行之后都执行
+|         | @PointCut | |  | 声明一个切点
+| Bean属性 | @Scope | |  | 设置Spring容器Bean实例的生命周期，取值有：singleton、prototype、request、session、global session
+|         | @PostConstruct | |  | 声明方法在构造函数执行完后开始执行
+|         | @PreDestroy | |  | 声明方法在Bean销毁之前执行
+|         | @Value | |  | 为属性注入值
+|         | @PropertySource | |  | 声明 和加载配置文件
+| 异步操作注解 | @EnableAsync | |  | 声明在类上，开启对异步任务的支持
+|            | @Async | |  | 声明方法是一个异步任务，Spring后台基于线程池异步执行该方法
+| 定时任务相关 | @EnableScheduling | |  | 声明在调度类上，开启对任务调度的支持
+|            | @Scheduled | |  | 声明一个定时任务，包括cron、fixDelay、fixRate等参数
+| 开启功能支持 | @EnableAspectJAutoProxy | |  | 开启对AspectJ自动代理的支持
+|            | @EnableAsync | |  | 开启对异步方法的支持
+|            | @EnableScheduling | |  | 开启对计划任务的支持
+|            | @EnableWebMVC | |  | 开启对Web MVC的配置支持
+|            | @EnableConfigurationProperties | |  | 开启对@ConfigurationProperties注解配置 Bean的支持
+|            | @EnableJpaRepositories | |  | 开启对SpringData JPA Repository的支持
+|            | @EnableTransactionManagement | |  | 开启对事务的支持
+|            | @EnableCaching | |  | 开启对缓存的支持
+| 测试相关注解 | @RunWith | |  | 运行器，Spring中通常对JUnit的支持
+|            | @ContextConfiguration | |  | 用来加载配置ApplicationContext，其中classes属性用来加载配置类
+| SpringMVC注解 | @Controller | |  | 声明控制器类
+|            | @RequestMapping | |  | 声明映射Web请求的地址和参数，包括访问路径和参数
+|            | @ResponseBody | |  | 支持将返回值放在Response Body 体中返回，通常用于返回Json数据到前端
+|            | @RequestBody | |  | 允许Request 的参数在Request Body 体中
+|            | @PathVariable | |  | 用于接收基于路径的参数，通常作为RESTful接口的实现
+|            | @RestController | |  | 组合注解，相当于@Controller 和@ResponseBody的组合
+|            | @ExceptionHandler | |  | 用于全局控制器的异常处理
+|            | @InitBinder | |  | WebDataBinder 用来自动绑定前台请求的参数到模型(Model)中
+
 
 
 [返回目录](#目录)
