@@ -45,6 +45,10 @@
     - [锁](#锁)
         - [synchronized](#synchronized)
         - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
+    - [CAS](#CAS)
+        - [CAS特性--乐观锁](#CAS特性乐观锁)
+        - [ABA问题](#ABA问题)
+        - [CAS应用--AtomicInteger源码分析](#CAS应用AtomicInteger源码分析)
    
 - [网络](#网络)
     - [OSI七层网络模型](#OSI七层网络模型)
@@ -523,6 +527,161 @@ public List<String> setInfo() {
     } finally {
         writeLock.unlock();
     }
+}
+```
+
+[返回目录](#目录)
+
+## CAS
+- **CAS**：(Compare And Swap) 比较并交换。
+- CAS(V,E,N)算法包含三个参数：
+    - V：要更新的变量
+    - E：预期值
+    - N：新值
+- 当且仅当**`V == E`** 时，才会将**V设为N `V = N`**
+- 如果**`V != E`** ，说明已有其他线程更新了V值，则当前线程什么也不做，返回当前**V的真实值**。
+
+### CAS特性--乐观锁
+- CAS采用乐观锁的思想--总是认为自己可以成功完成操作。
+- 在有多个线程同时使用CAS操作一个变量时，只有一个会胜出并成功更新，其余均会失败。
+- 失败的线程不会被挂起，仅被告知失败，并且允许再次尝试，当然，也允许失败的线程放弃操作。
+- 基于这样的原理，CAS操作即使没有锁，也可以发现其他线程对当前线程的干扰，并进行恰当的处理。
+
+### ABA问题
+- CAS算法的实现有一个重要的前提：需要取出内存中某时刻的数据，然后在下一时刻进行比较、替换，在这个时间差内可能数据已经发生了变化，导致产生ABA问题。
+- **ABA问题产生：**
+    - 第①个线程从内存的V位置取出A；
+    - 这时第②个线程也从内存中取出A，并将V位置的数据先改为B，之后又改回A；
+    - 此时当第①个线程在进行CAS操作时，发现内存中仍然是A，然后就操作成功。
+- 从第①线程的角度看CAS操作是成功的，但过程中其实V位置数据已经发生过变化，只是第①线程不感知，这在某些场景下可能出现过程数据不一致的问题。
+- **ABA问题解决：** 可以通过版本号方式解决ABA问题（版本号只会增加）
+    - 乐观锁每次在执行数据修改操作时 带上一个版本号；
+    - 在预期版本号 和数据版本号 一致时 执行修改操作，并对版本号 +1；
+    - 否则执行失败。 
+
+[返回目录](#目录)
+
+### CAS应用--AtomicInteger源码分析
+- **原子类：如AtomicInteger** 底层就是基于CAS来更新数据的。
+- `java.util.concurrent`包都中的实现类都是基于`volatile`和`CAS`来实现的。尤其`java.util.concurrent.atomic`包下的原子类。
+
+```java
+public class AtomicInteger extends Number implements java.io.Serializable {
+
+    // compareAndSwapInt即CAS
+    // setup to use Unsafe.compareAndSwapInt for updates
+    private static final Unsafe unsafe = Unsafe.getUnsafe();
+    //对象地址的偏移量
+    private static final long valueOffset;
+
+    static {
+        try {
+            //获取字段value相对于当前对象的"起始地址"的偏移量
+            valueOffset = unsafe.objectFieldOffset(AtomicInteger.class.getDeclaredField("value"));
+        } catch (Exception ex) { throw new Error(ex); }
+    }
+
+    //volatile声明变量value对所有线程可见
+    private volatile int value;
+    
+    //返回当前值
+    public final int get() {
+        return value;
+    }
+
+    //设置新值
+    public final void set(int newValue) {
+        value = newValue;
+    }
+
+    //设置新值，但不会立即生效(最终生效)，不保证可见性，可能发生指令重排，但是性能比set高
+    public final void lazySet(int newValue) {
+        unsafe.putOrderedInt(this, valueOffset, newValue);
+    }
+
+    //设置新值，返回旧值（原子操作）
+    public final int getAndSet(int newValue) {
+        return unsafe.getAndSetInt(this, valueOffset, newValue);
+    }
+    
+    //CAS原子操作，当value和expect相等时，才将value修改为update
+    //true:value和expect相等，且完成修改；false:value和expect不相等
+    public final boolean compareAndSet(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+    }
+    //同上compareAndSet，但不保证多个线程CAS有序性
+    public final boolean weakCompareAndSet(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+    }
+
+    //原子操作，将value + 1，返回旧值
+    public final int getAndIncrement() {
+        return unsafe.getAndAddInt(this, valueOffset, 1);
+    }
+
+    //原子操作，将value - 1，返回旧值
+    public final int getAndDecrement() {
+        return unsafe.getAndAddInt(this, valueOffset, -1);
+    }
+
+    //原子操作，将value + delta，返回旧值
+    public final int getAndAdd(int delta) {
+        return unsafe.getAndAddInt(this, valueOffset, delta);
+    }
+
+    //原子操作，将value + 1，返回新值
+    public final int incrementAndGet() {
+        return unsafe.getAndAddInt(this, valueOffset, 1) + 1;
+    }
+
+    //原子操作，将value - 1，返回新值
+    public final int decrementAndGet() {
+        return unsafe.getAndAddInt(this, valueOffset, -1) - 1;
+    }
+
+    //原子操作，将value + delta，返回新值
+    public final int addAndGet(int delta) {
+        return unsafe.getAndAddInt(this, valueOffset, delta) + delta;
+    }
+
+    //传入Function，对value进行操作（同样使用CAS保证原子性），会一直重试直到成功才中断，然后返回旧值
+    public final int getAndUpdate(IntUnaryOperator updateFunction) {
+        int prev, next;
+        do {
+            prev = get();
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSet(prev, next)); // 一直重试，直到CAS操作成功
+        return prev;
+    }
+
+    //传入Function，对value进行操作（同样使用CAS保证原子性），会一直重试直到成功才中断，然后返回新值
+    public final int updateAndGet(IntUnaryOperator updateFunction) {
+        int prev, next;
+        do {
+            prev = get();
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSet(prev, next)); // 一直重试，直到CAS操作成功
+        return next;
+    }
+
+    public final int getAndAccumulate(int x, IntBinaryOperator accumulatorFunction) {
+        int prev, next;
+        do {
+            prev = get();
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSet(prev, next));
+        return prev;
+    }
+
+    public final int accumulateAndGet(int x, IntBinaryOperator accumulatorFunction) {
+        int prev, next;
+        do {
+            prev = get();
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSet(prev, next));
+        return next;
+    }
+
 }
 ```
 
