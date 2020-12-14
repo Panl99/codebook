@@ -46,9 +46,9 @@
         - [synchronized](#synchronized)
         - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
     - [CAS](#CAS)
-        - [CAS特性--乐观锁](#CAS特性乐观锁)
+        - [CAS特性--乐观锁](#CAS特性--乐观锁)
         - [ABA问题](#ABA问题)
-        - [CAS应用--AtomicInteger源码分析](#CAS应用AtomicInteger源码分析)
+        - [CAS应用--AtomicInteger源码分析](#CAS应用--AtomicInteger源码分析)
    
 - [网络](#网络)
     - [OSI七层网络模型](#OSI七层网络模型)
