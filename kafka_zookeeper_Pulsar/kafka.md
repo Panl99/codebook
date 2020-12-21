@@ -54,6 +54,8 @@
 - `leader` 每个分区多个副本的“主”，生产者发送数据的对象，以及消费者消费数据的对象都是 leader。
 - `follower` 每个分区多个副本中的“从”，实时从 leader中同步数据，保持和 leader数据的同步。 leader发生故障时，某个 follower会成为新的 follower。
 
+![kafka架构](../resources/static/images/kafka架构.PNG)
+
 [返回目录](#目录)
 
 ## kafka特点
@@ -164,14 +166,14 @@
 6. 分发安装包：`module]$ xsync kafka/` 注意：分发后要修改其他机器的环境变量。
 7. 分别在 hadoop103和 hadoop104上修改 配置文件 `/opt/module/kafka/config/server.properties`中 的 `broker.id=1`、 `broker.id=2`
     - 注: broker.id不得 重复
-8. 启动集群：依次在hadoop102、 hadoop103、 hadoop104节点上启动 kafka
-    `[atguigu@hadoop102 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`
-    `[atguigu@hadoop103 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`
-    `[atguigu@hadoop104 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`
-9. 关闭集群：
-    `[atguigu@hadoop102 kafka]$ bin/kafka-server-stop.sh`
-    `[atguigu@hadoop103 kafka]$ bin/kafka-server-stop.sh`
-    `[atguigu@hadoop104 kafka]$ bin/kafka-server-stop.sh`
+8. 启动集群：依次在hadoop102、 hadoop103、 hadoop104节点上启动 kafka  
+    `[atguigu@hadoop102 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`  
+    `[atguigu@hadoop103 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`  
+    `[atguigu@hadoop104 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`  
+9. 关闭集群：  
+    `[atguigu@hadoop102 kafka]$ bin/kafka-server-stop.sh`  
+    `[atguigu@hadoop103 kafka]$ bin/kafka-server-stop.sh`  
+    `[atguigu@hadoop104 kafka]$ bin/kafka-server-stop.sh`  
 10. kafka群起脚本：
 ```shell script
 #!/bin/bash
