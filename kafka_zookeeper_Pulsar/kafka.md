@@ -1,13 +1,13 @@
 # 目录
-- [一、kafka概念](#一、kafka概念)
+- [一、kafka概念](#一kafka概念)
     - [kafka特点](#kafka特点)
-- [二、安装kafka](#二、安装kafka)
+- [二、安装kafka](#二安装kafka)
     - [broker配置](#broker配置)
     - [选择硬件-TODO](#选择硬件)
     - [kafka集群](#kafka集群)
         - [配置kafka集群](#配置kafka集群)
     - [生产环境注意事项](#生产环境注意事项)
-- [三、kafka生产者](#三、kafka生产者)
+- [三、kafka生产者](#三kafka生产者)
     - [消息发送流程](#消息发送流程)
     - [创建kafka生产者](#创建kafka生产者)
     - [发送消息到kafka](#发送消息到kafka)
@@ -17,7 +17,7 @@
         - [其它序列化框架](#其它序列化框架)
     - [分区](#分区)
         - [自定义分区](#自定义分区)
-- [四、kafka消费者](#四、kafka消费者)
+- [四、kafka消费者](#四kafka消费者)
     - [创建Kafka消费者](#创建Kafka消费者)
         - [消息轮询请求数据](#消息轮询请求数据)
     - [消费者的配置](#消费者的配置)
@@ -41,12 +41,18 @@
     - `Producer`将消息发送到`Broker`，`Broker`将收到的消息存储到磁盘，`Consumer`从`Broker`订阅并消费消息。
 - `Producer`：生产者，负责生产消息，然后发送到Kafka中。
 - `Consumer`：消费者，从Kafka中接收消息，进行处理。
-- `Broker`：服务代理节点，对于Kafka，`broker`可看作一个独立的Kafka服务节点(或Kafka服务实例)。
+    - `Consumer Group`（CG）：消费者组，由多个consumer 组成。
+    - 消费者组内每个消费者负责消费不同分区的数据，一个分区只能由一个组内消费者消费；消费者组之间互不影响。
+    - 所有的消费者都属于某个消费者组，即消费者组是逻辑上的一个订阅者。
+- `Broker`：服务代理节点，即一个kafka服务器就是一个`broker`。
     - `Broker` 接收来自生产者的消息，为消息设置偏移量，并提交消息到磁盘保存。
     - `Broker` 为消费者提供服务，对读取分区的请求作出响应，返回已经提交到磁盘上的消息。
 - `Topic`：主题，Kafka中消息以主题为单位归类，生产者将消息发送到特定主题，消费者订阅主题并消费。
-- `Partition`：分区，`Topic`可以分为多个`Partition`，一个分区只属于单个主题。同一主题下的不同分区消息不同。
+- `Partition`：分区，`Topic`可以分为多个`Partition`，一个`Partition`只属于一个`Topic`。同一主题下的不同分区消息不同。
+- `Replica`：副本，为保证集群中的某个节点发生故障时，该节点上的`Partition`数据不丢失，且kafka仍然能够继续工作， kafka提供了副本机制，一个 topic的每个分区都有若干个副本，一个 leader和若干个 follower。
 - `Offset`：偏移量，是消息在分区中唯一标识，Kafka通过偏移量保证消息在分区中的顺序性。
+- `leader` 每个分区多个副本的“主”，生产者发送数据的对象，以及消费者消费数据的对象都是 leader。
+- `follower` 每个分区多个副本中的“从”，实时从 leader中同步数据，保持和 leader数据的同步。 leader发生故障时，某个 follower会成为新的 follower。
 
 [返回目录](#目录)
 
@@ -69,6 +75,8 @@
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190612232716776.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
 - **安装Kafka Broker**  
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190612232747159.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
+
+- [kafka集群部署](#kafka集群部署)
 
 [返回目录](#目录)
 
@@ -114,6 +122,65 @@
 ## kafka集群
 - 跨服务器进行负载均衡 
 - 可以使用复制功能避免单节点故障造成数据丢失
+
+### kafka集群部署
+1. 解压安装包：`software]$ tar -zxvf kafka_2.11-0.11.0.0.tgz -C /opt/module/`
+2. 修改解压后文件名称：`module]$ mv kafka_2.11-0.11.0.0/ kafka`
+3. 在`/opt/module/kafka`目录下 创建`logs`文件夹：`kafka]$ mkdir logs`
+4. 修改配置文件：`config]$ vim server.properties`
+    ```properties
+    #broker 的 全局唯一编号，不能重复
+    broker.id=0
+    #删除 topic 功能使能
+    delete.topic.enable=true
+    #处理网络请求 的 线程数量
+    num.network.threads=3
+    #用来 处理磁盘 IO 的现成数量
+    num.io.threads=8
+    #发送套接字的缓冲区大小
+    socket.send.buffer.bytes=102400
+    #接收套接字的缓冲区大小
+    socket.receive.buffer.bytes=102400
+    #请求套接字的缓冲区大小
+    socket.request.max.bytes=104857600
+    #kafka 运行日志存放的路径
+    log.dirs=/opt/module/kafka/logs
+    #topic 在当前 broker 上的分区个数
+    num.partitions=1
+    #用来恢复和清理 data 下数据的线程数量
+    num.recovery.threads.per.data.dir=1
+    #segment 文件保留的最长时间，超时将被删除
+    log.retention.hours=168
+    #配置连接 Zookeeper 集群 地址
+    zookeeper.connect=hadoop102:2181,hadoop103:2181,hadoop104:21 81
+    ```
+5. 配置环境变量：`module]$ sudo vim /etc/profile`
+    ```properties
+    #KAFKA_HOME
+    export KAFKA_HOME=/opt/module/kafka
+    export PATH=$PATH:$KAFKA_HOME/bin
+    ```
+   `module]$ source /etc/profile`
+6. 分发安装包：`module]$ xsync kafka/` 注意：分发后要修改其他机器的环境变量。
+7. 分别在 hadoop103和 hadoop104上修改 配置文件 `/opt/module/kafka/config/server.properties`中 的 `broker.id=1`、 `broker.id=2`
+    - 注: broker.id不得 重复
+8. 启动集群：依次在hadoop102、 hadoop103、 hadoop104节点上启动 kafka
+    `[atguigu@hadoop102 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`
+    `[atguigu@hadoop103 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`
+    `[atguigu@hadoop104 kafka]$ bin/kafka-server-start.sh -daemon config/server.properties`
+9. 关闭集群：
+    `[atguigu@hadoop102 kafka]$ bin/kafka-server-stop.sh`
+    `[atguigu@hadoop103 kafka]$ bin/kafka-server-stop.sh`
+    `[atguigu@hadoop104 kafka]$ bin/kafka-server-stop.sh`
+10. kafka群起脚本：
+```shell script
+#!/bin/bash
+for i in hadoop102 hadoop103 hadoop104
+do
+  echo "========== $i =========="
+  ssh $i '/opt/module/kafka/bin/kafka-server-start.sh -daemon /opt/module/kafka/config/server.properties'
+done
+```
 
 [返回目录](#目录)
 
