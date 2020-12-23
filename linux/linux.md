@@ -20,7 +20,8 @@
     - [输入输出重定向](#输入输出重定向)
     - [加载外部脚本](#加载外部脚本)
     - [awk](#awk)
-    - [实战](实战)
+    - [编辑文件sed](#编辑文件sed)
+    - [实战](#实战)
 - [linux](#linux)
     - [常用命令](#常用命令)
     - [用户-用户组](#用户-用户组)
@@ -538,7 +539,85 @@ There orange,apple,mongo
 
 [目录](#目录)
 
+## 编辑文件sed
+- 参数：
+    - `-e<script> 或--expression=<script>` 以选项中指定的script来处理输入的文本文件。
+    - `-f<script文件> 或--file=<script文件>` 以选项中指定的script文件来处理输入的文本文件。
+    - `-h 或--help` 显示帮助。
+    - `-n 或--quiet或--silent` 仅显示script处理后的结果。
+    - `-V 或--version` 显示版本信息。
+- 动作：
+    - `a`：新增， a 的后面可以接字串，而这些字串会在新的一行出现(目前的下一行)～
+    - `c`：取代， c 的后面可以接字串，这些字串可以取代 n1,n2 之间的行！
+    - `d`：删除， d 后面通常不接任何东西；
+    - `i`：插入， i 的后面可以接字串，而这些字串会在新的一行出现(目前的上一行)；
+    - `p`：打印，亦即将某个选择的数据印出。通常 p 会与参数 sed -n 一起运行～
+    - `s`：取代，可以直接进行取代的工作，通常这个 s 的动作可以搭配正规表示法！例如 1,20s/old/new/g
+
+```shell script
+#!/usr/bin/env bash
+LOGPATH='/home/test/shell/'
+TEST_LOG="${LOGPATH}test.log"
+#$TEST_LOG初始内容
+## abc.
+## def.
+## ghi.
+## jkl.
+
+# 在TEST_LOG文件的第四行后添加一行，并将结果输出到标准输出
+sed -e 4a\newLine $TEST_LOG
+## ...
+## jkl
+## newLine
+
+# 将 TEST_LOG 的内容列出并且列印行号，同时，请将第 2~5 行删除！
+nl $TEST_LOG | sed -e '2,5d'
+# 删除第 3 到最后一行($：代表最后一行)
+nl $TEST_LOG | sed -e '3,$d'
+# 在第二行后(亦即是加在第三行)加上『drink tea?』字样！
+nl $TEST_LOG | sed -e '2a drink tea'
+# 在第二行前加上『drink tea?』字样！
+nl $TEST_LOG | sed -e '2i drink tea'
+# 在第4行之后追加 3 行(2 行文字和 1 行空行)
+sed -e '4 a newline\nnewline2\n' $TEST_LOG
+
+# 将第2-5行的内容替换成为『No 2-5 number』
+nl $TEST_LOG | sed '2,5c No 2-5 number'
+
+# 搜索$TEST_LOG有root关键字的行，只输出匹配行
+nl $TEST_LOG | sed -n '/root/p'
+
+# 删除$TEST_LOG所有包含root的行，其他行输出
+nl $TEST_LOG | sed  '/root/d'
+
+# 搜索$TEST_LOG,找到root对应的行，执行后面花括号中的一组命令，每个命令之间用分号分隔
+# 这里把bash替换为blueshell，再输出这行,q表示退出
+nl $TEST_LOG | sed -n '/root/{s/bash/blueshell/;p;q}'
+
+# 一条sed命令，删除$TEST_LOG第3行到末尾的数据，并把bash替换为blueshell
+nl $TEST_LOG | sed -e '3,$d' -e 's/bash/blueshell/'
+
+
+# 数据的搜寻并替换
+# 格式：sed 's/要被取代的字串/新的字串/g'
+
+# 查询本机ip，将IP前面和后面的部分删除，过滤出ip地址（inet addr:192.168.1.100 Bcast:192.168.1.255 Mask:255.255.255.0）
+/sbin/ifconfig eth0 | grep 'inet addr' | sed 's/^.*addr://g' | sed 's/Bcast.*$//g'
+
+
+# 修改文件内容
+# 将$TEST_LOG中每行结尾的.替换成！
+sed -i 's/\.$/\!/g' $TEST_LOG
+# 在$TEST_LOG最后一行添加 #This is a test
+sed -i '$a # This is a test' $TEST_LOG
+
+```
+- [菜鸟](https://www.runoob.com/linux/linux-comm-sed.html)
+
+[目录](#目录)
+
 ## 实战
+
 ```shell script
 #!/bin/bash
 # 关闭对使用POSIX规范的检测
