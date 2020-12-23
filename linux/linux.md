@@ -20,11 +20,14 @@
     - [输入输出重定向](#输入输出重定向)
     - [加载外部脚本](#加载外部脚本)
     - [awk](#awk)
+    - [实战](实战)
 - [linux](#linux)
     - [常用命令](#常用命令)
     - [用户-用户组](#用户-用户组)
     - [磁盘管理](#磁盘管理)
     - [vim](#vim)
+- [问题解决](#问题解决)
+    - [syntax error near unexpected token](#syntaxerrornearunexpectedtoken)
 
 [目录](#目录)
 
@@ -83,6 +86,17 @@ done
 
 echo 'end...'
 ```
+```shell script
+#!/bin/bash
+logpath='home/test/shell/shell-test.log'
+
+# 读取logpath文件
+while read line
+do 
+	echo $line
+done < $logpath
+```
+
 [目录](#目录)
 
 ## 字符串截取
@@ -524,6 +538,55 @@ There orange,apple,mongo
 
 [目录](#目录)
 
+## 实战
+```shell script
+#!/bin/bash
+# 关闭对使用POSIX规范的检测
+set +o posix
+
+LOGPATH='/home/test/shell/'
+TEST_LOG="${LOGPATH}test.log"
+SHELL_LOG="${LOGPATH}shell.log"
+STR="abc_123-def.test"
+
+# 定义日志格式
+log_info="eval echo \"[$0]\" @\`date +\"%Y%m%d %T\"\` [info]: "
+log_error="eval echo \"[$0]\" @\`date +\"%Y%m%d %T\"\` [error]: "
+
+# 打印回车
+echo -e "\n" >> $TEST_LOG
+
+# 查询目录下的文件名
+files=$(ls $LOGPATH)
+
+# 字符串替换
+str=${STR//./_} #将STR中的所有.替换成_
+str=${STR/_/.} #将STR中的第一个_替换成.
+
+# 读取TEST_LOG文件,追加到$SHELL_LOG
+while read line
+do 
+	$log_info $line >> $SHELL_LOG
+done < $TEST_LOG
+
+# 输出追加到多个文件,并取消打印在控制台
+echo $STR | tee -a $TEST_LOG $SHELL_LOG > /dev/null
+
+# 求两个文件的差集：$TEST_LOG - $SHELL_LOG
+sort -m <(sort $TEST_LOG | uniq) <(sort $SHELL_LOG | uniq) <(sort $SHELL_LOG | uniq) | uniq -u
+## 求差集并写入到文件
+sort -m <(sort $TEST_LOG | uniq) <(sort $SHELL_LOG | uniq) <(sort $SHELL_LOG | uniq) | uniq -u | tee -a $TEST_LOG $SHELL_LOG > /dev/null
+## 求出差集并直接读取
+sort -m <(sort $TEST_LOG | uniq) <(sort $SHELL_LOG | uniq) <(sort $SHELL_LOG | uniq) | uniq -u | while read line
+do
+    $log_info $line >> $TEST_LOG
+done
+
+
+```
+
+[目录](#目录)
+
 # linux
 ## 常用命令
 - `ls`: 列出目录及文件名
@@ -538,6 +601,8 @@ There orange,apple,mongo
     - `-p` ：帮助你直接将所需要的目录(包含上一级目录)递归创建起来！
 - `rmdir`：删除一个空的目录
     - `-p` ：连同上一级『空的』目录也一起删除
+- `touch` ：创建一个文件`touch test.txt`
+    - 或者直接`vim test.txt`
 - `cp`: 复制文件或目录
     - `-a`：相当於 -pdr 的意思，至於 pdr 请参考下列说明；(常用)
     - `-d`：若来源档为连结档的属性(link file)，则复制连结档属性而非文件本身；
@@ -736,7 +801,20 @@ There orange,apple,mongo
 [目录](#目录)
 
 ## vim
-- `dd` 删除光标所在行
-- `yy` 复制光标所在行
+- `Esc`
+    - `dd` 删除光标所在行
+    - `yy` 复制光标所在行
+    - `u` 撤销
+
+[目录](#目录)
+
+# 问题解决
+## syntax error near unexpected token
+- 现象：
+    - `sh test.sh`使用sh执行脚本时报错：`syntax error near unexpected token `('`
+    - 使用`bash`不报错
+- 解决：
+    在脚本首行添加：`set +o posix` 关闭对使用POSIX规范的检测。
+- 参考：[https://blog.csdn.net/su20145104009/article/details/91458006](https://blog.csdn.net/su20145104009/article/details/91458006)
 
 [目录](#目录)
