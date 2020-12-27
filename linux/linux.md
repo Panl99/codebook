@@ -23,7 +23,7 @@
     - [编辑文件sed](#编辑文件sed)
 - [实战](#实战)
     - [常用操作](#常用操作)
-    - [Bash脚本模板](#Bashscripttemplate)
+    - [Bash脚本模板](#bash-script-template)
 - [linux](#linux)
     - [常用命令](#常用命令)
     - [用户-用户组](#用户-用户组)
