@@ -21,7 +21,9 @@
     - [加载外部脚本](#加载外部脚本)
     - [awk](#awk)
     - [编辑文件sed](#编辑文件sed)
-    - [实战](#实战)
+- [实战](#实战)
+    - [常用操作](#常用操作)
+    - [Bash脚本模板](#Bashscripttemplate)
 - [linux](#linux)
     - [常用命令](#常用命令)
     - [用户-用户组](#用户-用户组)
@@ -616,8 +618,8 @@ sed -i '$a # This is a test' $TEST_LOG
 
 [目录](#目录)
 
-## 实战
-
+# 实战
+## 常用操作
 ```shell script
 #!/bin/bash
 # 关闭对使用POSIX规范的检测
@@ -655,14 +657,143 @@ echo $STR | tee -a $TEST_LOG $SHELL_LOG > /dev/null
 sort -m <(sort $TEST_LOG | uniq) <(sort $SHELL_LOG | uniq) <(sort $SHELL_LOG | uniq) | uniq -u
 ## 求差集并写入到文件
 sort -m <(sort $TEST_LOG | uniq) <(sort $SHELL_LOG | uniq) <(sort $SHELL_LOG | uniq) | uniq -u | tee -a $TEST_LOG $SHELL_LOG > /dev/null
-## 求出差集并直接读取
+## 1.求出差集并直接读取
 sort -m <(sort $TEST_LOG | uniq) <(sort $SHELL_LOG | uniq) <(sort $SHELL_LOG | uniq) | uniq -u | while read line
 do
     $log_info $line >> $TEST_LOG
 done
-
+## 2.或者使用grep，以$SHELL_LOG为基准，找出$TEST_LOG中不存在与$SHELL_LOG中的行
+grep -vxFf $SHELL_LOG $TEST_LOG
 
 ```
+
+[目录](#目录)
+
+## Bash script template
+- 一个基础、简单、安全的脚本模板
+- 使用这个模板：
+    - 直接复制粘贴
+    - 需要修改4处：
+        - 包含脚本说明的usage()文本
+        - cleanup()内容
+        - parse_params()中的参数，保留--help和--no-color，但是替换示例：-f、-p
+        - 实际脚本逻辑
+
+```shell script
+#!/usr/bin/env bash
+## 使用/usr/bin/env bash比/bin/bash兼容性更好
+
+## 脚本遇错终止，返回错误（放在Bash脚本头部）
+### -e：脚本遇到错误会终止执行(根据返回值是否是0判断)。
+### -u：脚本遇到报错会停止并返回错误。
+### -o pipefail：解决-e不适用于管道命令，只要一个子命令失败，管道就会失败，脚本就终止。
+### -x：在输出结果之前，输出执行的那行命令（常用于调试复杂脚本）：set -euxo pipefail
+### -E：If set, any trap on ERR is inherited by shell functions, command substitutions, and commands executed in a subshell environment. The ERR trap is normally not inherited in such cases.
+set -Eeuo pipefail
+## 脚本结束时，执行cleanup()函数，清除脚本创建的临时文件。
+### trap 捕捉程序运行时的信号。（trap --list：列出所有信号）
+### SIGINT：终止进程、中断进程（通常用户Ctrl-C时发出）
+### SIGTERM：程序结束（通常程序正常退出）
+### ERR：进程以非 0 状态码退出时发出的信号
+### EXIT：进程退出时发出的信号
+trap cleanup SIGINT SIGTERM ERR EXIT
+
+## 定义脚本的位置目录，然后对其进行 cd 配置
+### 如果脚本从同一目录中读取某个文件或执行另一个程序，可以这样调用：cat "$script_dir/my_file"
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+
+## Display helpful help：尽量让usage()函数相对靠近脚本的顶部，有两种作用：
+### 要为不知道所有选项并且不想查看整个脚本来发现这些选项的人显示帮助。
+### 当有人修改脚本时，保存一个最小的文档（因为两周后，你甚至不记得当初是怎么写的）。
+usage() {
+  cat <<EOF
+Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param_value arg1 [arg2...]
+
+Script description here.
+
+Available options:
+
+-h, --help      Print this help and exit
+-v, --verbose   Print script debug info
+-f, --flag      Some flag description
+-p, --param     Some param description
+EOF
+  exit
+}
+
+## cleanup()函数不仅可以在最后调用，可以在任何时候调用
+cleanup() {
+  trap - SIGINT SIGTERM ERR EXIT
+  # script cleanup here
+}
+
+## 在文本中使用颜色，只用于msg()函数（不用于echo）
+setup_colors() {
+  if [[ -t 2 ]] && [[ -z "${NO_COLOR-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
+    NOFORMAT='\033[0m' RED='\033[0;31m' GREEN='\033[0;32m' ORANGE='\033[0;33m' BLUE='\033[0;34m' PURPLE='\033[0;35m' CYAN='\033[0;36m' YELLOW='\033[1;33m'
+  else
+    NOFORMAT='' RED='' GREEN='' ORANGE='' BLUE='' PURPLE='' CYAN='' YELLOW=''
+  fi
+}
+
+## 打印不是脚本输出的所有内容，包括：日志、消息
+### 用msg()打印的消息被发送到stderr流并支持特殊的序列，比如颜色。如果stderr输出不是交互式终端，或者传递了一个标准参数，那么颜色将被禁用。
+#### 用法：msg "This is a ${RED}very important${NOFORMAT} message, but not a script output value!"
+### 要检查stderr是不是交互式终端时的行为，请在脚本中添加类似于上面的一行。然后执行它，将stderr重定向到stdout并通过管道将其发送到cat。管道操作使输出不再直接发送到终端，而是发送到下一个命令，因此颜色会被禁用。
+#### $ ./test.sh 2>&1 | cat This is a very important message, but not a script output value!
+msg() {
+  echo >&2 -e "${1-}"
+}
+
+die() {
+  local msg=$1
+  local code=${2-1} # default exit status 1
+  msg "$msg"
+  exit "$code"
+}
+
+## 解析任意参数
+parse_params() {
+  # default values of variables set from params
+  flag=0
+  param=''
+
+  while :; do
+    case "${1-}" in
+    -h | --help) usage ;;
+    -v | --verbose) set -x ;;
+    --no-color) NO_COLOR=1 ;;
+    -f | --flag) flag=1 ;; # example flag
+    -p | --param) # example named parameter
+      param="${2-}"
+      shift
+      ;;
+    -?*) die "Unknown option: $1" ;;
+    *) break ;;
+    esac
+    shift
+  done
+
+  args=("$@")
+
+  # check required params and arguments
+  [[ -z "${param-}" ]] && die "Missing required parameter: param"
+  [[ ${#args[@]} -eq 0 ]] && die "Missing script arguments"
+
+  return 0
+}
+
+parse_params "$@"
+setup_colors
+
+# script logic here
+
+msg "${RED}Read parameters:${NOFORMAT}"
+msg "- flag: ${flag}"
+msg "- param: ${param}"
+msg "- arguments: ${args[*]-}"
+```
+- [link](http://blog.didispace.com/minimal-safe-bash-script-template/)
 
 [目录](#目录)
 
