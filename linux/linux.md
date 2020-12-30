@@ -20,17 +20,21 @@
     - [输入输出重定向](#输入输出重定向)
     - [加载外部脚本](#加载外部脚本)
     - [awk](#awk)
+    - [xargs](#xargs)
     - [编辑文件sed](#编辑文件sed)
+    - [EOF](#EOF)
 - [实战](#实战)
     - [常用操作](#常用操作)
     - [Bash脚本模板](#bash-script-template)
 - [linux](#linux)
     - [常用命令](#常用命令)
+        - `ls`,`cd`,`pwd`,`mkdir`,`rmdir`,`touch`,`cp`,`rm`,`mv`,`cat`,`tac`,`nl`,`more`,`less`,`head`,`tail`,`grep`,`find`,`date`
+        - [Linux常用命令-菜鸟](https://www.runoob.com/w3cnote/linux-common-command-2.html)
     - [用户-用户组](#用户-用户组)
     - [磁盘管理](#磁盘管理)
     - [vim](#vim)
 - [问题解决](#问题解决)
-    - [syntax error near unexpected token](#syntaxerrornearunexpectedtoken)
+    - [syntax error near unexpected token](#syntax-error-near-unexpected-token)
 
 [目录](#目录)
 
@@ -541,6 +545,66 @@ There orange,apple,mongo
 
 [目录](#目录)
 
+## xargs
+给命令传递参数的过滤器，将标准输入（stdin）数据转化为命令行参数，一般和管道`|`一起使用。
+
+- `-a`：file 从文件中读入作为sdtin
+- `-e`：flag ，注意有的时候可能会是-E，flag必须是一个以空格分隔的标志，当xargs分析到含有flag这个标志的时候就停止。
+- `-p`：当每次执行一个argument的时候询问一次用户。
+- `-n`：num 后面加次数，表示命令在执行的时候一次用的argument的个数，默认是用所有的。
+- `-t`：表示先打印命令，然后再执行。
+- `-i`：或者是-I，这得看linux支持了，将xargs的每项名称，一般是一行一行赋值给 {}，可以用 {} 代替。
+- `-r`：no-run-if-empty 当xargs的输入为空的时候则停止xargs，不用再去执行了。
+- `-s`：num 命令行的最大字符数，指的是 xargs 后面那个命令的最大命令行字符数。
+- `-L`：num 从标准输入一次读取 num 行送给 command 命令。
+- `-l`：同 -L。
+- `-d`：delim 分隔符，默认的xargs分隔符是回车，argument的分隔符是空格，这里修改的是xargs的分隔符。
+- `-x`：exit的意思，主要是配合-s使用。。
+- `-P`：修改最大的进程数，默认是1，为0时候为as many as it can ，这个例子我没有想到，应该平时都用不到的吧。
+
+```shell script
+# cat test.log
+a b c d e
+f g h i j
+k l
+
+#多行输入单行输出：
+# cat test.txt | xargs
+a b c d e f g h i j k l
+
+# cat test.txt | xargs -n3
+a b c
+d e f
+g h i
+j k l
+
+# echo "nameXnameXnameXname" | xargs -dX
+name name name name
+
+# echo "nameXnameXnameXname" | xargs -dX -n2
+name name
+name name
+
+#复制所有图片文件到 /data/images 目录下：
+ls *.jpg | xargs -n1 -I {} cp {} /data/images
+
+#用 rm 删除太多的文件时候，可能得到一个错误信息：/bin/rm Argument list too long. 用 xargs 去避免这个问题：
+find . -type f -name "*.log" -print0 | xargs -0 rm -f
+# -print0：指定输出的文件列表以null分隔。
+# xargs命令的-0参数表示用null当作分隔符
+
+#统计一个源代码目录中所有 php 文件的行数：
+find . -type f -name "*.php" -print0 | xargs -0 wc -l
+
+#查找所有的 jpg 文件，并且压缩它们：
+find . -type f -name "*.jpg" -print | xargs tar -czvf images.tar.gz
+
+#假如你有一个文件包含了很多你希望下载的 URL，你能够使用 xargs下载所有链接：
+cat url-list.txt | xargs wget -c
+```
+
+[目录](#目录)
+
 ## 编辑文件sed
 - 参数：
     - `-e<script> 或--expression=<script>` 以选项中指定的script来处理输入的文本文件。
@@ -615,6 +679,42 @@ sed -i '$a # This is a test' $TEST_LOG
 
 ```
 - [菜鸟](https://www.runoob.com/linux/linux-comm-sed.html)
+
+[目录](#目录)
+
+## EOF
+- End Of File：文件结束符，可自定义成其他的字符串，但要成对出现
+- EOF通常与 << 结合使用，`<<EOF` 表示后续的输入作为子命令或子shell的输入，直到遇到EOF结束，再返回到主调Shell。
+- 格式：
+    ```shell script
+    命令 <<EOF
+    cmd1
+    cmd2
+    ...
+    EOF
+  
+    例：在test.log中追加三行代码。
+    cat >> /root/test.txt <<EOF 
+    abc
+    def
+    ghi
+    EOF   
+    ```
+- 特殊用法：
+    ```shell script
+    : << COMMENTBLOCK
+       shell脚本代码段
+    COMMENTBLOCK
+    # 用来注释整段脚本代码。 : 是shell中的空语句。
+    # 例如：这段脚本执行时，中间部分不会被执行。
+    echo start
+    :<<COMMENTBLOCK
+    echo
+    echo "this is a test"
+    echo
+    COMMENTBLOCK
+    echo end
+    ```
 
 [目录](#目录)
 
@@ -877,61 +977,91 @@ msg "- arguments: ${args[*]-}"
     - `-E`：多条件查找。`grep -E "aa|bb" test.log`查找包含aa或者bb的行
         - 等同于：`egrep "aa|bb" test.log`
 - `zgrep`：可以查找压缩文件。
-- `xargs`：将标准输入（stdin）数据转化为命令行参数，一般和管道`|`一起使用。
-    - `-a`：file 从文件中读入作为sdtin
-    - `-e`：flag ，注意有的时候可能会是-E，flag必须是一个以空格分隔的标志，当xargs分析到含有flag这个标志的时候就停止。
-    - `-p`：当每次执行一个argument的时候询问一次用户。
-    - `-n`：num 后面加次数，表示命令在执行的时候一次用的argument的个数，默认是用所有的。
-    - `-t`：表示先打印命令，然后再执行。
-    - `-i`：或者是-I，这得看linux支持了，将xargs的每项名称，一般是一行一行赋值给 {}，可以用 {} 代替。
-    - `-r`：no-run-if-empty 当xargs的输入为空的时候则停止xargs，不用再去执行了。
-    - `-s`：num 命令行的最大字符数，指的是 xargs 后面那个命令的最大命令行字符数。
-    - `-L`：num 从标准输入一次读取 num 行送给 command 命令。
-    - `-l`：同 -L。
-    - `-d`：delim 分隔符，默认的xargs分隔符是回车，argument的分隔符是空格，这里修改的是xargs的分隔符。
-    - `-x`：exit的意思，主要是配合-s使用。。
-    - `-P`：修改最大的进程数，默认是1，为0时候为as many as it can ，这个例子我没有想到，应该平时都用不到的吧。
+- `find`：在指定目录下查找文件。
+    - `-mount`, `-xdev` : 只检查和指定目录在同一个文件系统下的文件，避免列出其它文件系统中的文件
+    - `-anewer file` : 比文件 file 更晚被读取过的文件
+    - `-cnewer file` :比文件 file 更新的文件
+    - `-amin n` : 在过去 n 分钟内被读取过
+    - `-cmin n `: 在过去 n 分钟内被修改过
+    - `-atime n` : 在过去n天内被读取过的文件
+    - `-ctime n`: 在过去n天内被修改过的文件
+    - `-mtime +n`：n天之前的文件。`+0`：表示24小时之前，`+1`：表示48小时之前，`1`：表示24-48小时之内，`-1`：表示24小时之内。
+    - `-empty` : 空的文件-gid n or -group name : gid 是 n 或是 group 名称是 name
+    - `-ipath p`, `-path p` : 路径名称符合 p 的文件，ipath 会忽略大小写
+    - `-name name`, `-iname name` : 文件名称符合 name 的文件。iname 会忽略大小写
+    - `-size n` : 文件大小 是 n 单位，b 代表 512 位元组的区块，c 表示字元数，k 表示 kilo bytes，w 是二个位元组。
+    - `-type c` : 文件类型是 c 的文件。
+    - `d`: 目录
+    - `c`: 字型装置文件
+    - `b`: 区块装置文件
+    - `p`: 具名贮列
+    - `f`: 一般文件
+    - `l`: 符号连结
+    - `s`: socket
+    - `-pid n` : process id 是 n 的文件
     ```shell script
-    # cat test.log
-    a b c d e
-    f g h i j
-    k l
+    # 当前目录及其子目录下所有文件后缀为 .c 的文件列出来:
+    find . -name "*.c"
     
-    #多行输入单行输出：
-    # cat test.txt | xargs
-    a b c d e f g h i j k l
+    # 列出当前目录下的文件
+    find . -type f
+    # 列出当前目录下的目录
+    find . -type d
     
-    # cat test.txt | xargs -n3
-    a b c
-    d e f
-    g h i
-    j k l
+    # 列出当前目录及其子目录下所有最近 20 天内更新过的文件
+    find . -ctime -20
     
-    # echo "nameXnameXnameXname" | xargs -dX
-    name name name name
+    # 查找 /var/log 目录中更改时间在 7 日以前的普通文件，并在删除之前询问它们：
+    find /var/log -type f -mtime +7 -ok rm {} \;
     
-    # echo "nameXnameXnameXname" | xargs -dX -n2
-    name name
-    name name
+    # 查找当前目录中文件属主具有读、写权限，并且文件所属组的用户和其他用户具有读权限的文件：
+    find . -type f -perm 644 -exec ls -l {} \;
     
-    #复制所有图片文件到 /data/images 目录下：
-    ls *.jpg | xargs -n1 -I {} cp {} /data/images
+    # 查找系统中所有文件长度为 0 的普通文件，并列出它们的完整路径：
+    find / -type f -size 0 -exec ls -l {} \;
     
-    #用 rm 删除太多的文件时候，可能得到一个错误信息：/bin/rm Argument list too long. 用 xargs 去避免这个问题：
-    find . -type f -name "*.log" -print0 | xargs -0 rm -f
-    # -print0：指定输出的文件列表以null分隔。
-    # xargs命令的-0参数表示用null当作分隔符
-    
-    #统计一个源代码目录中所有 php 文件的行数：
-    find . -type f -name "*.php" -print0 | xargs -0 wc -l
-    
-    #查找所有的 jpg 文件，并且压缩它们：
-    find . -type f -name "*.jpg" -print | xargs tar -czvf images.tar.gz
-    
-    #假如你有一个文件包含了很多你希望下载的 URL，你能够使用 xargs下载所有链接：
-    cat url-list.txt | xargs wget -c
+    # 查找/test/目录下2天以前的目录名
+    find /test/ -type d -mtime +1
     ```
-
+- `date`：打印当前时间
+    - `-d`<字符串> 　显示字符串所指的日期与时间。字符串前后必须加上双引号。
+    - `-s`<字符串> 　根据字符串来设置日期与时间。字符串前后必须加上双引号。
+    - `-u` 　显示GMT。
+    - `%H` 小时(00-23)
+    - `%I` 小时(00-12)
+    - `%M` 分钟(以00-59来表示)
+    - `%s` 总秒数。起算时间为1970-01-01 00:00:00 UTC。
+    - `%S` 秒(以本地的惯用法来表示)
+    - `%a` 星期的缩写。
+    - `%A` 星期的完整名称。
+    - `%d` 日期(以01-31来表示)。
+    - `%D` 日期(含年月日)。
+    - `%m` 月份(以01-12来表示)。
+    - `%y` 年份(以00-99来表示)。
+    - `%Y` 年份(以四位数来表示)。
+    ```shell script
+    # 当前时间
+    `date +"%Y%m%d%H%M%S"`
+    
+    # 显示下一天的日期
+    date +%Y%m%d --date="+1 day"
+    
+    # 2周后的日期
+    date -d '2 weeks'
+  
+    # date
+    三 5月 12 14:08:12 CST 2010
+    # date '+%c' 
+    2010年05月12日 星期三 14时09分02秒
+    # date '+%D' //显示完整的时间
+    05/12/10
+    # date '+%x' //显示数字日期，年份两位数表示
+    2010年05月12日
+    # date '+%T' //显示日期，年份用四位数表示
+    14:09:31
+    # date '+%X' //显示24小时的格式
+    14时09分39秒
+    ```
 [目录](#目录)
 
 ## 用户-用户组
