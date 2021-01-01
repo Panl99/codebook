@@ -87,6 +87,7 @@
 
 ## 项目
 - [mall](https://github.com/macrozheng/mall)
+- [cloud-platform](https://gitee.com/geek_qi/cloud-platform)
 - [微信小程序商城、微店:wechat-app-mall](https://github.com/EastWorld/wechat-app-mall)
 - [企业后台管理系统基础框架:hs-web](https://github.com/hs-web) 
 	1. [hsweb-framework：hsweb是一个用于快速搭建企业后台管理系统的基础项目,集成一揽子便捷功能如:通用增删改查，在线代码生成，权限管理，OAuth2.0 ,动态多数据源分布式事务，动态脚本，动态定时任务，在线数据库维护等等. 基于 spring-boot,mybaits http://hsweb.io](https://github.com/hs-web/hsweb-framework)
