@@ -666,6 +666,7 @@ nl $TEST_LOG | sed -e '3,$d' -e 's/bash/blueshell/'
 
 # 数据的搜寻并替换
 # 格式：sed 's/要被取代的字串/新的字串/g'
+# 替换多个格式：sed 's/要被取代的字串/新的字串/g;s/source2/target2/g;s/source3/target3/g'
 
 # 查询本机ip，将IP前面和后面的部分删除，过滤出ip地址（inet addr:192.168.1.100 Bcast:192.168.1.255 Mask:255.255.255.0）
 /sbin/ifconfig eth0 | grep 'inet addr' | sed 's/^.*addr://g' | sed 's/Bcast.*$//g'
@@ -728,11 +729,14 @@ set +o posix
 LOGPATH='/home/test/shell/'
 TEST_LOG="${LOGPATH}test.log"
 SHELL_LOG="${LOGPATH}shell.log"
-STR="abc_123-def.test"
+STR="abc_123.234.345.456:7890-def.test"
 
 # 定义日志格式
 log_info="eval echo \"[$0]\" @\`date +\"%Y%m%d %T\"\` [info]: "
 log_error="eval echo \"[$0]\" @\`date +\"%Y%m%d %T\"\` [error]: "
+
+# 当前时间
+`date +"%Y%m%d%H%M%S"`
 
 # 打印回车
 echo -e "\n" >> $TEST_LOG
@@ -743,6 +747,8 @@ files=$(ls $LOGPATH)
 # 字符串替换
 str=${STR//./_} #将STR中的所有.替换成_
 str=${STR/_/.} #将STR中的第一个_替换成.
+# 通过sed替换字符，把$STR中的. : -都替换成_，末尾的.test删除
+echo $STR | sed 's/./_/g;s/:/_/g;s/-/_/g;s/.test$//g'
 
 # 读取TEST_LOG文件,追加到$SHELL_LOG
 while read line
@@ -764,6 +770,9 @@ do
 done
 ## 2.或者使用grep，以$SHELL_LOG为基准，找出$TEST_LOG中不存在与$SHELL_LOG中的行
 grep -vxFf $SHELL_LOG $TEST_LOG
+
+# 查找/test/目录下(不包含子目录)2天以前的目录名
+find /test/ -maxdepth 1 -type d -mtime +1
 
 ```
 
@@ -1020,8 +1029,8 @@ msg "- arguments: ${args[*]-}"
     # 查找系统中所有文件长度为 0 的普通文件，并列出它们的完整路径：
     find / -type f -size 0 -exec ls -l {} \;
     
-    # 查找/test/目录下2天以前的目录名
-    find /test/ -type d -mtime +1
+    # 查找/test/目录下(不包含子目录)2天以前的目录名
+    find /test/ -maxdepth 1 -type d -mtime +1
     ```
 - `date`：打印当前时间
     - `-d`<字符串> 　显示字符串所指的日期与时间。字符串前后必须加上双引号。
