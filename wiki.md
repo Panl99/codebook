@@ -12,6 +12,8 @@
     - [idea优化](#idea优化)
         - [启动优化](#启动优化)
         - [编码优化](#编码优化)
+- [GitHub](#GitHub)
+    - [修改github邮箱](#修改github邮箱)
 
 
 # win10相关
@@ -100,5 +102,13 @@ xshell/ftp5的为：7F 0C 81 F9 80 33 E1 01 0F 86 80
     ```
 - 编码格式：`Settings/Editor/File Encodings`选择Global Encodings、Project Encodings、Default encoding for properties files(右边自动转换勾上)为UTF-8
 - 修改代码提示快捷键：`Settings/Keymap`，先点击Find Shortcut搜索Alt+/(或者选择Main menu/Code/Code Completion/Cyclic Expand Word)，把快捷键释放占用，再在Find Shortcut搜索Ctrl+空格(或者选择Main menu/Code/Code Completion/Basic)修改为Alt+/
+
+[目录](#目录)
+
+# GitHub
+## 修改github邮箱
+- settings -> Emails: Add email address
+- 添加完设置为：Primary 
+- **注意**：不要删除旧邮箱，删除后会出现以前的提交记录contributions不显示了(绿色小方块没有了)，恢复方法就是重新加回旧邮箱即可（不需要设置为主邮箱）。
 
 [目录](#目录)
