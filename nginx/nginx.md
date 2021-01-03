@@ -1,7 +1,8 @@
-> [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
-> [深入理解Nginx：模块开发与架构解析（第2版）](https://github.com/Panl99/codebook/blob/master/nginx_lvs/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
-> [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
+- [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
+- [深入理解Nginx：模块开发与架构解析（第2版）](../resources/static/doc/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
+- [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
 
+# 
 - [Nginx特点](#Nginx特点)-√
 - [Nginx配置-nginx.conf](#Nginx配置文件)-9.3-9.4
     - [Nginx配置文件详解](https://www.cnblogs.com/dongye95/p/11096785.html)
@@ -54,7 +55,7 @@
     - [Lua通用库](#Lua通用库)
 - [nginx.conf](#nginx.conf)
 
-[Back to TOC](#目录)
+[目录](#目录)
 
 # 关于Nginx
 ## Nginx特点

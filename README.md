@@ -1,7 +1,7 @@
 ## Java
 - [java.md ✔](https://github.com/Panl99/codebook/blob/master/java/java.md)
 - [java.java TODO](https://github.com/Panl99/codebook/blob/master/java/java.java)
-- [annotation.md TODO](https://github.com/Panl99/codebook/blob/master/java/annotation.md)
+- [annotation.md 1/n](https://github.com/Panl99/codebook/blob/master/java/annotation.md)
 - [Java诊断工具：arthas  TODO](https://github.com/Panl99/codebook/blob/master/arthas/arthas.md)
 
 ## Python ✔
@@ -10,36 +10,36 @@
 - [Python-100天从新手到大师：https://github.com/jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days)
 
 ## Spring ✔
-- [spring.md ✔](https://github.com/Panl99/codebook/tree/master/spring_boot_cloud/spring.md)
-- [springboot.md ✔](https://github.com/Panl99/codebook/tree/master/spring_boot_cloud/springboot.md)
-- [springcloud.md ✔](https://github.com/Panl99/codebook/tree/master/spring_boot_cloud/springcloud.md)
+- [SpringAll.md ✔](https://github.com/Panl99/codebook/tree/master/spring/SpringAll.md)
+- [~~spring.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/spring.md)
+- [~~springboot.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/springboot.md)
+- [~~springcloud.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/springcloud.md)
 
 ## Kafka,Zookeeper ✔
-- [kafka.md ✔](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/kafka.md)
+- [kafka.md 1/n](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/kafka.md)
 - [zookeeper.md 1/n](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/zookeeper.md)
-- [Pulsar.md](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/Pulsar.md)
+- [Pulsar.md TODO](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/Pulsar.md)
 
 ## Redis,MongoDB ✔
 - [redis.md ✔](https://github.com/Panl99/codebook/blob/master/redis_mongodb/redis.md)
-- [mongodb.md](https://github.com/Panl99/codebook/blob/master/redis_mongodb/mongodb.md)
+- [mongodb.md TODO](https://github.com/Panl99/codebook/blob/master/redis_mongodb/mongodb.md)
 - MongoDB -> Cassandra
 
 ## Mysql,Oracle ✔
 - [mysql.md 3/7](https://github.com/Panl99/codebook/blob/master/mysql_oracle/mysql.md)
-- [oracle.md ✔](https://github.com/Panl99/codebook/blob/master/mysql_oracle/oracle.md)
+- [oracle.md 1/n](https://github.com/Panl99/codebook/blob/master/mysql_oracle/oracle.md)
 
 ## Docker,Kubernetes
-- [docker.md](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/docker.md)
-- [kubernetes.md](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/kubernetes.md)
+- [docker.md TODO](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/docker.md)
+- [kubernetes.md TODO](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/kubernetes.md)
 
-## Nginx,Lvs ✔
-- [nginx.md ✔](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.md)
-- [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
-- [lvs.md](https://github.com/Panl99/codebook/blob/master/nginx_lvs/lvs.md)
+## Nginx ✔
+- [nginx.md 1/n](https://github.com/Panl99/codebook/blob/master/nginx/nginx.md)
+- [nginx.conf 1/n](https://github.com/Panl99/codebook/blob/master/nginx/nginx.conf)
 - Nginx -> Envoy Proxy | APISIX | Consul | Nacos
 
 ## ElasticSearch
-- [elasticsearch.md](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)
+- [elasticsearch.md TODO](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)
 
 ## Linux ✔
 - [linux.md ✔](https://github.com/Panl99/codebook/blob/master/linux/linux.md)
@@ -48,8 +48,8 @@
 - [go.md TODO](https://github.com/Panl99/codebook/blob/master/go/go.md)
 
 ## Git,Maven ✔
-- [git.md ✔](https://github.com/Panl99/codebook/blob/master/git_maven/git.md)
-- [maven.md](https://github.com/Panl99/codebook/blob/master/git_maven/maven.md)
+- [git.md 1/n](https://github.com/Panl99/codebook/blob/master/git_maven/git.md)
+- [maven.md TODO](https://github.com/Panl99/codebook/blob/master/git_maven/maven.md)
 
 ## bigdata ✔
 - [hadoop.md](https://github.com/Panl99/codebook/blob/master/bigdata/hadoop.md)
@@ -58,7 +58,28 @@
 - [hbase.md](https://github.com/Panl99/codebook/blob/master/bigdata/hbase.md)
 - [flink.md ×](https://github.com/Panl99/codebook/blob/master/bigdata/flink.md)
 
-## [csdn:https://mp.csdn.net/postlist](https://mp.csdn.net/postlist)
+## 项目
+- [mall](https://github.com/macrozheng/mall)
+- [cloud-platform](https://gitee.com/geek_qi/cloud-platform)
+- [企业后台管理系统基础框架:hs-web](https://github.com/hs-web) 
+	1. [hsweb-framework：hsweb是一个用于快速搭建企业后台管理系统的基础项目,集成一揽子便捷功能如:通用增删改查，在线代码生成，权限管理，OAuth2.0 ,动态多数据源分布式事务，动态脚本，动态定时任务，在线数据库维护等等. 基于 spring-boot,mybaits http://hsweb.io](https://github.com/hs-web/hsweb-framework)
+	2. [hsweb-iot-cloud：基于java8,spring-cloud,vertx的开源物联网云平台，提供一个开源的物联网管理平台,支持各种设备接入,并完成数据上报,分析,处理等自定义功能.](https://github.com/hs-web/hsweb-iot-cloud)
+	3. [hsweb-easy-orm：简单的orm工具,为动态表单而生](https://github.com/hs-web/hsweb-easy-orm)
+	4. [hsweb-task：提供任务配置,调度,监控. 支持单节点,集群,分布式部署.支持多种任务配置方式: 注解, jar包, 脚本(js,groovy)](https://github.com/hs-web/hsweb-task)
+	5. [hsweb-expands：文件压缩解压、office文档读写、http,ftp请求模拟、shell执行、模板引擎](https://github.com/hs-web/hsweb-expands)
+	6. [redis-manager：restful redis manager](https://github.com/hs-web/redis-manager)
+	7. [hsweb-utils：常用工具类](https://github.com/hs-web/hsweb-utils)
+	8. [hsweb-learning：java开发大全,java常用资料,算法,代码.（module：hsweb-lele-elasticsearchDemo 该模块为elasticsearch的一个小Demo，实现基本的增删改查。）](https://github.com/hs-web/hsweb-learning)
+- [微信小程序商城、微店:wechat-app-mall](https://github.com/EastWorld/wechat-app-mall)
+- [微信小程序学习：awesome-wechat-weapp](https://github.com/Panl99/awesome-wechat-weapp)
+- [计算机理论知识：Crash-Course-Computer-Science-Chinese](https://github.com/Panl99/Crash-Course-Computer-Science-Chinese)
+- [~~Java学习站：how2j~~](https://how2j.cn/)  
+
+## 书籍
+- [互联网上的免费书籍:https://github.com/ruanyf/free-books](https://github.com/ruanyf/free-books)
+- [免费的编程中文书籍索引:https://github.com/justjavac/free-programming-books-zh_CN](https://github.com/justjavac/free-programming-books-zh_CN)
+- [pdf大全：https://m.seotest.cn/jishu/31878.html](https://m.seotest.cn/jishu/31878.html)
+- [书栈网](https://www.bookstack.cn)
 
 ## [ali面试题](https://files.alicdn.com/tpsservice/569551994992fac384988407af9c02a8.pdf)
 技术 | 链接 
@@ -84,23 +105,4 @@
 **运维** | 
 《7大板块，200+面试题》 | https://developer.aliyun.com/article/715486?utm_content=g_1000088323
 
-
-## 项目
-- [mall](https://github.com/macrozheng/mall)
-- [cloud-platform](https://gitee.com/geek_qi/cloud-platform)
-- [微信小程序商城、微店:wechat-app-mall](https://github.com/EastWorld/wechat-app-mall)
-- [企业后台管理系统基础框架:hs-web](https://github.com/hs-web) 
-	1. [hsweb-framework：hsweb是一个用于快速搭建企业后台管理系统的基础项目,集成一揽子便捷功能如:通用增删改查，在线代码生成，权限管理，OAuth2.0 ,动态多数据源分布式事务，动态脚本，动态定时任务，在线数据库维护等等. 基于 spring-boot,mybaits http://hsweb.io](https://github.com/hs-web/hsweb-framework)
-	2. [hsweb-iot-cloud：基于java8,spring-cloud,vertx的开源物联网云平台，提供一个开源的物联网管理平台,支持各种设备接入,并完成数据上报,分析,处理等自定义功能.](https://github.com/hs-web/hsweb-iot-cloud)
-	3. [hsweb-easy-orm：简单的orm工具,为动态表单而生](https://github.com/hs-web/hsweb-easy-orm)
-	4. [hsweb-task：提供任务配置,调度,监控. 支持单节点,集群,分布式部署.支持多种任务配置方式: 注解, jar包, 脚本(js,groovy)](https://github.com/hs-web/hsweb-task)
-	5. [hsweb-expands：文件压缩解压、office文档读写、http,ftp请求模拟、shell执行、模板引擎](https://github.com/hs-web/hsweb-expands)
-	6. [redis-manager：restful redis manager](https://github.com/hs-web/redis-manager)
-	7. [hsweb-utils：常用工具类](https://github.com/hs-web/hsweb-utils)
-	8. [hsweb-learning：java开发大全,java常用资料,算法,代码.（module：hsweb-lele-elasticsearchDemo 该模块为elasticsearch的一个小Demo，实现基本的增删改查。）](https://github.com/hs-web/hsweb-learning)
-
-## 书籍
-- [互联网上的免费书籍:https://github.com/ruanyf/free-books](https://github.com/ruanyf/free-books)
-- [免费的编程中文书籍索引:https://github.com/justjavac/free-programming-books-zh_CN](https://github.com/justjavac/free-programming-books-zh_CN)
-- [pdf大全：https://m.seotest.cn/jishu/31878.html](https://m.seotest.cn/jishu/31878.html)
-- [书栈网](https://www.bookstack.cn)
+## [csdn](https://mp.csdn.net/postlist)
