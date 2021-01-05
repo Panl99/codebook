@@ -59,8 +59,22 @@
 - [flink.md ×](https://github.com/Panl99/codebook/blob/master/bigdata/flink.md)
 
 ## 项目
-- [mall](https://github.com/macrozheng/mall)
-- [cloud-platform](https://gitee.com/geek_qi/cloud-platform)
+- [fullstack-tutorial：🚀 fullstack tutorial 2020，后台技术栈/架构师之路/全栈开发社区](https://github.com/Panl99/fullstack-tutorial)
+- [JavaGuide：「Java学习+面试指南」一份涵盖大部分 Java 程序员所需要掌握的核心知识。](https://github.com/Panl99/JavaGuide)
+- [CS-Notes：📚 技术面试必备基础知识、Leetcode、计算机操作系统、计算机网络、系统设计、Java、Python、C++](https://github.com/Panl99/CS-Notes)
+- [3y：📓从Java基础、JavaWeb基础到常用的框架再到面试题都有完整的教程，几乎涵盖了Java后端必备的知识点](https://github.com/Panl99/3y)
+- [SpringCloud-Learning：Spring Cloud基础教程](https://github.com/Panl99/SpringCloud-Learning)
+- [cloud-platform：国内首个基于Spring Cloud微服务化开发平台，具有统一授权、认证后台管理系统，其中包含具备用户管理、资源权限管理、网关API 管理等多个模块](https://gitee.com/geek_qi/cloud-platform)
+- [SpringCloud：基于SpringCloud2.1的微服务开发脚手架](https://github.com/Panl99/SpringCloud)
+- [hutool：Java工具类集成](https://github.com/Panl99/hutool)
+- [miaosha：秒杀系统设计与实现.互联网工程师进阶与分析🙋](https://github.com/Panl99/miaosha)
+- [interview_internal_reference：2020年最新总结，阿里，腾讯，百度，美团，头条等技术面试题目，以及答案，专家出题人分析汇总。](https://github.com/Panl99/interview_internal_reference)
+- [OnJava8：《On Java 8》中文版](https://github.com/Panl99/OnJava8)
+- [计算机理论知识：Crash-Course-Computer-Science-Chinese](https://github.com/Panl99/Crash-Course-Computer-Science-Chinese)
+
+- [mall：一套电商系统，包括前台商城系统及后台管理系统，基于SpringBoot+MyBatis实现。](https://github.com/macrozheng/mall)
+- [mall-learning：mall学习教程，架构、业务、技术要点全方位解析](https://github.com/Panl99/mall-learning)
+- [mall-admin-web：电商后台管理系统的前端项目，基于Vue+Element实现。](https://github.com/Panl99/mall-admin-web)
 - [企业后台管理系统基础框架:hs-web](https://github.com/hs-web) 
 	1. [hsweb-framework：hsweb是一个用于快速搭建企业后台管理系统的基础项目,集成一揽子便捷功能如:通用增删改查，在线代码生成，权限管理，OAuth2.0 ,动态多数据源分布式事务，动态脚本，动态定时任务，在线数据库维护等等. 基于 spring-boot,mybaits http://hsweb.io](https://github.com/hs-web/hsweb-framework)
 	2. [hsweb-iot-cloud：基于java8,spring-cloud,vertx的开源物联网云平台，提供一个开源的物联网管理平台,支持各种设备接入,并完成数据上报,分析,处理等自定义功能.](https://github.com/hs-web/hsweb-iot-cloud)
@@ -72,7 +86,6 @@
 	8. [hsweb-learning：java开发大全,java常用资料,算法,代码.（module：hsweb-lele-elasticsearchDemo 该模块为elasticsearch的一个小Demo，实现基本的增删改查。）](https://github.com/hs-web/hsweb-learning)
 - [微信小程序商城、微店:wechat-app-mall](https://github.com/EastWorld/wechat-app-mall)
 - [微信小程序学习：awesome-wechat-weapp](https://github.com/Panl99/awesome-wechat-weapp)
-- [计算机理论知识：Crash-Course-Computer-Science-Chinese](https://github.com/Panl99/Crash-Course-Computer-Science-Chinese)
 - [~~Java学习站：how2j~~](https://how2j.cn/)  
 
 ## 书籍
