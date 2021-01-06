@@ -5,6 +5,7 @@
     - [xshell6无法连接centos8的静态ip](#xshell6无法连接centos8的静态ip)
     - [xshell6、xftp6强制更新才能用](#xshell6xftp6强制更新才能用)
     - [centos8安装](#centos8安装)
+    - [centos8离线安装Nginx](#centos8离线安装Nginx)
 - [Chrome使用](#Chrome使用)
     - [网站登录才能复制](#网站登录才能复制)
 - [IDEA使用](#IDEA使用)
@@ -49,6 +50,86 @@ xshell/ftp5的为：7F 0C 81 F9 80 33 E1 01 0F 86 80
 ```
 
 [目录](#目录)
+
+
+## centos8离线安装Nginx
+### 查找镜像包
+
+用压缩软件打开centos8镜像包，
+
+进入baseos/package下：存在软件包
+
+AppStream\Packages：gcc、g++包
+
+![centos8离线安装nginx所需rpm包.png](resources/static/images/centos8离线安装nginx所需rpm包.png)
+
+### 安装gcc
+
+> 真正安装顺序①②③④⑤⑥⑦⑧⑨⑩
+
+1. ①rpm -ivh libmpc-1.0.2-9.el8.x86_64.rpm --force
+
+2. ②rpm -ivh cpp-8.3.1-4.5.el8.x86_64.rpm --force
+
+3. ③rpm -ivh isl-0.16.1-6.el8.x86_64.rpm --force
+
+4. ⑨rpm -ivh gcc-8.3.1-4.5.el8.x86_64.rpm --force
+
+   - ④rpm -ivh binutils-2.30-58.el8.x86_64.rpm --force
+   - ⑧rpm -ivh glibc-devel-2.28-72.el8.x86_64.rpm --force
+     - ⑦rpm -ivh glibc-headers-2.28-72.el8.x86_64.rpm --force
+       - ⑤rpm -ivh kernel-headers-4.18.0-147.el8.x86_64.rpm --force
+     - ⑥rpm -ivh libxcrypt-devel-4.1.1-4.el8.x86_64.rpm --force --nodeps（忽略依赖，跟glibc-devel互相依赖，死循环了）
+       - rpm -ivh glibc-devel-2.28-72.el8.x86_64.rpm --force
+       - /usr/bin/pkg-config [安装pkg-config](#安装pkg-config)
+ 
+
+#### 安装pkg-config
+
+1. rpm -ivh pkgconf-pkg-config-1.4.2-1.el8.x86_64.rpm --force
+   1. rpm -ivh pkgconf-1.4.2-1.el8.x86_64.rpm --force
+      1. rpm -ivh libpkgconf-1.4.2-1.el8.x86_64.rpm --force
+   2. rpm -ivh pkgconf-m4-1.4.2-1.el8.noarch.rpm --force
+
+### 安装gcc-g++
+
+1. rpm -ivh libstdc++-devel-8.3.1-4.5.el8.x86_64.rpm --force
+2. rpm -ivh gcc-c++-8.3.1-4.5.el8.x86_64.rpm --force
+
+### 安装pcre pcre-devel
+
+1. rpm -ivh pcre-8.42-4.el8.x86_64.rpm --force
+2. rpm -ivh pcre-devel-8.42-4.el8.x86_64.rpm --force
+   - rpm -ivh pcre-cpp-8.42-4.el8.x86_64.rpm --force
+   - rpm -ivh pcre-utf16-8.42-4.el8.x86_64.rpm --force
+   - rpm -ivh pcre-utf32-8.42-4.el8.x86_64.rpm --force
+   - /usr/bin/pkg-config [安装pkg-config](#安装pkg-config)
+
+### 安装zlib zlib-devel
+
+1. 查询系统已安装：`rpm -qa | grep "zlib"`
+   1. zlib-1.2.11-10.el8.x86_64
+
+1. rpm -ivh zlib-devel-1.2.11-10.el8.x86_64.rpm --force
+
+### 安装openssl openssl-devel
+
+1. rpm -ivh openssl-1.1.1c-2.el8.x86_64.rpm --force
+2. rpm -ivh openssl-devel-1.1.1c-2.el8.x86_64.rpm --force
+   1. rpm -ivh keyutils-libs-devel-1.5.10-6.el8.x86_64.rpm --force
+   2. rpm -ivh libcom_err-devel-1.44.6-3.el8.x86_64.rpm --force
+   3. rpm -ivh libkadm5-1.17-9.el8.x86_64.rpm --force
+   4. rpm -ivh libverto-devel-0.3.0-5.el8.x86_64.rpm --force
+   5. rpm -ivh libselinux-devel-2.9-2.1.el8.x86_64.rpm --force
+      1. rpm -ivh libsepol-devel-2.9-1.el8.x86_64.rpm --force
+      2. pkgconfig(libpcre2-8) [安装pcre2](#安装pcre2)
+
+#### 安装pcre2
+
+1. rpm -ivh pcre2-10.32-1.el8.x86_64.rpm --force
+2. rpm -ivh pcre2-devel-10.32-1.el8.x86_64.rpm --force
+   1. rpm -ivh pcre2-utf16-10.32-1.el8.x86_64.rpm --force
+   2. rpm -ivh pcre2-utf32-10.32-1.el8.x86_64.rpm --force
 
 # Chrome使用
 ## 网站登录才能复制
