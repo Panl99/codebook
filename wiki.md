@@ -1,4 +1,4 @@
-#目录
+# 目录
 - [win10相关](#win10相关)
     - [win10多分屏](#win10多分屏)
     - [win10自带截屏](#win10自带截屏)
@@ -61,7 +61,7 @@ xshell/ftp5的为：7F 0C 81 F9 80 33 E1 01 0F 86 80
 
 AppStream\Packages：gcc、g++包
 
-![centos8离线安装nginx所需rpm包.png](resources/static/images/centos8离线安装nginx所需rpm包.png)
+![centos8离线安装nginx所需rpm包.png](./resources/static/images/centos8离线安装nginx所需rpm包.png)
 
 ### 安装gcc
 
@@ -130,6 +130,69 @@ AppStream\Packages：gcc、g++包
 2. rpm -ivh pcre2-devel-10.32-1.el8.x86_64.rpm --force
    1. rpm -ivh pcre2-utf16-10.32-1.el8.x86_64.rpm --force
    2. rpm -ivh pcre2-utf32-10.32-1.el8.x86_64.rpm --force
+   
+### 安装其他
+
+1. rpm -ivh tar-1.30-4.el8.x86_64.rpm --force
+2. rpm -ivh make-4.2.1-9.el8.x86_64.rpm --force
+
+### 安装Nginx
+
+1. tar -zxvf nginx-1.19.6.tar.gz -C /opt/
+
+2. ```shell
+   cd nginx-1.19.6
+   ./configure --prefix=/opt/nginx --sbin-path=/opt/nginx/sbin/nginx
+   make
+   make install
+   ```
+#### 测试
+- ps aux|grep nginx
+
+```shell
+[root@localhost sbin]# cd /opt/nginx/sbin/
+[root@localhost sbin]# ./nginx 
+[root@localhost sbin]# curl http://localhost
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+[root@localhost sbin]# 
+
+```
+#### 防火墙
+- rpm -ivh firewalld-0.7.0-5.el8.noarch.rpm --force
+- 在 windows 系统中访问 linux 中 nginx ，默认不能访问的，因为防火墙问题
+    - 1 ）关闭防火墙
+    - 2 ）开放访问的端口号 80 端口
+- 查看开放的端口号`firewall-cmd --list-all`
+- 设置开放的端口号
+    - `firewall-cmd --add-service=http --permanent`
+    - `firewall-cmd --add-port=80/tcp --permanent`
+- 重启防火墙`firewall-cmd --reload`
+
+[目录](#目录)
 
 # Chrome使用
 ## 网站登录才能复制
