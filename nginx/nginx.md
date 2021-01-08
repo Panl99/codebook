@@ -1,29 +1,20 @@
 - [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
 - [深入理解Nginx：模块开发与架构解析（第2版）](../resources/static/doc/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
 - [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
+- [OpenResty最佳实践](https://github.com/Panl99/openresty-best-practices)
 
-# 
-- [Nginx特点](#Nginx特点)-√
-- [Nginx配置-nginx.conf](#Nginx配置文件)-9.3-9.4
-    - [Nginx配置文件详解](https://www.cnblogs.com/dongye95/p/11096785.html)
-    - [Nginx配置文件详解](https://www.cnblogs.com/hunttown/p/5759959.html)
-- [Nginx负载均衡原理](#Nginx负载均衡原理)
-- [Nginx反向代理原理](#Nginx反向代理原理)
-- [Nginx正向代理原理](#Nginx正向代理原理)
-- [Nginx配置MySQL](#Nginx配置MySQL)-12
-- [Nginx配置Redis](#Nginx配置redis)-11
-- [Nginx配置MongoDB](#Nginx配置MongoDB)-15
-- [ngx_lua原理](#ngx_lua原理)-10
-    - [ngx_lua_module模块配置](#ngx_lua_module模块配置)-27
 
 # 目录
-- [关于Nginx](#关于Nginx)
+- [Nginx](#Nginx)
     - [Nginx特点](#Nginx特点)
+    - [Nginx作用](#Nginx作用)
     - [安装使用Nginx](#安装使用Nginx)
 - [Nginx配置](#Nginx配置)
     - [Nginx进程间关系](#Nginx进程间关系)
     - [配置语法](#配置语法)
     - [Nginx基本配置](#Nginx基本配置)
+    - [Nginx配置文件详解](https://www.cnblogs.com/dongye95/p/11096785.html)
+    - [Nginx配置文件详解](https://www.cnblogs.com/hunttown/p/5759959.html)
 - [HTTP模块](#HTTP模块)
     - [用HTTP核心模块配置一个静态web服务器](#用HTTP核心模块配置一个静态web服务器)
     - [反向代理配置](#反向代理配置)
@@ -57,15 +48,21 @@
 
 [目录](#目录)
 
-# 关于Nginx
+# Nginx
 ## Nginx特点
-- **<font color=red>速度更快</font>：** 不论单次请求还是高峰大量的并发请求，Nginx都可以快速的响应。
+- **速度更快：** 不论单次请求还是高峰大量的并发请求，Nginx都可以快速的响应。
 - **高扩展性：** Nginx的设计极具扩展性，它完全是由多个不同功能、不同层次、不同类型且耦合度极低的模块组成。Nginx的模块都是嵌入到二进制文件中执行的，所以无论官方发布的模块还是第三方模块都一样具备很好的性能。
 - **高可靠性：** Nginx常用模块非常稳定，每个worker进程相对独立，master进程在1个worker进程出错时可以快速“拉起”新的worker子进程提供服务。
 - **低内存消耗：** 一般10000个非活跃的HTTP Keep-Alive连接在Nginx中仅消耗2.5MB的内存。
 - **高并发：** Nginx能支持<font color=red>10万</font>以上的并发请求。
 - **热部署：** master管理进程与worker工作进程分离设计可支持热部署，支持更新配置、更换日志等功能。
 - **开源协议友好：** BSD开源协议不仅允许用户免费使用，还允许直接使用、修改源码并发布。
+
+## Nginx作用
+- 反向代理
+- 正向代理
+- 负载均衡
+- 动静分离
 
 [返回目录](#目录)
 
@@ -78,38 +75,41 @@
     4. zlib库：用来对HTTP包的内容做gzip格式压缩，安装方式：yum install -y zlib zlib-devel
     5. OpenSSL库：支持在更安全的SSL协议上传输HTTP，支持MD5、SHA1等散列函数，安装方式：yum install -y openssl openssl-devel
     6. 其他模块所需要的的第三方库
+    
+    [centos8离线安装Nginx](../wiki.md#centos8离线安装Nginx)
+    
 - 磁盘目录：
     1. Nginx源码存放目录
     2. Nginx编译产生的中间文件存放目录
     3. 部署目录：存放Nginx运行所需的二进制文件、配置文件等，默认目录：/usr/local/nginx 或者/opt/nginx
     4. 日志存放目录
 - Linux内核参数优化：  
-```properties
-#多并发Nginx内核参数修改：
-#修改/etc/sysctl.conf，修改完执行sysctl -p 命令，使修改生效。
-
-fs.file-max = 999999    #表示进程（在Nginx里指一个工作进程）可以同时打开的最大句柄数。本参数影响最大并发连接数。
-net.core.netdev_max_backlog = 8096  #当网卡接收报文速度大于内核处理速度时，本参数设置这个缓冲队列最大值。
-net.core.rmem_default = 262144  #表示内核套接宇 接收缓冲区默认值。
-net.core.wmem_default = 262144  #表示内核套接字 发送缓冲区默认值。
-net.core.rmem_max = 2097152     #表示内核套接字 接收缓冲区最大值。
-net.core.wmem_max = 2097152     #表示内核套接字 发送缓冲区最大值。
-net.ipv4.tcp_tw_reuse = 1   #参数为1时表示允许将TIME_WAIT状态的套接字重新用于新的TCP连接。服务器上的TCP协议拢在工作时会有大量的TIME WAIT状态连接，重新使用这些连接对于服务器处理大并发连接非常有用。
-net.ipv4.tcp_keepalive_time = 600   #表示当keepalive启用时，TCP发送keepalive消息的频率。默认为2小时，如果本值变小，可以更快地清理无效的连接。
-net.ipv4.tcp_fine_timeout = 30      #表示服务器主动关闭连接时，套接字的FIN_WAIT-2 状态最大时间。
-net.ipv4.tcp_max_tw_buckets = 5000      #表示操作系统允许的TIME _WAIT套接字数量的最大值。当超过这个值，TIME WAIT状态的套接字被立即清除并输出警告消息，默认值为180000，过多的TIME WAIT套接字会使服务器速度变慢。
-net.ipv4.ip_local_port_range = 1024 61000   #定义UDP 和TCP 连接中本地端口范围（不包括连接到远端的端口） 。
-net.ipv4.tcp_rmem = 4096 32768 262142   #定义TCP 接收缓存（TCP接收窗口）的最小值、默认值、最大值。
-net.ipv4.tcp_wmen = 4096 32768 262142   #：定义TCP 发送缓存（TCP 发送窗口）的最小值、默认值、最大值。
-net.ipv4.tcp_syncookies = 1     # 解决TCP的SYN攻击。
-net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请求队列最大值，默认为1024 。调置为更大的值可以使Nginx 在非常繁忙的情况下，若来不及接收新的连接时， Linux 不至于丢失客户端新创建的连接请求。
-```
+    ```properties
+    #多并发Nginx内核参数修改：
+    #修改/etc/sysctl.conf，修改完执行sysctl -p 命令，使修改生效。
+    
+    fs.file-max = 999999    #表示进程（在Nginx里指一个工作进程）可以同时打开的最大句柄数。本参数影响最大并发连接数。
+    net.core.netdev_max_backlog = 8096  #当网卡接收报文速度大于内核处理速度时，本参数设置这个缓冲队列最大值。
+    net.core.rmem_default = 262144  #表示内核套接宇 接收缓冲区默认值。
+    net.core.wmem_default = 262144  #表示内核套接字 发送缓冲区默认值。
+    net.core.rmem_max = 2097152     #表示内核套接字 接收缓冲区最大值。
+    net.core.wmem_max = 2097152     #表示内核套接字 发送缓冲区最大值。
+    net.ipv4.tcp_tw_reuse = 1   #参数为1时表示允许将TIME_WAIT状态的套接字重新用于新的TCP连接。服务器上的TCP协议拢在工作时会有大量的TIME WAIT状态连接，重新使用这些连接对于服务器处理大并发连接非常有用。
+    net.ipv4.tcp_keepalive_time = 600   #表示当keepalive启用时，TCP发送keepalive消息的频率。默认为2小时，如果本值变小，可以更快地清理无效的连接。
+    net.ipv4.tcp_fine_timeout = 30      #表示服务器主动关闭连接时，套接字的FIN_WAIT-2 状态最大时间。
+    net.ipv4.tcp_max_tw_buckets = 5000      #表示操作系统允许的TIME _WAIT套接字数量的最大值。当超过这个值，TIME WAIT状态的套接字被立即清除并输出警告消息，默认值为180000，过多的TIME WAIT套接字会使服务器速度变慢。
+    net.ipv4.ip_local_port_range = 1024 61000   #定义UDP 和TCP 连接中本地端口范围（不包括连接到远端的端口） 。
+    net.ipv4.tcp_rmem = 4096 32768 262142   #定义TCP 接收缓存（TCP接收窗口）的最小值、默认值、最大值。
+    net.ipv4.tcp_wmen = 4096 32768 262142   #：定义TCP 发送缓存（TCP 发送窗口）的最小值、默认值、最大值。
+    net.ipv4.tcp_syncookies = 1     # 解决TCP的SYN攻击。
+    net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请求队列最大值，默认为1024 。调置为更大的值可以使Nginx 在非常繁忙的情况下，若来不及接收新的连接时， Linux 不至于丢失客户端新创建的连接请求。
+    ```
 - 获取安装Nginx：
     1. [Nginx官网下载](http://nginx.org/en/download.html)
     2. 将下载的nginx-x.x.x.tar.gz源码压缩包放到Nginx源码目录，解压：tar -zxvf nginx-x.x.x.tar.gz
     3. 编译安装Nginx：进入nginx-x.x.x目录执行以下3个命令：
         1. **./configure**：检测操作系统内核和已安装软件、解析参数、生成中间目录及根据参数生成各种C源码文件、Makefile文件等  
-            （或者指定安装目录：./configure -prefix=/opt/nginx -sbin-path=/opt/nginx/sbin/nginx）
+            （或者指定安装目录：./configure --prefix=/opt/nginx --sbin-path=/opt/nginx/sbin/nginx）
         2. **make**：根据configure命令生成的Makefile文件编译Nginx工程，生成目标文件、最终的二进制文件
         3. **make install**：根据configure执行时的参数将Nginx部署到指定安装目录，包括相关目录的创建和二进制文件、配置文件的复制
     4. 默认情况下Nginx被安装在：usr/local/nginx
