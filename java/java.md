@@ -1,15 +1,15 @@
-> [Java 8实战](https://github.com/Panl99/codebook/blob/master/resources/static/doc/Java%208%E5%AE%9E%E6%88%98.pdf)  
-> [Java 8函数式编程](https://github.com/Panl99/codebook/blob/master/resources/static/doc/Java%208%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B.pdf)  
-
+- [Java 8实战](https://github.com/Panl99/codebook/blob/master/resources/static/doc/Java%208%E5%AE%9E%E6%88%98.pdf)  
+- [Java 8函数式编程](https://github.com/Panl99/codebook/blob/master/resources/static/doc/Java%208%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B.pdf)  
+- [Offer来了: Java面试核心知识点精讲.原理篇]()
 
 # 目录
 - [Java常见问题](#Java常见问题)
 - [Java基础](#Java基础)
     - [String常用方法](#string常用方法)
-    - [流程控制-×](#流程控制)
-    - [数组-×](#数组)
-    - [面向对象-×](#面向对象)
-    - [异常处理-×](#异常处理)
+    - [流程控制 TODO](#流程控制)
+    - [数组 TODO](#数组)
+    - [面向对象 TODO](#面向对象)
+    - [进制转换 TODO](#进制转换)
  
 - [集合](#集合)
     - [List](#List)
@@ -27,15 +27,33 @@
         - [HashTable](#HashTable)
         - [TreeMap](#TreeMap)
     - [Queue](#Queue)
-- [I/O-×](#IO)
-- [泛型-×](#泛型)
-- [反射-×](#反射)
-- [正则-×](#正则)
-- [注解-×](#注解)
+- [异常](#异常)
+    - [异常分类](#异常分类)
+    - [异常处理](#异常处理)
+- [反射](#反射)
+    - [Java中的对象有两种类型](#Java中的对象有两种类型)
+    - [反射API](#反射API)
+    - [反射的步骤](#反射的步骤)
+    - [创建对象的两种方式](#创建对象的两种方式)
+    - [Method的invoke方法](#Method的invoke方法)
+- [注解](#注解)
+    - [标准元注解](#标准元注解)
+    - [注解处理器](#注解处理器)
+- [内部类 TODO](#内部类)
+- [泛型](#泛型)
+    - [泛型标记和泛型限定](#泛型标记和泛型限定)
+    - [泛型方法](#泛型方法)
+    - [泛型类](#泛型类)
+    - [泛型接口](#泛型接口)
+    - [类型擦除](#类型擦除)
+- [序列化](#序列化)
+    - [Java序列化API](#Java序列化API)
+    - [序列化与反序列化](#序列化与反序列化)
+- [正则 TODO](#正则)
 - [日期和时间](#日期和时间)
     - [标准库API](#标准库API)
         - [java.util.Date](#date)
-
+- [IO TODO](#IO)
 - [Java并发编程](#Java并发编程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
@@ -123,7 +141,7 @@
     - [解析xml-×](#解析xml)
     - [解析Excel-×](#解析Excel)
     
-- [命名](#命名)
+- [命名规范](#命名)
 
 [返回目录](#目录)
 
@@ -147,26 +165,8 @@
         - 在clone()方法中调用super.clone()
         - 把浅复制的引用指向原型对象新的克隆体
 
-- Java反射机制
-    - 允许程序运行时进行自我检查
-    - 允许对内部成员进行操作
-    - 运行时对类进行装载
-    - 提供的功能：
-        - 获取一个对象所属的类。
-        - 获取一个类的所有成员变量和方法。
-        - 在运行时创建对象。
-        - 在运行时调用对象的方法。
-- 运行时异常和普通异常的区别
-    - Java提供两种异常：Error、Exception，父类都是Throwable。
-    - Error表示运行时错误，错误不可恢复，是JVM层次的错误，会导致程序终止。
-        - 编译器不会检查Error是否被处理，因此不建议捕获Error异常。
-        - 运行时异常多是由于逻辑错误造成，应该在编码时解决。
-    - Exception表示可恢复异常，编译器可捕捉，包含：检查异常、运行时异常。
-        - 检查异常：发生在编译阶段，包含在try{}catch(){}中。
-            - 例如：IO异常、SQL异常。
-        - 运行时异常：编译器不强制捕获处理，异常时由JVM处理。
-            - 例如：空指针异常、类型转换异常、数组下标越界异常 等。
-            - 运行时异常时，系统会一直往上抛，直到有代码处理，若不处理可能导致线程终止，或者程序终止。
+
+
 - Java Socket
     - 套接字，用来实现不同虚拟机或不同计算机之间的通信。
     - Java中，Socket分为两种：面向连接的Socket通信协议(TCP)、面向无连接的Socket通信协议(UDP)。
@@ -303,7 +303,7 @@
 ## 面向对象
 [返回目录](#目录)
 
-## 异常处理
+## 进制转换
 [返回目录](#目录)
 
 # 集合
@@ -317,7 +317,7 @@
 - 线程不安全，效率高
 - ArrayList的缺点：
     - 元素必须连续存储，在ArrayList的中间插入/删除元素时，需要将待插入或者删除的节点后的所有元素进行移动，其修改代价较高，因此，ArrayList不适合随机插入和删除的操作，更适合随机查找和遍历的操作。
-- ArrayList**不需要在定义时指定数组的长度** ，在数组长度不能满足存储要求时，ArrayList会创建一个新的更大的数组并将数组中已有的数据复制到新的数组中。
+- ArrayList**不需要在定义时初始化数组的长度** ，在数组长度不能满足存储要求时，ArrayList会创建一个新的更大的数组并将数组中已有的数据复制到新的数组中。
 - **怎样保证安全** 
     - `List list = Collections.synchronizedList(new ArrayList<>());`
     - `CopyOnWriteArrayList`
@@ -330,11 +330,13 @@
 
 ### Vector
 - 底层：数组，查询快，增删慢
-- 线程安全，效率低(保证多线程环境下数据的一致性，需要频繁地对Vector实例进行加锁和释放锁操作)
+- 线程安全，效率低
+    - 同一时刻只允许一个线程对Vector进行写操作（新增、删除、修改），保证了多线程环境下数据的一致性，需要频繁地对Vector实例进行加锁和释放锁操作
 
 ## Set
 - 接口，继承Collection接口
 - 无序，唯一
+- 适用于存储无序且值不相等的元素。
 ### HashSet
 - 无序，唯一
 - 底层：哈希表
@@ -396,19 +398,466 @@
 
 ## Queue
 - 接口，继承Collection接口
+- Java中常用队列：
+    - ArrayBlockingQueue：基于数组数据结构实现的有界阻塞队列。
+    - LinkedBlockingQueue：基于链表数据结构实现的有界阻塞队列。
+    - PriorityBlockingQueue：支持优先级排序的无界阻塞队列。
+    - DelayQueue：支持延迟操作的无界阻塞队列。
+    - SynchronousQueue：用于线程同步的阻塞队列。
+    - LinkedTransferQueue：基于链表数据结构实现的无界阻塞队列。
+    - LinkedBlockingDeque：基于链表数据结构实现的双向阻塞队列。
 
 [返回目录](#目录)
 
-# IO
+# 异常
+## 异常分类
+- Throwable：所有错误Error 和 异常Exception 的父类。
+    - Error：Java程序运行错误挂掉，一般为内部错误或者资源耗尽，不能在运行中动态处理。
+        - 常见：AWTError、ThreadDeath。
+    - Exception：Java程序运行异常，可以动态处理。分为：运行时异常RuntimeException、受检异常：CheckedException
+        - RuntimeException：JVM在运行时抛出，可以被捕获处理。常见：NullPointerException 、ClassCastException 、ArrayIndexOutOfBundsException等。
+        - CheckedException：在编译阶段Java 编译器会检查CheckedException异常并强制程序捕获和处理此类异常，即要求程序在可能出现异常的地方通过try catch语句块捕获并处理异常。常见：IOException 、SQLException、ClassNotFoundException等。
+
+## 异常处理
+- 抛出异常
+    - 自己不处理，将异常抛出给调用者去处理。
+    - 三种形式：throws(作用在方法上)、throw(作用在方法内)、系统自动抛出
+```java
+// throws
+public int test(int a, int b) throws Exception {
+    return a/b;
+}
+
+// throw
+public void test(String s) {
+    if (s.length() <= 10) {
+        throw new StringIndexOutOfBoundsException();
+    }
+}
+```
+
+- 捕获处理
+```java
+try {
+    //业务实现
+} catch (Exception e) {
+    //异常处理
+}
+
+public class ReadFile {
+    public static void main(String[] args) {
+       BufferedReader reader = null;
+        String buffer = null;
+        try {
+            reader = new BufferedReader(new FileReader("test.txt"));
+            do {
+                buffer = reader.readLine();
+                System.out.println(buffer);
+            } while (reader.read() != -1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+// try-with-resources
+public class ReadFile {
+    public static void main(String[] args) {
+        String bufferSugar = null;
+        try (BufferedReader readerSugar = new BufferedReader(new FileReader("test.txt"))) {
+            bufferSugar = readerSugar.readLine();
+            System.out.println(bufferSugar);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+```
+
 [返回目录](#目录)
-# 泛型
-[返回目录](#目录)
+
 # 反射
+反射机制：指在程序运行过程中，能够动态获取类和对象的属性和方法，以及能够动态调用对象的方法。
+
+- 反射应用
+- 获取一个对象所属的类。
+- 获取一个类的所有成员变量和方法。
+- 在运行时创建对象。
+- 在运行时调用对象的方法。
+
+## Java中的对象有两种类型
+- 编译时类型：指在声明对象时所采用的的类型。如示例的Person
+- 运行时类型：指为对象赋值时所采用的的类型。如示例的Student
+```java
+Person person = new Student();
+// 程序在编译时无法获知person对象和Person类的真实信息，只能通过运行时发现，而其真实信息（对象的属性和方法）通常通过反射机制来获取，这便是Java语言中反射机制的核心功能。
+```
+
+## 反射API
+- Java的反射API主要用于在运行过程中动态生成类、接口或对象等信息。
+- 常用API：
+    - Class类：用于获取类的属性、方法等信息。
+    - Field类：表示类的成员变量，用于获取和设置类中的属性值。
+    - Method类：表示类的方法，用于获取方法的描述信息或者执行某个方法。
+    - Constructor类：表示类的构造方法。
+
+## 反射的步骤
+1. 获取想要操作的类的Class对象，该Class对象是反射的核心，通过它可以调用类的任意方法。
+2. 调用Class对象所对应的类中定义的方法，这是反射的使用阶段。
+3. 使用反射API来获取并调用类的属性和方法等信息。
+
+### 获取类的Class对象的3种方式
+1. 调用某个对象的getClass方法以获取该类对应的Class对象。
+```java
+Person p = new Person();
+Class clazz = p.getClass();
+```
+2. 调用某个类的class属性以获取该类对应的Class对象。
+```java
+Class clazz = Person.class;
+```
+3. 调用Class类中的forName静态方法以获取该类对应的Class对象，这是最安全、性能也最好的方法。
+```java
+Class clazz = Class.forName("fullClassPath"); //fullClassPath为类的包路径及名称
+```
+
+### 通过Class类中的方法获取并查看该类中的方法和属性
+```java
+//1. 获取Person类的Class对象
+Class clazz = Class.forName("test.java.reflect.Person");
+
+//2. 获取Person类所有方法信息
+Method[] method = clazz.getDeclaredMethods();
+for (Method m : method) {
+    System.out.println(m.toString);
+}
+
+//3. 获取Person类所有成员的属性信息
+Field[] field = clazz.getDeclaredFields();
+for (Field f : field) {
+    System.out.println(f.toString);
+}
+
+//4. 获取Person类所有构造方法信息
+Constructor[] constructor = clazz.getDeclaredConstructors();
+for (Constructor c : constructor) {
+    System.out.println(c.toString);
+}
+```
+
+## 创建对象的两种方式
+- 使用Class对象的newInstance方法创建该Class对象对应类的实例，这种方法要求该Class对象对应的类有默认的空构造器。
+- 先使用Class 对象获取指定的Constructor 对象， 再调用Constructor对象的newInstance方法创建Class对象对应类的实例，通过这种方法可以选定构造方法创建实例。
+```java
+//1.1 获取Person类的Class对象
+Class clazz = Class.forName("test.java.reflect.Person");
+//1.2 使用newInstance方法创建对象
+Person p = (Person) clazz.newInstance();
+
+//2.1 获取构造方法并创建对象
+Constructor c = clazz.getDeclaredConstructor(String.class, String.class, int.class);
+//2.2 根据构造方法创建对象并设置属性
+Person p1 = (Person) c.newInstance("zhangsan", "男"， 20);
+```
+
+## Method的invoke方法
+- 通过调用Method的invoke方法 在运行的代码中动态去访问 Method提供的关于类或接口上某个方法。
+- 比如 可以动态传入参数及将方法参数化。具体过程为： 获取对象的Method，并调用Method的invoke方法，如下：
+    - 获取Method对象：通过调用Class对象的getMethod(String name, Class<?>... parameterTypes)返回一个Method对象，它描述了此Class对象所表示的类或接口指定的公共成员方法。name参数是String类型，用于指定所需方法的名称。parameterTypes参数是按声明顺序标识该方法的形参类型的Class 对象的一个数组， 如果parameterTypes为null，则按空数组处理。
+    - 调用invoke方法：指通过调用Method对象的invoke方法来动态执行函数。invoke方法的具体使用代码如下：
+```java
+//1. 获取Person类的Class对象
+Class clazz = Class.forName("test.java.reflect.Person");
+
+//2. 获取Class对象中的setName方法
+Method m = clazz.getMethod("setName", String.class);
+
+//3. 获取Constructor对象
+Constructor c = clazz.getConstructor();
+
+//4. 根据构造方法Constructor创建对象
+Object o = c.newInstance();
+
+//5. 调用Method的invoke方法，这里的m表示setName方法
+// 因此，相当于动态调用Object对象的setName方法并传入alex参数
+m.invoke(o, "alex");
+```
+
 [返回目录](#目录)
-# 正则
-[返回目录](#目录)
+
 # 注解
+注解（Annotation）是Java提供的设置程序中元素的关联信息和元数据（MetaData）的方法，它是一个接口，程序可以通过反射获取指定程序中元素的注解对象，然后通过该注解对象获取注解中的元数据信息。
+
+## 标准元注解
+元注解（Meta-Annotation）负责注解其他注解。在Java中定义了4 个标准的元注解类型@Target 、@Retention 、@Documented 、@Inherited，用于定义不同类型的注解。
+
+### @Target
+- @Target 说明了注解所修饰的对象范围。
+- 注解可被用于packages、types（类、接口、枚举、注解类型）、类型成员（方法、构造方法、成员变量、枚举值）、方法参数和本地变量（循环变量、catch参数等）。
+- 在注解类型的声明中使用了target，可更加明确其修饰的目标。
+
+target具体取值：
+
+名称|修饰目标
+---|---
+TYPE|描述类、接口(包括注解类型)、enum声明
+FIELD|描述域
+METHOD|描述方法
+PARAMETER|描述参数
+CONSTRUCTOR|描述构造器
+LOCAL_VARIABLE|描述局部变量
+ANNOTATION_TYPE|声明一个注解
+PACKAGE|描述包
+TYPE_PARAMETER|声明普通变量
+TYPE_USE|能标注任何类型的名称
+
+### @Retention
+- @Retention 定义了该注解被保留的级别，即被描述的注解在什么级别有效，有以下3种类型。
+    - SOURCE：在源文件中有效，即在源文件中被保留。
+    - CLASS：在Class文件中有效，即在Class文件中被保留。
+    - RUNTIME：在运行时有效，即在运行时被保留。
+
+### @Documented
+- @Documented 表明这个注解应该被javadoc工具记录，因此可以被javadoc类的工具文档化。
+
+### @Inherited
+- @Inherited 是一个标记注解，表明某个被标注的类型是被继承的。
+- 如果有一个使用了@Inherited修饰的Annotation被用于一个Class，则这个注解将被用于该Class的子类。
+
+[目录](#目录)
+
+## 注解处理器
+- 注解用于描述元数据的信息，使用的重点在于对注解处理器的定义。
+- Java SE5扩展了反射机制的API，以帮助程序快速构造自定义注解处理器。
+- 对注解的使用一般包含定义及使用注解接口，我们一般通过封装统一的注解工具来使用注解。
+```java
+// 1. 定义注解接口，有name和address两个属性
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface FruitProvider {
+    public int id() default -1; //编号
+    public String name() default ""; //名字
+    public String address() default ""; //地址
+}
+
+// 2. 使用注解接口
+public class Apple {
+    @FruitProvider(id = 1, name = "嘎啦国际", address = "陕西西安")
+    private String appleProvider;
+    public void setAppleProvider(String appleProvider) {
+        this.appleProvider = appleProvider;
+    }
+    public String getAppleProvider() {
+        return appleProvider;
+    }
+}
+
+// 3. 定义注解处理器
+//定义一个FruitInfoUtil注解处理器，并通过反射信息获取注解数据，最后通过main方法调用该注解处理器使用注解
+public class FruitInfoUtil {
+    public static void getFruitInfo(Class<?> clazz) {
+        String strFruitProvider = "供应商信息";
+        Field[] fields = clazz.getDeclaredFields(); //通过反射获取处理注解
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(FruitProvider.class)) {
+                FruitProvider fruitProvider = (FruitProvider) field.getAnnotation(FruitProvider.class);
+                // 处理注解信息
+                strFruitProvider = "供应商编号：" + fruitProvider.id() + "供应商名称：" + fruitProvider.name() + "供应商地址：" + fruitProvider.address();
+                System.out.println(strFruitProvider);
+            }
+        }
+    }
+}
+public class FruitRun {
+    public static void main(String[] args) {
+        FruitInfoUtil.getFruitInfo(Apple.class);
+        //输出结果：供应商编号：1 供应商名称：嘎啦国际 供应商地址：陕西西安
+    }    
+}
+```
+
 [返回目录](#目录)
+
+# 内部类
+## 静态内部类
+## 成员内部类
+## 局部内部类
+## 匿名内部类
+
+[返回目录](#目录)
+
+# 泛型
+- 泛型的本质是参数化类型，泛型提供了编译时类型的安全检测机制，该机制允许程序在编译时检测非法的类型。
+- 在不使用泛型的情况下，我们可以通过引用Object类型来实现参数的任意化，在具体使用时需要进行强制类型转换。
+    - 强制类型转换要求首先必须明确知道实际参数的引用类型，不然可能引起前置类型转换错误，在编译期无法识别这种错误，只能在运行期检测这种错误。
+
+## 泛型标记和泛型限定
+- E、T、K、V、N、?
+
+泛型标记|说明
+---|---
+E-Element|在集合中使用，表示集合中存放的元素
+T-Type|表示Java类，包括基本类 和自定义类
+K-Key|表示键，如Map中的Key
+V-Value|表示值
+N-Number|表示数值类型
+?|表示不确定的Java类型
+
+- 在使用泛型的时候，若希望将类的继承关系加入泛型应用中，就需要对泛型做限定，具体的泛型限定有对泛型上线的限定和对泛型下线的限定。
+    - 对泛型上限的限定：`<? extends T>` 表示该通配符所代表的类型是 T类的子类或者接口T的子接口。
+    - 对泛型下限的限定：`<? super T>` 表示该通配符所代表的类型是 T类型的父类或者父接口。
+
+## 泛型方法
+- 泛型方法指将方法的参数类型定义为泛型，以便在调用时接收不同类型的参数。
+```java
+public static void main(String[] args) {
+    generalMethod("1", 2, new Worker());
+}
+
+public static <T> void generalMethod(T ... inputArray) {
+    for (T element : inputArray) {
+        if (element instanceof Integer) {
+            System.out.println("Type is Integer");
+        } else if (element instanceof String) {
+            System.out.println("Type is String");
+        } else if (element instanceof Boolean) {
+            System.out.println("Type is Boolean");
+        } else if (element instanceof Worker) {
+            System.out.println("Type is Worker");
+        }
+        ...
+    }
+}
+```
+
+## 泛型类
+- 泛型类指在定义类时在类上定义了泛型，以便类在使用时可以根据传入的不同参数类型实例化不同的对象。
+- 泛型类的具体使用方法是在类的名称后面添加一个或多个类型参数的声明部分，在多个泛型参数之间用逗号隔开。
+```java
+public class GeneralClass<T> {
+    public static void main(String[] args) {
+        //根据需求初始化不同的类型
+        GeneralClass<Integer> genInt = new GeneralClass<Integer>();
+        genInt.add(1);
+        GeneralClass<String> genStr = new GeneralClass<String>();
+        genStr.add("2");
+    }
+    private T t;
+    public void add(T t) {
+        this.t = t;
+    }
+    public T get() {
+        return t;
+    }
+}
+```
+
+## 泛型接口
+- 泛型接口通过在接口名后面添加类型参数的声明部分来实现。泛型接口的具体类型一般在实现类中进行声明，不同类型的实现类处理不同的业务逻辑。
+```java
+public interface IGeneral<T> {
+    public T getId();    
+}
+
+public class GeneralIntegerImpl implements IGeneral<Integer> {
+    @Override
+    public Integer getId() {
+        Random random = new Random(100);
+        return random.nextInt();
+    }
+
+    public static void main(String[] args) {
+        GeneralIntegerImpl gen = new GeneralIntegerImpl();
+        System.out.println(gen.getId());
+    }
+}
+```
+
+## 类型擦除
+- 在编码阶段采用泛型时加上的类型参数，会被编译器在编译时去掉，这个过程就被称为类型擦除。因此，泛型主要用于编译阶段。在编译后生成的Java字节代码文件中不包含泛型中的类型信息。
+    - 例如，编码时定义的List<Integer> 和List<String> 在经过编译后统一为List。JVM所读取的只是List，由泛型附加的类型信息对JVM来说是不可见的。
+- Java类型的擦除过程为：
+    - 首先，查找用来替换类型参数的具体类（该具体类一般为Object），如果指定了类型参数的上界，则以该上界作为替换时的具体类；
+    - 然后，把代码中的类型参数都替换为具体的类。
+  
+[返回目录](#目录)
+
+# 序列化
+- Java对象在JVM运行时被创建、更新和销毁，当JVM退出时，对象也会随之销毁，即这些对象的生命周期不会比JVM的生命周期更长。但在现实应用中，我们常常需要将对象及其状态在多个应用之间传递、共享，或者将对象及其状态持久化，在其他地方重新读取被保存的对象及其状态继续进行处理。这就需要通过将Java对象序列化来实现。
+- 在使用Java序列化技术保存对象及其状态信息时，对象及其状态信息会被保存在一组字节数组中，在需要时再将这些字节数组反序列化为对象。
+    - 注意，对象序列化保存的是对象的状态，即它的成员变量，因此类中的静态变量不会被序列化。
+- 对象序列化除了用于持久化对象，在RPC（远程过程调用）或者网络传输中也经常被使用。
+
+## Java序列化API
+Java序列化API为处理对象序列化提供了一个标准机制，具体的Java系列化需要注意以下事项。  
+
+- 类要实现序列化功能，只需实现`java.io.Serializable`接口即可。
+- 序列化和反序列化必须保持序列化的ID 一致，一般使用`private static final long serialVersionUID`定义序列化ID。
+- 序列化并不保存静态变量。
+- 在需要序列化父类变量时，父类也需要实现Serializable接口。
+- 使用`transient`关键字可以阻止该变量被序列化，在被反序列化后，`transient`变量的值被设为对应类型的初始值，例如，int类型变量的值是 0，对象类型变量的值是null。
+- 对象通过序列化后在网络上传输时，基于网络安全，我们可以在序列化前将一些敏感字段（用户名、密码、身份证号码）使用秘钥进行加密，在反序列化后再基于秘钥对数据进行解密。这样即使数据在网络中被劫持，由于缺少秘钥也无法对数据进行解析，这样可以在一定程度上保证序列化对象的数据安全。
+  
+```java
+import java.io.Serializable
+
+public class Worker implements Serializable {
+    //定义序列化ID
+    private static final long serialVersionUID = -7359408741695605860L;
+    //name属性会被序列化
+    private String name;
+    //transient修饰的变量不会被序列化
+    private transient int salary;
+    //静态变量属于类信息，不属于对象状态，因此不会被序列化
+    static int age = 100;
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+- ![idea打开自动生成序列化id开关](../resources/static/images/idea打开自动生成序列化id开关.png)
+- ![idea自动生成序列化id](../resources/static/images/idea自动生成序列化id.png)
+
+## 序列化与反序列化
+- Java反序列框架：arvo、protobuf、thrift、fastjson
+- 也可以基于JDK原生的`ObjectOutputStream`和`ObjectInputStream`类实现对象进行序列化及反序列化，并调用其`writeObject`和`readObject`方法实现自定义序列化策略。
+
+```java
+public static void main(String[] args) throws Exception {
+    //序列化数据到磁盘
+    FileOutputStream fos = new FileOutputStream("worker.out");
+    ObjectOutputStream oos = new ObjectOutputStream(fos);
+    Worker worker = new Worker();
+    worker.setName("alex");
+    oos.writeObject(worker);
+    oos.flush();
+    oos.close();
+
+    //反序列化磁盘数据并解析数据状态
+    FileInputStream fis = new FileInputStream("woker.out");
+    ObjectInputStream ois = new ObjectInputStream(fis);
+    Worker deWorker = (Worker) ois.readObject();
+    System.out.println(deWorker.getName());
+}
+```
+
+[返回目录](#目录)
+
+# 正则
+
+[返回目录](#目录)
+
 # 日期和时间
 ## 标准库API
 - java.util包：Date、Calendar、TimeZone
@@ -431,6 +880,10 @@
         System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
     }
 ```
+
+[返回目录](#目录)
+
+# IO
 
 [返回目录](#目录)
 
