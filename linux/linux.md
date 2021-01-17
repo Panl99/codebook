@@ -1,3 +1,5 @@
+> [Linux命令行与shell脚本编程大全（第3版）](../resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)
+
 # 目录
 - [shell](#shell)
     - [流程控制](#流程控制)

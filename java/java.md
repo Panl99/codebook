@@ -54,6 +54,7 @@
     - [标准库API](#标准库API)
         - [java.util.Date](#date)
 - [IO TODO](#IO)
+
 - [Java并发编程](#Java并发编程)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
@@ -222,8 +223,8 @@
     - 如果节点是红色的，则它的子节点必须是黑色的（反之不一定）
     - 每个叶子节点都是黑色的空节点（NIL节点）
     - 从根节点到叶节点或空子节点的每条路径，必须包含相同数目的黑色节点（即相同的黑色高度）
-    - ![红黑树](../resources/static/images/redblackTree.PNG)
-<img src="../resources/static/images/redblackTree.PNG" />   
+
+![红黑树](../resources/static/images/redblackTree.PNG)
     
 [返回目录](#目录)
 
