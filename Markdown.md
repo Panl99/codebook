@@ -41,7 +41,8 @@
 代码块
 ```
 
-<span style="color: green"> green </span>
-<font color="red"> red </font>
-
-2<sup>n</sup>表示：`2<sup>n</sup>`
+- `<span style="color: green"> green </span>`
+- `<font color="red"> red </font>`
+- 2<sup>n</sup>表示：`2<sup>n</sup>`
+- [ ] test --> `- [ ] test`
+- [x] test --> `- [x] test -->`
