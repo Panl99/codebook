@@ -15,6 +15,7 @@
         - [编码优化](#编码优化)
 - [GitHub](#GitHub)
     - [修改github邮箱](#修改github邮箱)
+    - [添加SSH公钥](#添加SSH公钥)
 
 
 # win10相关
@@ -254,5 +255,13 @@ Commercial support is available at
 - settings -> Emails: Add email address
 - 添加完设置为：Primary 
 - **注意**：不要删除旧邮箱，删除后会出现以前的提交记录contributions不显示了(绿色小方块没有了)，恢复方法就是重新加回旧邮箱即可（不需要设置为主邮箱）。
+
+## 添加SSH公钥
+1. git bash输入：`ssh-keygen -t rsa -C "xxxxx@xxxxx.com"`
+2. 一路回车
+3. 查看：`C:\Users\lp\.ssh\id_rsa.pub` 填到gitee/设置/安全设置/SSH公钥
+4. 测试gitee：`ssh -T git@gitee.com`
+
+- [gitee-生成/添加SSH公钥](https://gitee.com/help/articles/4181#article-header0)
 
 [目录](#目录)
