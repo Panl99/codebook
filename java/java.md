@@ -129,14 +129,34 @@
     - [图](#图)
     - [位图](#位图)
 - [设计模式](#设计模式)
-    - [使用Lambda重构设计模式](#使用Lambda重构设计模式)
-        - [策略模式](#策略模式)
-        - [工厂模式](#工厂模式)
-        - [观察者模式](#观察者模式)
-        - [模板方法](#模板方法)
-        - [责任链模式](#责任链模式)
-    - [单例模式](https://github.com/Panl99/leetcode/tree/master/java/src/designpattern/Singleton.java)
+    - [设计模式的7个原则](#设计模式的7个原则)
+    - [单例模式](#单例模式)
+    - [工厂模式](#工厂模式)
+        - [抽象工厂模式](#抽象工厂模式)
+    - [建造者模式](#建造者模式)
+    - [原型模式](#原型模式)
+    
+    - [适配器模式](#适配器模式)
+    - [装饰者模式](#装饰者模式)
+    - [代理模式](#代理模式)
+    - [外观模式](#外观模式)
+    - [桥接模式](#桥接模式)
+    - [组合模式](#组合模式)
+    - [享元模式](#享元模式)
 
+    - [观察者模式](#观察者模式)
+    - [责任链模式](#责任链模式)
+    - [迭代器模式](#迭代器模式)
+    - [命令模式](#命令模式)
+    - [备忘录模式](#备忘录模式)  
+    - [中介者模式](#中介者模式)
+    - [解释器模式](#解释器模式)
+    - [策略模式](#策略模式)
+    - [模板方法](#模板方法)
+    - [状态模式](#状态模式)
+    - [访问者模式](#访问者模式)
+    
+    
 - [解析文件-×](#解析文件)
     - [解析json-×](#解析json)
     - [解析xml-×](#解析xml)
@@ -2297,54 +2317,45 @@ public static Optional<Integer> stringToInt(String s) {
 [返回目录](#目录)
 
 # 设计模式
-## 使用Lambda重构设计模式
-### 策略模式  
-解决某类算法的通用方案，包含三部分内容：  
-一个代表某个算法的接口（它是策略模式的接口）。  
-一个或多个该接口的具体实现，它们代表了算法的多种实现（比如，实体类Concrete-StrategyA或者ConcreteStrategyB）。  
-一个或多个使用策略对象的客户。  
-```java
-//假设希望验证输入的内容是否根据标准进行了恰当的格式化（比如只包含小写字母或数字）。
-//1、可以从定义一个验证文本（以String的形式表示）的接口入手：
-public interface ValidationStrategy {
-    boolean execute(String s);
-}
-//2、定义了该接口的一个或多个具体实现：
-public class IsAllLowerCase implements ValidationStrategy {
-    public boolean execute(String s){
-        return s.matches("[a-z]+");
-    }
-}
-public class IsNumeric implements ValidationStrategy {
-    public boolean execute(String s){
-        return s.matches("\\d+");
-    }
-}
-//3、在程序中使用这些略有差异的验证策略：
-public class Validator{
-    private final ValidationStrategy strategy;
-    public Validator(ValidationStrategy v){
-        this.strategy = v;
-    }
-    public boolean validate(String s){
-        return strategy.execute(s);
-    }
-}
-Validator numericValidator = new Validator(new IsNumeric());
-boolean b1 = numericValidator.validate("aaaa");//返回false
-Validator lowerCaseValidator = new Validator(new IsAllLowerCase ());
-boolean b2 = lowerCaseValidator.validate("bbbb");//返回true
+设计模式是人们经过长期编程经验总结出来的一种编程思想。
 
-//使用Lambda（ValidationStrategy是一个函数接口）
-Validator numericValidator = new Validator((String s) -> s.matches("[a-z]+"));
-boolean b1 = numericValidator.validate("aaaa");
-Validator lowerCaseValidator = new Validator((String s) -> s.matches("\\d+"));
-boolean b2 = lowerCaseValidator.validate("bbbb");
-```
+## 设计模式的7个原则
+1. 单一职责原则
+    - 又称单一功能原则，规定一个类只能有一个职责（功能）。
+2. 开闭原则
+    - 规定软件中的对象(类、模块、函数等)对扩展开放，对修改封闭。意味着一个实体允许在不改变其源码的前提下改变其行为。
+3. 里氏代换原则
+    - 对开闭原则的补充，规定在任意父类出现的地方，子类都一定可以出现。
+    - 实现开闭原则的关键就是抽象化，父类与子类的继承关系就是抽象化的具体表现，所以里氏代换原则是对实现抽象化的具体步骤的规范。
+4. 依赖倒转原则
+    - 指程序要依赖于抽象（Java中的抽象类和接口），而不依赖于具体的实现（Java中的实现类）。
+    - 简单地说，就是要求对抽象进行编程，不要求对实现进行编程，这就降低了用户与实现模块之间的耦合度。
+5. 接口隔离原则
+    - 指通过将不同的功能定义在不同的接口中来实现接口的隔离，这样就避免了其他类在依赖该接口（接口上定义的功能）时依赖其不需要的接口，可减少接口之间依赖的冗余性和复杂性。
+6. 合成/聚合复用原则
+    - 指通过在一个新的对象中引入（注入）已有的对象以达到类的功能复用和扩展的目的。它的设计原则是要尽量使用合成或聚合而不要使用继承来扩展类的功能。
+7. 迪米特法则
+    - 指一个对象尽可能少地与其他对象发生相互作用，即一个对象对其他对象应该有尽可能少的了解或依赖。
+    - 核心思想在于降低模块之间的耦合度，提高模块的内聚性。迪米特法则规定每个模块对其他模块都要有尽可能少的了解和依赖，因此很容易使系统模块之间功能独立，这使得各个模块的独立运行变得更简单，同时使得各个模块之间的组合变得更容易。
 
 [返回目录](#目录)
 
-### 工厂模式
+## [单例模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/singletonpattern/Singleton.java)
+   
+## [工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern)
+- FactoryPattern：提供了一种简单、快速、高效而安全地创建对象的方式。
+- 工厂模式在接口中定义了创建对象的方法，而将具体的创建对象的过程在子类中实现，用户只需通过接口创建需要的对象即可，不用关注对象的具体创建过程。同时，不同的子类可根据需求灵活实现创建对象的不同方法。
+- 工厂模式的本质就是用工厂方法代替new操作创建一种实例化对象的方式
+
+#### 实现
+以创建手机为例，假设手机的品牌有华为和苹果两种类型，我们要实现的是根据不同的传入参数实例化不同的手机。
+
+1. 定义接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Phone.java) ，在接口中定义品牌 brand()；
+2. 定义实现类 [MyIPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/MyIPhone.java) 、[MyHuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/MyHuaWei.java) ；
+3. 定义工厂类 [Factory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Factory.java) ；
+4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Main.java) 。
+
+#### 使用Lambda重构工厂模式
 无需暴露实例化的逻辑就能完成对象的创建。  
 ```java
 //1、创建一个工厂类，它包含一个负责实现不同对象的方法
@@ -2385,7 +2396,20 @@ Loan loan = loanSupplier.get();
 
 [返回目录](#目录)
 
-### 观察者模式  
+### [抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/abstractfactorypattern)
+
+## [建造者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/builderpattern)
+## [原型模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/prototypepattern)
+## [适配器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/adapterpattern)
+## [装饰者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/decoratorpattern)
+## [代理模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern)
+## [外观模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/facadepattern)
+## [桥接模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/bridgepattern)
+## [组合模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/compositepattern)
+## [享元模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/flyweightpattern)
+## [观察者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/observerpattern)
+
+### 使用Lambda重构观察者模式  
 某些事件发生时，需要自动地通知其他多个对象(观察者)  
 ```java
 //通知系统，报纸机构订阅了新闻，当接收的新闻中包含的关键字时，能得到特别通知。
@@ -2452,30 +2476,9 @@ f.registerObserver((String tweet) -> {
 
 [返回目录](#目录)
 
-### 模板方法  
-需要采用某个算法的框架，同时又希望有一定的灵活度，能对它的某些部分进行改进  
-```java
-//processCustomer方法搭建了在线银行算法的框架：获取客户提供的ID，然后提供服务给用户。不同的支行可以通过继承OnlineBanking类，对该方法提供差异化的实现。
-abstract class OnlineBanking {
-    public void processCustomer(int id){
-        Customer c = Database.getCustomerWithId(id);
-        makeCustomerHappy(c);
-    }
-    abstract void makeCustomerHappy(Customer c);
-}
+## [责任链模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/chain-of-responsibilitypattern)
 
-//使用Lambda
-public void processCustomer(int id, Consumer<Customer> makeCustomerHappy){
-    Customer c = Database.getCustomerWithId(id);
-    makeCustomerHappy.accept(c);
-}
-//可以直接插入不同的行为，不再需要继承OnlineBanking类
-new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.println("Hello " + c.getName());
-```
-
-[返回目录](#目录)
-
-### 责任链模式
+### 使用Lambda重构责任链模式
 一个处理对象可能需要在完成一些工作之后，将结果传递给另一个对象，这个对象接着做一些工作，再转交给下一个处理对象，以此类推。  
 ```java
 //这种模式通常是通过定义一个代表处理对象的抽象类来实现的，在抽象类中会定义一个字段来记录后续对象。一旦对象完成它的工作，处理对象就会将它的工作转交给它的后继。
@@ -2517,6 +2520,89 @@ UnaryOperator<String> spellCheckerProcessing = (String text) -> text.replaceAll(
 Function<String, String> pipeline = headerProcessing.andThen(spellCheckerProcessing);
 String result = pipeline.apply("Aren't labdas really sexy?!!");
 ```
+
+[返回目录](#目录)
+
+## [迭代器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/iteratorpattern)
+## [命令模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/commandpattern)
+## [备忘录模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/mementopattern)  
+## [中介者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/mediatorpattern)
+## [解释器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/interpreterpattern)
+## [策略模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/strategypattern)
+
+### 使用Lambda重构策略模式  
+解决某类算法的通用方案，包含三部分内容：  
+一个代表某个算法的接口（它是策略模式的接口）。  
+一个或多个该接口的具体实现，它们代表了算法的多种实现（比如，实体类Concrete-StrategyA或者ConcreteStrategyB）。  
+一个或多个使用策略对象的客户。  
+```java
+//假设希望验证输入的内容是否根据标准进行了恰当的格式化（比如只包含小写字母或数字）。
+//1、可以从定义一个验证文本（以String的形式表示）的接口入手：
+public interface ValidationStrategy {
+    boolean execute(String s);
+}
+//2、定义了该接口的一个或多个具体实现：
+public class IsAllLowerCase implements ValidationStrategy {
+    public boolean execute(String s){
+        return s.matches("[a-z]+");
+    }
+}
+public class IsNumeric implements ValidationStrategy {
+    public boolean execute(String s){
+        return s.matches("\\d+");
+    }
+}
+//3、在程序中使用这些略有差异的验证策略：
+public class Validator{
+    private final ValidationStrategy strategy;
+    public Validator(ValidationStrategy v){
+        this.strategy = v;
+    }
+    public boolean validate(String s){
+        return strategy.execute(s);
+    }
+}
+Validator numericValidator = new Validator(new IsNumeric());
+boolean b1 = numericValidator.validate("aaaa");//返回false
+Validator lowerCaseValidator = new Validator(new IsAllLowerCase ());
+boolean b2 = lowerCaseValidator.validate("bbbb");//返回true
+
+//使用Lambda（ValidationStrategy是一个函数接口）
+Validator numericValidator = new Validator((String s) -> s.matches("[a-z]+"));
+boolean b1 = numericValidator.validate("aaaa");
+Validator lowerCaseValidator = new Validator((String s) -> s.matches("\\d+"));
+boolean b2 = lowerCaseValidator.validate("bbbb");
+```
+
+[返回目录](#目录)
+
+## [模板方法](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/templatepattern)
+
+### 使用Lambda重构模板方法  
+需要采用某个算法的框架，同时又希望有一定的灵活度，能对它的某些部分进行改进  
+```java
+//processCustomer方法搭建了在线银行算法的框架：获取客户提供的ID，然后提供服务给用户。不同的支行可以通过继承OnlineBanking类，对该方法提供差异化的实现。
+abstract class OnlineBanking {
+    public void processCustomer(int id){
+        Customer c = Database.getCustomerWithId(id);
+        makeCustomerHappy(c);
+    }
+    abstract void makeCustomerHappy(Customer c);
+}
+
+//使用Lambda
+public void processCustomer(int id, Consumer<Customer> makeCustomerHappy){
+    Customer c = Database.getCustomerWithId(id);
+    makeCustomerHappy.accept(c);
+}
+//可以直接插入不同的行为，不再需要继承OnlineBanking类
+new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.println("Hello " + c.getName());
+```
+
+[返回目录](#目录)
+
+## [状态模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/statepattern)
+## [访问者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/visitorpattern)
 
 [返回目录](#目录)
 
