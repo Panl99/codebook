@@ -16,6 +16,7 @@
 - [GitHub](#GitHub)
     - [修改github邮箱](#修改github邮箱)
     - [添加SSH公钥](#添加SSH公钥)
+    - [Git推送到多个远端库](#Git推送到多个远端库)
 
 
 # win10相关
@@ -263,5 +264,24 @@ Commercial support is available at
 4. 测试gitee：`ssh -T git@gitee.com`
 
 - [gitee-生成/添加SSH公钥](https://gitee.com/help/articles/4181#article-header0)
+
+## Git推送到多个远端库
+- git本地一次推送到github、gitee两个库
+- 修改 隐藏.git/config：
+```
+[remote "origin"]
+	url = git@github.com:Panl99/codebook.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+添加1：	url = git@gitee.com:livpan/codebook.git
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+添加2：
+[remote "gitee"]
+    url = git@gitee.com:livpan/codebook.git
+    fetch = +refs/heads/*:refs/remotes/github/*
+```
+
+![git推送到多个远端库](resources/static/images/git推送到多个远端库.png)
 
 [目录](#目录)
