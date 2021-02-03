@@ -2348,55 +2348,72 @@ public static Optional<Integer> stringToInt(String s) {
 - 工厂模式的本质就是用工厂方法代替new操作创建一种实例化对象的方式
 
 #### 实现
-以创建手机为例，假设手机的品牌有华为和苹果两种类型，我们要实现的是根据不同的传入参数实例化不同的手机。
+以创建手机为例，假设手机的品牌有华为、小米、苹果三种类型，我们要实现的是根据不同的传入参数实例化不同的手机。
 
 1. 定义接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Phone.java) ，在接口中定义品牌 brand()；
-2. 定义实现类 [MyIPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/MyIPhone.java) 、[MyHuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/MyHuaWei.java) ；
+2. 定义实现类 [IPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/IPhone.java) 、[HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/HuaWei.java) 、[HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/XiaoMi.java) ；
 3. 定义工厂类 [Factory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Factory.java) ；
 4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Main.java) 。
+5. 优化3：使用枚举创建手机对象 [PhoneEnum]([HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/PhoneEnum.java))
 
 #### 使用Lambda重构工厂模式
 无需暴露实例化的逻辑就能完成对象的创建。  
 ```java
-//1、创建一个工厂类，它包含一个负责实现不同对象的方法
-public class ProductFactory {
-    public static Product createProduct(String name){
-        switch(name){
-            case "loan": return new Loan();
-            case "stock": return new Stock();
-            case "bond": return new Bond();
-            default: throw new RuntimeException("No such product " + name);
-        }
+//1、创建接口和实现类
+public interface Phone {
+    String brand(); //品牌
+}
+public class IPhone implements Phone {
+    @Override
+    public String brand() {
+        return "this is a iphone";
     }
 }
-//2、创建产品
-Product p = ProductFactory.createProduct("loan");
 
-//使用Lambda
-//创建一个Map，将产品名映射到对应的构造函数
-final static Map<String, Supplier<Product>> map = new HashMap<>();
-static {
-    map.put("loan", Loan::new);
-    map.put("stock", Stock::new);
-    map.put("bond", Bond::new);
-}
-//利用这个Map来实例化不同的产品
-public static Product createProduct(String name){
-    Supplier<Product> p = map.get(name);
-    if(p != null) {
+//2、创建一个工厂类
+public static Phone createPhone(PhoneEnum name) {
+    Supplier<Phone> p = name.getPhone();
+    if (p != null) {
         return p.get();
     } else {
-        throw new IllegalArgumentException("No such product " + name);
+        throw new IllegalArgumentException("no such phone " + name);
     }
 }
-//引用构造函数
-Supplier<Product> loanSupplier = Loan::new;
-Loan loan = loanSupplier.get();
+
+//3、枚举产品
+public enum PhoneEnum {
+    HUAWEI(HuaWei::new),
+    IPHONE(IPhone::new),
+    XIAOMI(XiaoMi::new);
+
+    private final Supplier<Phone> phone;
+
+    PhoneEnum(Supplier<Phone> phone) {
+        this.phone = phone;
+    }
+
+    public Supplier<Phone> getPhone() {
+        return phone;
+    }
+}
+
+//4、测试
+public static void main(String[] args) {
+    Phone iphone = Factory.createPhone(PhoneEnum.IPHONE);
+    Phone xm = Factory.createPhone(PhoneEnum.XIAOMI);
+    System.out.println(iphone.brand());
+    System.out.println(xm.brand());
+
+}
 ```
 
-[返回目录](#目录)
+### [抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern)
+- 抽象工厂模式（Abstract Factory Pattern）在工厂模式上添加了一个创建不同工厂的抽象接口（抽象类或接口实现），该接口可叫作超级工厂。在使用过程中，我们首先通过抽象接口创建出不同的工厂对象，然后根据不同的工厂对象创建不同的对象。
+- 手机厂商还可能制造其他产品，减少实现多个工厂类
 
-### [抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/abstractfactorypattern)
+
+
+[返回目录](#目录)
 
 ## [建造者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/builderpattern)
 ## [原型模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/prototypepattern)
