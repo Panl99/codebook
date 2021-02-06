@@ -17,6 +17,8 @@
     - [修改github邮箱](#修改github邮箱)
     - [添加SSH公钥](#添加SSH公钥)
     - [Git推送到多个远端库](#Git推送到多个远端库)
+- [hugo搭建个人博客](#hugo搭建个人博客)
+    - [Windows安装hugo](#Windows安装hugo)
 
 
 # win10相关
@@ -283,5 +285,35 @@ Commercial support is available at
 ```
 
 ![git推送到多个远端库](resources/static/images/git推送到多个远端库.png)
+
+[目录](#目录)
+
+# hugo搭建个人博客
+- hugo使用go语言编写的静态网站生成器，但无需安装go就可使用，只需要获取预编译的二进制文件即可。
+- hugo比hexo加载快
+
+## [Windows安装hugo](https://gohugo.io/getting-started/installing)
+1. 本地创建博客目录：`D:\Code\hugo` 、`D:\Code\hugo\bin` 、`D:\Code\hugo\sites` 
+    - `hugo\bin\`下存放：hugo二进制文件
+    - `hugo\sites\`下存放：站点文件
+2. [下载二进制](https://github.com/gohugoio/hugo/releases)
+![hugo二进制文件下载](resources/static/images/hugo二进制文件下载.png)
+3. 解压到`D:\Code\hugo\bin`，然后在环境变量中添加此路径
+4. 验证：打开`cmd`，输入`hugo help`，有帮助内容说明安装好了
+
+### 创建站点
+1. 打开`cmd`，进入sites目录`D:\Code\hugo\sites\`，输入`hugo new site lpblog>`会在sites目录下生成一个lpblog目录存放网站文件，包含如下文件：
+![hugo创建站点](resources/static/images/hugo创建站点.png)
+2. 站点已经生成，现在创建一个文章：
+    - 进入目录`D:\Code\hugo\sites\lpblog\`，执行`hugo new readme.md`创建一个文章，会自动创建到`\lpblog\content\readme.md`下
+    - ![](resources/static/images/hugo创建一个文章.png)
+    - 指定目录创建一个文章
+    - ![](resources/static/images/hugo指定目录创建一个文章.png)
+3. 打开创建的文章，编辑自己的博客内容
+    - ![](resources/static/images/hugo编辑文章.png)
+    - 要发布的时候，将草稿状态`draft: true`修改为`draft: false`
+
+### 添加主题
+
 
 [目录](#目录)
