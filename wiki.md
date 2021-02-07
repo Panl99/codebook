@@ -19,6 +19,7 @@
     - [Git推送到多个远端库](#Git推送到多个远端库)
 - [hugo搭建个人博客](#hugo搭建个人博客)
     - [Windows安装hugo](#Windows安装hugo)
+    - [hugo博客托管到github](#hugo博客托管到github)
 
 
 # win10相关
@@ -304,16 +305,27 @@ Commercial support is available at
 ### 创建站点
 1. 打开`cmd`，进入sites目录`D:\Code\hugo\sites\`，输入`hugo new site lpblog>`会在sites目录下生成一个lpblog目录存放网站文件，包含如下文件：
 ![hugo创建站点](resources/static/images/hugo创建站点.png)
-2. 站点已经生成，现在创建一个文章：
-    - 进入目录`D:\Code\hugo\sites\lpblog\`，执行`hugo new readme.md`创建一个文章，会自动创建到`\lpblog\content\readme.md`下
+2. [添加主题](https://themes.gohugo.io/)
+    - 进入sites目录`D:\Code\hugo\sites\lpblog\`
+    - 克隆主题到themes目录下：`git clone https://github.com/Panl99/hugo-blog-jeffprod.git themes/jeffprod`
+    - 克隆完后修改下默认的一些参数：
+        - `lpblog\themes\jeffprod\archetypes\post.md`: 创建文章标题栏，改下 author
+        - `lpblog\config.toml`：站点配置、分页个数等
+        - [背景图](https://pixabay.com/)
+3. 站点已经生成，现在创建一个文章：
+    - 进入目录`D:\Code\hugo\sites\lpblog\`，执行`hugo new about.md`创建一个文章，会自动创建到`\lpblog\content\`下
     - ![](resources/static/images/hugo创建一个文章.png)
-    - 指定目录创建一个文章
-    - ![](resources/static/images/hugo指定目录创建一个文章.png)
-3. 打开创建的文章，编辑自己的博客内容
+    - 指定目录创建一个文章，注意一定是`post\`目录下
+    - ![](resources/static/images/hugo指定目录post创建一个文章.png)
+4. 打开创建的文章，编辑自己的博客内容
+    - ![](resources/static/images/hugo编辑文章first.png)
     - ![](resources/static/images/hugo编辑文章.png)
     - 要发布的时候，将草稿状态`draft: true`修改为`draft: false`
+5. 启动站点：`hugo server`
+6. 访问站点：`http://localhost:1313/`
+![](resources/static/images/hugo博客页面.png)
 
-### 添加主题
+## hugo博客托管到github
 
 
 [目录](#目录)
