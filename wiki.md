@@ -326,6 +326,21 @@ Commercial support is available at
 ![](resources/static/images/hugo博客页面.png)
 
 ## hugo博客托管到github
-
+1. 在github上创建仓库：`Panl99.github.io`，一定要用自己的github用户名
+    - settings往下拉 找到GitHub Pages，分支选择master，点击`Change theme`随便选择一个主题 提交，主要是要它给的网址
+    - 过几分钟去访问下[https://panl99.github.io/](https://panl99.github.io/)能正常打开就OK了
+    - 将`lpblog\config.toml`中的baseURL改成`baseURL = "https://panl99.github.io/"`
+2. 在站点根目录执行`hugo`生成public目录，只需将该目录传到github上即可
+    - 先在`\lpblog\`下执行`hugo`生成public目录
+    - 再将新建的仓库`Panl99.github.io`pull到public目录下` git pull origin master`
+    - 将public下的所有文件添加到git，并提交到github的`Panl99.github.io`仓库。
+    ```
+    cd public/
+    git init
+    git remote add origin https://github.com/Panl99/Panl99.github.io.git
+    git add -A
+    git commit -m "init hugo"
+    git push -u origin master
+    ```
 
 [目录](#目录)
