@@ -2435,6 +2435,18 @@ public static void main(String[] args) {
 ## [适配器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/adapterpattern)
 ## [装饰者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/decoratorpattern)
 ## [代理模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern)
+- 代理模式指为对象提供一种通过代理的方式来访问并控制该对象行为的方法。在客户端不适合或者不能够直接引用一个对象时，可以通过该对象的代理对象来实现对该对象的访问，可以将该代理对象理解为客户端和目标对象之间的中介者。
+
+### 代理模式实现
+以招聘工作为例
+
+1. 定义接口Company：[Company](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/Company.java)
+2. 定义其实现类HR：[HR](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/HR.java)
+3. 定义代理类Proxy：[Proxy](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/Proxy.java)
+4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/Main.java)
+
+[返回目录](#目录)
+
 ## [外观模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/facadepattern)
 ## [桥接模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/bridgepattern)
 ## [组合模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/compositepattern)
