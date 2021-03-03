@@ -56,6 +56,11 @@
 - [IO TODO](#IO)
 
 - [Java并发编程](#Java并发编程)
+    - [Java线程的创建方式](#Java线程的创建方式)
+        - [继承Thread类](#继承Thread类)
+        - [实现Runnable接口](#实现Runnable接口)
+        - [通过ExecutorService和Callable<Class>实现有返回值的线程 TODO](#通过ExecutorService和Callable<Class>实现有返回值的线程)
+        - [基于线程池](#基于线程池)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
     - [线程池](#线程池)
@@ -130,21 +135,21 @@
     - [位图](#位图)
 - [设计模式](#设计模式)
     - [设计模式的7个原则](#设计模式的7个原则)
-    - [单例模式](#单例模式)
-    - [工厂模式](#工厂模式)
-        - [抽象工厂模式](#抽象工厂模式)
+    - [单例模式 √](#单例模式)
+    - [工厂模式 √](#工厂模式)
+        - [抽象工厂模式 √](#抽象工厂模式)
     - [建造者模式](#建造者模式)
     - [原型模式](#原型模式)
     
     - [适配器模式](#适配器模式)
     - [装饰者模式](#装饰者模式)
-    - [代理模式](#代理模式)
+    - [代理模式 √](#代理模式)
     - [外观模式](#外观模式)
     - [桥接模式](#桥接模式)
     - [组合模式](#组合模式)
     - [享元模式](#享元模式)
 
-    - [观察者模式](#观察者模式)
+    - [观察者模式 ](#观察者模式)
     - [责任链模式](#责任链模式)
     - [迭代器模式](#迭代器模式)
     - [命令模式](#命令模式)
@@ -909,6 +914,78 @@ public static void main(String[] args) throws Exception {
 [返回目录](#目录)
 
 # Java并发编程
+
+## Java线程的创建方式
+Java线程常见的4种创建方式分别为：继承Thread类、实现Runnable接口、通过ExecutorService和Callable<Class>实现有返回值的线程、基于线程池。
+
+### 继承Thread类
+```java
+public class Thread001 extends Thread {
+    @Override
+    public void run() {
+        System.out.println("create a thread001 by extends Thread");
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Thread001 thread001 = new Thread001();
+        thread001.start();
+    }
+}
+```
+
+### 实现Runnable接口
+```java
+public class Thread002 implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("create a thread001 by implements Runnable");
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Thread002 thread002 = new Thread002();
+        new Thread(thread002).start();
+    }
+}
+```
+
+### 通过ExecutorService和Callable<Class>实现有返回值的线程
+
+
+### 基于线程池
+线程池不允许使用Executors去创建( ~~Executors.newFixedThreadPool(11);~~ )，而是通过ThreadPoolExecutor的方式，这样的处理方式让写的同学更加明确线程池的运行规则，规避资源耗尽的风险。 说明：Executors返回的线程池对象的弊端如下：  
+
+- 1）FixedThreadPool和SingleThreadPool:
+    - 允许的请求队列长度为Integer.MAX_VALUE，可能会堆积大量的请求，从而导致OOM。
+- 2）CachedThreadPool:
+    - 允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量的线程，从而导致OOM。
+
+```java
+//org.apache.commons.lang3.concurrent.BasicThreadFactory
+public class Main {
+    public static void main(String[] args) {
+        //1
+        ThreadFactory namedThreadFactory = new BasicThreadFactory.Builder().namingPattern("example-schedule-pool-%d").daemon(false).build();
+        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(2, namedThreadFactory);
+        executorService.execute(() -> System.out.println(Thread.currentThread().getName() + "running..."));
+
+        //2
+        ScheduledExecutorService poolExecutor = new ScheduledThreadPoolExecutor(2);
+        poolExecutor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + "running...");
+            }
+        },0,1, TimeUnit.SECONDS);
+
+
+    }
+}
+```
+- [ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+
+[返回目录](#目录)
 
 ## 异步编程
 ### CompletableFuture
