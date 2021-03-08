@@ -59,13 +59,14 @@
     - [Java线程的创建方式](#Java线程的创建方式)
         - [继承Thread类](#继承Thread类)
         - [实现Runnable接口](#实现Runnable接口)
-        - [通过ExecutorService和Callable<Class>实现有返回值的线程 TODO](#通过ExecutorService和Callable<Class>实现有返回值的线程)
+        - [通过ExecutorService和Callable<Class>实现有返回值的线程 TODO](#通过executorservice和callable实现有返回值的线程)
         - [基于线程池](#基于线程池)
-    - [异步编程-×](#异步编程)
-        - [CompletableFuture](#CompletableFuture)
     - [线程池](#线程池)
+        - [线程池工作原理](#线程池工作原理)
         - [ThreadPoolExecutor](#ThreadPoolExecutor)
         - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+    - [异步编程-×](#异步编程)
+        - [CompletableFuture](#CompletableFuture)
     - [锁](#锁)
         - [synchronized](#synchronized)
         - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
@@ -951,7 +952,7 @@ public class Main {
 ```
 
 ### 通过ExecutorService和Callable<Class>实现有返回值的线程
-
+//TODO
 
 ### 基于线程池
 线程池不允许使用Executors去创建( ~~Executors.newFixedThreadPool(11);~~ )，而是通过ThreadPoolExecutor的方式，这样的处理方式让写的同学更加明确线程池的运行规则，规避资源耗尽的风险。 说明：Executors返回的线程池对象的弊端如下：  
@@ -987,13 +988,36 @@ public class Main {
 
 [返回目录](#目录)
 
-## 异步编程
-### CompletableFuture
-- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
-
-[返回目录](#目录)
-
 ## 线程池
+### 线程池工作原理
+- java线程池主要用于管理线程组及其运行状态，以便java虚拟机更好的利用CPU资源。
+- java线程池工作原理：JVM先根据用户的参数创建一定数量可运行的线程任务，并将其放在队列中，在线程创建后启动这些任务，如果线程数量超过了最大线程数量，则超出的线程排队等待，在有任务执行完毕后，线程池调度器会将释放的可用线程执行队列中等待的任务。
+
+#### 线程复用
+//TODO
+
+#### 线程池核心类
+- Java中的线程池是通过Executor框架实现的，在该框架中用到了Executor 、Executors 、ExecutorService 、ThreadPoolExecutor 、Callable、Future、FutureTask这几个核心类，具体的继承关系如图：
+    - ThreadPoolExecutor是构建线程的核心方法，构造方法：
+    ```java
+    public ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, Executors.defaultThreadFactory(), defaultHandler);
+    }
+    // corePoolSize 线程池中核心线程数
+    // maximumPoolSize 线程池中最大线程数
+    // keepAliveTime 当前线程数超过 corePoolSize 大小时，空闲线程的存活时间
+    // unit keepAliveTime的时间单位
+    // workQueue 任务队列，被提交但尚未被执行的任务存放的地方
+    // threadFactory 线程工厂，用于创建线程，可使用默认的线程工厂或者自定义线程工厂
+    // handler 由于任务过多或者其他原因导致线程池无法处理时的任务拒绝策略
+    ```
+
+![](../resources/static/images/线程池核心类继承关系.png)
+
+#### 
+
+
+
 ### ThreadPoolExecutor
 - ThreadPoolExecutor 的内部工作原理  
     - 如果当前池大小 poolSize 小于 corePoolSize ，则创建新线程执行任务。 
@@ -1003,6 +1027,12 @@ public class Main {
     - 线程池里的每个线程执行完任务后不会立刻退出，而是会去检查下等待队列里是否还有线程任务需要执行，如果在 keepAliveTime 里等不到新的任务了，那么线程就会退出。
 
 - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+
+[返回目录](#目录)
+
+## 异步编程
+### CompletableFuture
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
 
 [返回目录](#目录)
 
