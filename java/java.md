@@ -63,8 +63,9 @@
         - [基于线程池](#基于线程池)
     - [线程池](#线程池)
         - [线程池工作原理](#线程池工作原理)
-        - [ThreadPoolExecutor](#ThreadPoolExecutor)
-        - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+            - [ThreadPoolExecutor](#ThreadPoolExecutor)
+            - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+        - [5种常用的线程池](#5种常用的线程池)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
     - [锁](#锁)
@@ -161,7 +162,9 @@
     - [模板方法](#模板方法)
     - [状态模式](#状态模式)
     - [访问者模式](#访问者模式)
-    
+
+- [Java源码](#Java源码)
+    - [java.util.concurrent](#javautilconcurrent)
     
 - [解析文件-×](#解析文件)
     - [解析json-×](#解析json)
@@ -169,6 +172,8 @@
     - [解析Excel-×](#解析Excel)
     
 - [命名规范](#命名)
+
+- [Netty](netty.md)
 
 [返回目录](#目录)
 
@@ -998,35 +1003,150 @@ public class Main {
 
 #### 线程池核心类
 - Java中的线程池是通过Executor框架实现的，在该框架中用到了Executor 、Executors 、ExecutorService 、ThreadPoolExecutor 、Callable、Future、FutureTask这几个核心类，具体的继承关系如图：
-    - ThreadPoolExecutor是构建线程的核心方法，构造方法：
-    ```java
-    public ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
-        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, Executors.defaultThreadFactory(), defaultHandler);
-    }
-    // corePoolSize 线程池中核心线程数
-    // maximumPoolSize 线程池中最大线程数
-    // keepAliveTime 当前线程数超过 corePoolSize 大小时，空闲线程的存活时间
-    // unit keepAliveTime的时间单位
-    // workQueue 任务队列，被提交但尚未被执行的任务存放的地方
-    // threadFactory 线程工厂，用于创建线程，可使用默认的线程工厂或者自定义线程工厂
-    // handler 由于任务过多或者其他原因导致线程池无法处理时的任务拒绝策略
-    ```
-
 ![](../resources/static/images/线程池核心类继承关系.png)
 
-#### 
+#### ThreadPoolExecutor
+- ThreadPoolExecutor是构建线程的核心方法，构造方法：
+```java
+public ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+    this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, Executors.defaultThreadFactory(), defaultHandler);
+}
+// corePoolSize 线程池中核心线程数
+// maximumPoolSize 线程池中最大线程数
+// keepAliveTime 当前线程数超过 corePoolSize 大小时，空闲线程的存活时间
+// unit keepAliveTime的时间单位
+// workQueue 任务队列，被提交但尚未被执行的任务存放的地方
+// threadFactory 线程工厂，用于创建线程，可使用默认的线程工厂或者自定义线程工厂
+// handler 由于任务过多或者其他原因导致线程池无法处理时的任务拒绝策略
+```
 
-
-
-### ThreadPoolExecutor
-- ThreadPoolExecutor 的内部工作原理  
-    - 如果当前池大小 poolSize 小于 corePoolSize ，则创建新线程执行任务。 
-    - 如果当前池大小 poolSize 大于 corePoolSize ，且等待队列未满，则进入等待队列 
-    - 如果当前池大小 poolSize 大于 corePoolSize 且小于 maximumPoolSize ，且等待队列已满，则创建新线程执行任务。 
-    - 如果当前池大小 poolSize 大于 corePoolSize 且大于 maximumPoolSize ，且等待队列已满，则调用拒绝策略来处理该任务。 
+#### ThreadPoolExecutor工作原理
+Java线程池的工作流程为：线程池刚被创建时，只是向系统申请一个用于执行线程队列和管理线程池的线程资源。在调用execute()添加一个任务时，线程池会按照以下流程执行任务。 
+    - 如果当前池大小 poolSize 小于 corePoolSize ，则线程池就立刻创建新线程 并执行任务。 
+    - 如果当前池大小 poolSize 大于等于 corePoolSize ，且等待队列未满，则将任务放入等待队列。 
+    - 如果当前池大小 poolSize 大于 corePoolSize 且小于 maximumPoolSize ，且等待队列已满，则线程池创建非核心线程 并执行任务。 
+    - 如果当前池大小 poolSize 大于 corePoolSize 且大于等于 maximumPoolSize ，且等待队列已满，则调用拒绝策略来处理该任务（拒绝执行该线程任务并抛出RejectExecutionException异常）。 
     - 线程池里的每个线程执行完任务后不会立刻退出，而是会去检查下等待队列里是否还有线程任务需要执行，如果在 keepAliveTime 里等不到新的任务了，那么线程就会退出。
 
+#### 线程池拒绝策略
+若线程池中的核心线程数被用完且阻塞队列已排满，则此时线程池的线程资源已耗尽，线程池将没有足够的线程资源执行新的任务。为了保证操作系统的安全，线程池将通过拒绝策略处理新添加的线程任务。  
+JDK内置的拒绝策略有四种：AbortPolicy 、CallerRunsPolicy 、DiscardOldestPolicy、DiscardPolicy 
+- AbortPolicy源码
+    - 直接抛出异常，阻止线程正常运行，不做任何处理。
+    ```java
+    public static class AbortPolicy implements RejectedExecutionHandler {
+        public AbortPolicy() { }
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            throw new RejectedExecutionException("Task " + r.toString() +
+                                                 " rejected from " +
+                                                 e.toString());
+        }
+    }
+    ``` 
+- CallerRunsPolicy源码
+    - 如果被丢弃的线程任务未关闭，则执行该线程任务。注意：CallerRunsPolicy拒绝策略不会真的丢弃任务。
+    ```java
+    public static class CallerRunsPolicy implements RejectedExecutionHandler {
+        public CallerRunsPolicy() { }
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (!e.isShutdown()) {
+                r.run();  //执行被丢弃的任务
+            }
+        }
+    }
+    ```
+- DiscardOldestPolicy源码
+    - 移除线程队列中最早的一个线程任务，并尝试提交当前任务。
+    ```java
+    public static class DiscardOldestPolicy implements RejectedExecutionHandler {
+        public DiscardOldestPolicy() { }
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (!e.isShutdown()) {
+                e.getQueue().poll();  //丢弃线程中最老的一个线程任务
+                e.execute(r);  //提交当前任务
+            }
+        }
+    }
+    ```
+- DiscardPolicy源码
+    - 丢弃当前的线程任务而不做任何处理。
+    - 如果系统允许在资源不足的情况下丢弃部分任务，则这将是保障系统安全、稳定的一种很好的方案。
+    ```java
+        public static class DiscardPolicy implements RejectedExecutionHandler {
+            public DiscardPolicy() { }
+            public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            }
+        }
+    ```
+- 自定义拒绝策略DiscardOldestNPolicy
+    - 根据传入的参数丢弃最老的 N个线程，以便在出现异常时释放更多的资源，保障后续线程任务整体、稳定地运行。
+    ```java
+    public static class DiscardOldestNPolicy implements RejectedExecutionHandler {
+        private int discardNumber = 5;
+        private List<Runnable> discardList = new ArrayList<Runnable>();
+        public DiscardOldestNPolicy(int discardNumber) {
+            this.discardNumber = discardNumber;
+        }
+        @Override
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (e.getQueue().size() > discardNumber) {
+                e.getQueue().drainTo(discardList, discardNumber);  //批量移除线程队列中discardNumber个线程任务
+                discardList.clear();  //清空discardList列表
+                if (!e.isShutdown()) {
+                    e.execute(r);  //提交当前任务
+                }
+            }
+        }
+    }
+    ```
+
+[返回目录](#目录)
+
+### 5种常用的线程池
+Java定义了Executor接口并在该接口中定义了execute()用于执行一个线程任务，然后通过ExecutorService实现Executor接口并执行具体的线程操作。ExecutorService接口有多个实现类可用于创建不同的线程池
+
+#### newCachedThreadPool
+- 创建一个可缓存线程池。
+- 它在创建新线程时如果有可重用的线程，则重用它们，否则重新创建一个新的线程并将其添加到线程池中。
+- 对于执行时间很短的任务，newCachedThreadPool能很大程度通过重用线程进而提高系统的性能。
+- 在线程池的keepAliveTime时间超过默认的 60秒后，该线程会被终止并从缓存中移除， 因此在没有线程任务运行时，newCachedThreadPool将不会占用系统的线程资源。
+- ~~ExecutorService cachedThreadPool = Executors.newCachedThreadPool();~~
+
+#### newFixedThreadPool
+- 创建一个固定线程数量的线程池，并将线程资源存放在队列中循环使用。
+- 在newFixedThreadPool线程池中，若处于活动状态的线程数量大于等于核心线程池的数量，则新提交的任务将在阻塞队列中排队，直到有可用的线程资源。
+- ~~ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);~~
+
+#### newScheduledThreadPool
+- 创建一个可定时调度的线程池，可设置在给定的延迟时间后执行或者定期执行某个线程任务。
+```java
+ScheduledExecutorService scheduledThreadPool = new ScheduledThreadPoolExecutor(3);
+//创建一个延迟3秒执行的线程
+scheduledThreadPool.schedule(new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("delay 3 seconds execute.");
+    }
+}, 3, TimeUnit.SECONDS);
+
+//创建一个初始化延迟1秒执行，后每3秒执行一次的线程
+scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("delay 1 seconds, repeat execute every 3 seconds.");
+    }
+}, 1, 3, TimeUnit.SECONDS);
+```
 - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+
+#### newSingleThreadExecutor
+- 创建一个有且只有一个可用的线程的线程池。
+- 在该线程停止或发生异常时，newSingleThreadExecutor线程池会启动一个新的线程来代替该线程继续执行任务。
+- ~~ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();~~
+
+#### newWorkStealingPool
+- 足够大小线程池，jdk1.8新增
+- 创建持有足够线程的线程池来达到快速运算的目的，在内部通过使用多个队列来减少各个线程调度产生的竞争。这里所说的有足够的线程指JDK根据当前线程的运行需求向操作系统申请足够的线程，以保障线程的快速执行，并很大程度地使用系统资源，提高并发计算的效率，省去用户根据CPU资源估算并行度的过程。当然，如果开发者想自己定义线程的并发数，则也可以将其作为参数传入。
 
 [返回目录](#目录)
 
@@ -2754,6 +2874,11 @@ new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.print
 
 ## [状态模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/statepattern)
 ## [访问者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/visitorpattern)
+
+[返回目录](#目录)
+
+# Java源码
+## java.util.concurrent
 
 [返回目录](#目录)
 
