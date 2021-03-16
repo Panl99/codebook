@@ -66,6 +66,8 @@
             - [ThreadPoolExecutor](#ThreadPoolExecutor)
             - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
         - [5种常用的线程池](#5种常用的线程池)
+        - [线程的生命周期](#线程的生命周期)
+        - [线程的基本方法](#线程的基本方法)
     - [异步编程-×](#异步编程)
         - [CompletableFuture](#CompletableFuture)
     - [锁](#锁)
@@ -165,6 +167,10 @@
 
 - [Java源码](#Java源码)
     - [java.util.concurrent](#javautilconcurrent)
+        - [ConcurrentHashMap源码及使用](#ConcurrentHashMap源码及使用)
+        - [CountDownLatch源码及使用](#CountDownLatch源码及使用)
+    - [java.net](#javanet)
+        - [InetAddress源码及使用](#InetAddress源码及使用)
     
 - [解析文件-×](#解析文件)
     - [解析json-×](#解析json)
@@ -414,6 +420,8 @@
 
 - ConcurrentHashMap1.8数据结构
 ![ConcurrentHashMap1.8数据结构](../resources/static/images/ConcurrentHashMap1.8数据结构.PNG)
+
+- [ConcurrentHashMap源码及使用](#ConcurrentHashMap源码及使用)
 
 ### LinkedHashMap
 - FIFO时有序
@@ -1147,6 +1155,96 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 #### newWorkStealingPool
 - 足够大小线程池，jdk1.8新增
 - 创建持有足够线程的线程池来达到快速运算的目的，在内部通过使用多个队列来减少各个线程调度产生的竞争。这里所说的有足够的线程指JDK根据当前线程的运行需求向操作系统申请足够的线程，以保障线程的快速执行，并很大程度地使用系统资源，提高并发计算的效率，省去用户根据CPU资源估算并行度的过程。当然，如果开发者想自己定义线程的并发数，则也可以将其作为参数传入。
+
+[返回目录](#目录)
+
+### 线程的生命周期
+- 新建（New）、就绪（Runnable）、运行（Running）、阻塞（Blocked）、死亡（Dead）
+- 线程状态转换流程：
+    - （1）调用new方法新建一个线程，这时线程处于新建状态。
+    - （2）调用start方法启动一个线程，这时线程处于就绪状态。
+    - （3）处于就绪状态的线程等待线程获取CPU资源，在等待其获取CPU资源后线程会执行run方法进入运行状态。
+    - （4）正在运行的线程在调用了yield方法或失去处理器资源时，会再次进入就绪状态。
+    - （5）正在执行的线程在执行了sleep方法、I/O阻塞、等待同步锁、等待通知、调用suspend方法等操作后，会挂起并进入阻塞状态，进入Blocked池。
+    - （6）阻塞状态的线程由于出现sleep时间已到、I/O方法返回、获得同步锁、收到通知、调用resume方法等情况，会再次进入就绪状态，等待CPU时间片的轮询。该线程在获取CPU资源后，会再次进入运行状态。
+    - （7）处于运行状态的线程，在调用run方法或call方法正常执行完成、调用stop方法停止线程或者程序执行错误导致异常退出时，会进入死亡状态。
+
+![线程状态转化](../resources/static/images/线程状态转化.png)
+
+[返回目录](#目录)
+
+### 线程的基本方法
+|方法|作用|
+|---|---|
+|wait|线程等待：调用wait方法的线程会进入WAITING状态，只有等到其他线程的通知或被中断后才会返回。需要注意的是，在调用wait方法后会释放对象的锁，因此wait方法一般被用于同步方法或同步代码块中。|
+|sleep|线程睡眠：调用sleep方法会导致当前线程休眠。与wait方法不同的是，sleep方法不会释放当前占有的锁，会导致线程进入TIMED-WATING状态。|
+|yield|线程让步：调用yield方法会使当前线程让出（释放）CPU执行时间片，与其他线程一起重新竞争CPU时间片。在一般情况下，优先级高的线程更有可能竞争到CPU时间片。|
+|[interrupt](#interrupt)|线程中断：interrupt方法用于向线程发行一个终止通知信号，会影响该线程内部的一个中断标识位，这个线程本身并不会因为调用了interrupt方法而改变状态（阻塞、终止等）。状态的具体变化需要等待接收到中断标识的程序的最终处理结果来判定。|
+|join|线程加入：join方法用于等待其他线程终止，如果在当前线程中调用一个线程的join方法，则当前线程转为阻塞状态，等到另一个线程结束，当前线程再由阻塞状态转为就绪状态，等待获取CPU的使用权。在很多情况下，主线程生成并启动了子线程，需要等到子线程返回结果并收集和处理再退出，这时就要用到join方法。|
+|notify|线程唤醒：Object类有个notify方法，用于唤醒在此对象监视器上等待的一个线程，如果所有线程都在此对象上等待，则会任意选择唤醒其中一个线程。|
+|notifyAll|线程唤醒：唤醒在监视器上等待的所有线程。|
+|[setDaemon](#守护线程)|后台守护线程：setDaemon方法用于定义一个守护线程，也叫作“服务线程”，该线程是后台线程，有一个特性，即为用户线程提供公共服务，在没有用户线程可服务时会自动离开。|
+|[sleep方法与wait方法的区别](#sleep方法与wait方法的区别)||
+|[start方法与run方法的区别](#start方法与run方法的区别)||
+|[终止线程的4种方式](#终止线程的4种方式)||
+
+
+#### interrupt
+- 调用interrupt方法并不会中断一个正在运行的线程，也就是说处于Running状态的线程并不会因为被中断而终止，仅仅改变了内部维护的中断标识位而已。
+- 若因为调用sleep方法而使线程处于TIMED-WATING状态，则这时调用interrupt方法会抛出InterruptedException，使线程提前结束TIMED-WATING状态。
+- 许多声明抛出InterruptedException 的方法如：Thread.sleep(long mills)，在抛出异常前都会清除中断标识位，所以在抛出异常后调用isInterrupted方法将会返回false。
+- 中断状态是线程固有的一个标识位，可以通过此标识位安全终止线程。比如，在想终止一个线程时，可以先调用该线程的interrupt方法，然后在线程的run方法中根据该线程isInterrupted方法的返回状态值安全终止线程。
+
+#### 守护线程
+- 守护线程的优先级较低，用于为系统中的其他对象和线程提供服务。将一个用户线程设置为守护线程的方法是在线程对象创建之前用线程对象的setDaemon(true)来设置。
+- 在后台守护线程中定义的线程也是后台守护线程。后台守护线程是JVM级别的，比如垃圾回收线程就是一个经典的守护线程，在我们的程序中不再有任何线程运行时，程序就不会再产生垃圾，垃圾回收器也就无事可做，所以在回收JVM上仅剩的线程时，垃圾回收线程会自动离开。它始终在低级别的状态下运行，用于实时监控和管理系统中的可回收资源。
+- 守护线程是运行在后台的一种特殊线程，独立于控制终端并且周期性地执行某种任务或等待处理某些已发生的事件。也就是说，守护线程不依赖于终端，但是依赖于JVM，与JVM“同生共死”。在JVM中的所有线程都是守护线程时，JVM就可以退出了，如果还有一个或一个以上的非守护线程，则JVM不会退出。
+
+#### sleep方法与wait方法的区别
+- sleep方法属于Thread类，wait方法则属于Object类。
+- sleep方法暂停执行指定的时间，让出CPU 给其他线程，但其监控状态依然保持，在指定的时间过后又会自动恢复运行状态。
+- 在调用sleep方法的过程中，线程不会释放对象锁。
+- 在调用wait方法时，线程会放弃对象锁，进入等待此对象的等待锁池，只有针对此对象调用notify方法后，该线程才能进入对象锁池准备获取对象锁，并进入运行状态。
+
+#### start方法与run方法的区别
+- start方法用于启动线程，真正实现了多线程运行。在调用了线程的start方法后，线程会在后台执行，无须等待run方法体的代码执行完毕，就可以继续执行下面的代码。
+- 在通过调用Thread类的start方法启动一个线程时，此线程处于就绪状态，并没有运行。
+- run方法也叫作线程体，包含了要执行的线程的逻辑代码，在调用run方法后，线程就进入运行状态，开始运行run方法中的代码。在run方法运行结束后，该线程终止，CPU再调度其他线程。
+
+#### 终止线程的4种方式
+1. 正常运行结束。
+2. 使用退出标志退出线程。
+    - 可以使用一个变量来控制循环，比如设置一个boolean类型的标志，并通过设置这个标志为true或false来控制while循环是否退出。
+    ```java
+    public class ThreadSafe extends Thread {
+        public volatile boolean exit = false;
+        public void run() {
+            while (!exit) {
+                //业务逻辑
+            }
+        }
+    }
+    ```
+3. 使用Interrupt方法终止线程
+    - （1）线程处于阻塞状态。例如，在使用了sleep、调用锁的wait或者调用socket的receiver、accept等方法时，会使线程处于阻塞状态。在调用线程的interrupt方法时，会抛出InterruptException异常。我们通过代码捕获该异常，然后通过break跳出状态检测循环，可以有机会结束这个线程的执行。通常很多人认为只要调用interrupt方法就会结束线程， 这实际上理解有误， 一定要先捕获InterruptedException异常再通过break跳出循环，才能正常结束run方法。
+    ```java
+    public class ThreadSafe extends Thread {
+        @Override
+        public void run() {
+            while (!isInterrupted()) { //在非阻塞过程中通过判断中断标志来退出
+                try {
+                    Thread.sleep(5000); //在阻塞过程中捕获中断异常来退出
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break; //捕获异常后执行break跳出循环
+                }
+            }
+        }
+    }
+    ```
+    - （2）线程未处于阻塞状态。此时，使用isInterrupted方法判断线程的中断标志来退出循环。在调用interrupt方法时，中断标志会被设置为true，并不能立刻退出线程，而是执行线程终止前的资源释放操作，等待资源释放完毕后退出该线程。
+4. 使用stop方法终止线程：不安全
+    - 在程序中可以直接调用Thread.stop方法强行终止线程，该线程的子线程会抛出ThreadDeatherror错误，并且释放子线程持有的所有锁。加锁的代码块一般被用于保护数据的一致性，如果在调用Thread.stop方法后导致该线程所持有的所有锁突然释放而使锁资源不可控制，被保护的数据就可能出现不一致的情况，其他线程在使用这些被破坏的数据时，有可能使程序运行错误。因此，并不推荐采用这种方法终止线程。
 
 [返回目录](#目录)
 
@@ -2879,6 +2977,13 @@ new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.print
 
 # Java源码
 ## java.util.concurrent
+### ConcurrentHashMap源码及使用
+
+### CountDownLatch源码及使用
+
+
+## java.net
+### InetAddress源码及使用
 
 [返回目录](#目录)
 
