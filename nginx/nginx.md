@@ -46,6 +46,8 @@
     - [Lua通用库](#Lua通用库)
 - [nginx.conf](#nginx.conf)
 
+- [Nginx高可用-keepalived](#Nginx高可用)
+
 [目录](#目录)
 
 # Nginx
@@ -158,6 +160,12 @@
     2. 多个worker进程处理请求可以提高服务健壮性
     3. 1个worker进程同时处理的请求数只受限于内存大小，多个worker进程处理并发请求时几乎没有同步锁的限制，worker进程一般不会睡眠，因此worker进程数等于cpu核心数时，进程间切换代价最小
 
+- 连接数：worker_connection
+    - 发送请求，占用worker的2 或者 4个连接数。
+    - nginx有1个master，有四个worker，每个worker支持最大连接数1024，支持的最大并发数是多少？
+        - 普通静态访问最大并发数：`worker_connections * worker_processes / 2`
+        - 若是HTTP做反向代理，最大并发数：`worker_connections * worker_processes / 4`
+
 [返回目录](#目录)
   
 ## 配置语法
@@ -215,7 +223,7 @@
 |使用accept锁后到真正建立连接之间的延迟时间|accept_mutex_delay "Nms";|accept_mutex_delay 500ms;|在使用accept锁后，同一时间只有一个worker进程能够取到accept锁。这个accept锁不是阻塞锁，如果取不到会立刻返回。如果有一个worker进程试图取accept锁而没有取到，它至少要等accept_mutex_delay定义的时间间隔后才能再次试图取锁。|
 |批量建立新连接|***multi_accept "on/off";***|multi_accept off;|当事件模型通知有新连接时，尽可能地对本次调度中客户端发起的所有TCP请求都建立连接。|
 |选择事件模型|***use*** "kqueue/rtsig/***epoll***/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
-|每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。|
+|每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。1个请求占用worker的2或者4个连接数|
 
 [返回目录](#目录)
 
@@ -1489,6 +1497,77 @@ Nginx 的工作流程是：在编译阶段选择要使用的模块并编译进�
 
 [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
 
+[返回目录](#目录)
 
+# Nginx高可用
+1. 配置Nginx高可用集群：
+    - 需要两台服务器安装 nginx：192.168.17.129 、192.168.17.131
+    - 需要两台服务器安装 keepalived
+    - ~~需要虚拟 ip~~
+
+![nginx高可用](../resources/static/images/nginx高可用.png)
+
+2. 在两台服务器安装 keepalived
+   - 使用 yum 命令进行安装：`yum install keepalived -y`
+   - 安装之后，在 etc 里面生成目录 keepalived ，有文件`keepalived.conf`
+3. 完成高可用配置（主从配置）
+    - （1）修改 /etc/keepalived/keepalivec.conf 配置文件
+    ```
+    global_defs {
+        notification_email {
+            acassen@firewall.loc
+            failover@firewall.loc
+            sysadmin@firewall.loc
+        }
+        notification_email_from Alexandre.Cassen@firewall.loc
+        smtp_server 1 92.168.17.129
+        smtp_connect_timeout 30
+        router_id LVS_DEVEL
+    }
+    
+    vrrp_script chk_http_port {
+        script "/usr/local/src/nginx_check.sh"
+        interval 2 #（检测脚本执行的间隔）
+        weight 2
+    }
+    
+    vrrp_instance VI_1 {
+        state BACKUP # 备份服务器上将 MASTER 改为 BACKUP
+        interface ens33 // 网卡
+        virtual_router_id 51 # 主、备机的 virtual_router_id 必须相同
+        priority 90 # 主、备机取不同的优先级，主机值较大，备份机值较小
+        advert_int 1 
+        authentication {
+            auth_type PASS
+            auth_pass 1111
+        }
+        virtual_ipaddress {
+            192.168.17.50 # VRRP H 虚拟地址
+        }
+    }
+    ```
+    - （2）在 /usr/local/src 添加检测脚本
+    ```
+    #!/bin/bash
+    A=`ps C nginx no header |wc l`
+    if [ $A eq 0 ];then
+        /usr/local/nginx/sbin/nginx
+        sleep 2
+        if [ `ps C nginx no header |wc l` eq 0 ];then
+            killall keepalived
+        fi
+    fi
+    ```
+    - （3）把两台服务器上 nginx 和 keepalived 启动
+        - 启动 nginx：`./nginx`
+        - 启动 keepalived：`systemctl start keepalived.service`
+4. 测试：
+    - （1）在浏览器地址栏输入 虚拟 ip 地址 `192.168.17.50`
+    ![](../resources/static/images/nginx高可用测试1.png)
+    ![](../resources/static/images/nginx高可用测试2.png)
+
+    - （2）把主服务器 `192.168.17.129` nginx 和 keepalived 停止，再输入 `192.168.17.50`
+    ![](../resources/static/images/nginx高可用测试3.png)
+    ![](../resources/static/images/nginx高可用测试4.png)
 
 [返回目录](#目录)
