@@ -776,6 +776,9 @@ grep -vxFf $SHELL_LOG $TEST_LOG
 # 查找/test/目录下(不包含子目录)2天以前的目录名
 find /test/ -maxdepth 1 -type d -mtime +1
 
+#行号
+${LINENO}
+
 ```
 
 [目录](#目录)
