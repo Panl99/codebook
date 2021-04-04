@@ -5,6 +5,7 @@
 | |[Java诊断工具：arthas  TODO](https://github.com/Panl99/codebook/blob/master/arthas/arthas.md)|
 | |[annotation.md 1/n](https://github.com/Panl99/codebook/blob/master/java/annotation.md)|
 | |[netty.md TODO](https://github.com/Panl99/codebook/blob/master/java/netty.md)|
+| |[数据结构可视化工具：https://www.cs.usfca.edu/~galles/visualization/Algorithms.html](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html)|
 |Spring|[SpringAll.md ✔](https://github.com/Panl99/codebook/tree/master/spring/SpringAll.md)|
 | |[~~spring.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/spring.md) 、 [~~springboot.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/springboot.md) 、 [~~springcloud.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/springcloud.md)|
 |NoSQL|[redis.md ✔](https://github.com/Panl99/codebook/blob/master/redis_mongodb/redis.md)|
@@ -28,12 +29,13 @@
 | |[Python-100天从新手到大师：https://github.com/jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days)|
 |Go|[go.md TODO](https://github.com/Panl99/codebook/blob/master/go/go.md)|
 |Git|[git.md 1/n](https://github.com/Panl99/codebook/blob/master/git_maven/git.md)|
-|Maven|[maven.md TODO](https://github.com/Panl99/codebook/blob/master/git_maven/maven.md)|
+|Maven|[maven.md √](https://github.com/Panl99/codebook/blob/master/git_maven/maven.md)|
 |BigData|[hadoop.md](https://github.com/Panl99/codebook/blob/master/bigdata/hadoop.md)|
 | |[spark.md](https://github.com/Panl99/codebook/blob/master/bigdata/spark.md)|
 | |[hive.md](https://github.com/Panl99/codebook/blob/master/bigdata/hive.md)|
 | |[hbase.md](https://github.com/Panl99/codebook/blob/master/bigdata/hbase.md)|
 | |[flink.md ×](https://github.com/Panl99/codebook/blob/master/bigdata/flink.md)|
+|MinIo|对象存储服务|
 
 # 项目
 - [fullstack-tutorial：🚀 fullstack tutorial 2020，后台技术栈/架构师之路/全栈开发社区](https://github.com/Panl99/fullstack-tutorial)
