@@ -18,6 +18,7 @@
     - [添加SSH公钥](#添加SSH公钥)
     - [Git推送到多个远端库](#Git推送到多个远端库)
     - [使用github1s在线vscode查看项目](#使用github1s在线vscode查看项目)
+    - [GitHub加速](#GitHub加速)
 - [hugo搭建个人博客](#hugo搭建个人博客)
     - [Windows安装hugo](#Windows安装hugo)
     - [hugo博客托管到github](#hugo博客托管到github)
@@ -292,6 +293,12 @@ Commercial support is available at
 
 ## 使用github1s在线vscode查看项目
 [使用github1s在线使用vscode查看项目codebook](https://github1s.com/Panl99/codebook)
+
+[目录](#目录)
+
+## GitHub加速
+
+[dev-sidecar](https://github.com/docmirror/dev-sidecar)
 
 [目录](#目录)
 
