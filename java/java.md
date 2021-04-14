@@ -73,6 +73,7 @@
     - [锁](#锁)
         - [乐观锁与悲观锁](#乐观锁与悲观锁)
         - [自旋锁](#自旋锁)
+        - [公平锁与非公平锁](#公平锁与非公平锁)
         - [synchronized](#synchronized)
         - [ReentrantLock](#ReentrantLock)
         - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
@@ -136,42 +137,29 @@
     - [队列](#队列)
     - [链表](#链表)
     - [散列表](#散列表)
-    - [二叉树](#二叉树)
-    - [红黑树](#红黑树)
+    - [树](#树)
+        - [二叉树](#二叉树)
+        - [红黑树](#红黑树)
+        - [B Tree](#B-Tree)
+        - [B+ Tree](#B+-Tree)
     - [图](#图)
     - [位图](#位图)
 - [设计模式](#设计模式)
-    - [设计模式的7个原则](#设计模式的7个原则)
-    - [单例模式 √](#单例模式)
-    - [工厂模式 √](#工厂模式)
-        - [抽象工厂模式 √](#抽象工厂模式)
-    - [建造者模式](#建造者模式)
-    - [原型模式](#原型模式)
-    
-    - [适配器模式](#适配器模式)
-    - [装饰者模式](#装饰者模式)
-    - [代理模式 √](#代理模式)
-    - [外观模式](#外观模式)
-    - [桥接模式](#桥接模式)
-    - [组合模式](#组合模式)
-    - [享元模式](#享元模式)
 
-    - [观察者模式 ](#观察者模式)
-    - [责任链模式](#责任链模式)
-    - [迭代器模式](#迭代器模式)
-    - [命令模式](#命令模式)
-    - [备忘录模式](#备忘录模式)  
-    - [中介者模式](#中介者模式)
-    - [解释器模式](#解释器模式)
-    - [策略模式](#策略模式)
-    - [模板方法](#模板方法)
-    - [状态模式](#状态模式)
-    - [访问者模式](#访问者模式)
+|[设计模式的7个原则](#设计模式的7个原则)||||||
+|---|---|---|---|---|---|
+|创建型模式| [单例模式 √](#单例模式) | [工厂模式 √](#工厂模式) | [抽象工厂模式 √](#抽象工厂模式) | [建造者模式](#建造者模式) | [原型模式](#原型模式) |
+|结构型模式| [适配器模式](#适配器模式) | [装饰者模式](#装饰者模式) | [代理模式 √](#代理模式) | [外观模式](#外观模式) | [桥接模式](#桥接模式) |
+| | [组合模式](#组合模式) | [享元模式](#享元模式) | [过滤器模式](#过滤器模式) |||
+|行为型模式| [观察者模式 ](#观察者模式) | [责任链模式](#责任链模式) | [迭代器模式](#迭代器模式) | [命令模式](#命令模式) | [备忘录模式](#备忘录模式) |
+| | [中介者模式](#中介者模式) | [解释器模式](#解释器模式) | [策略模式](#策略模式) | [模板方法](#模板方法) | [状态模式](#状态模式) |
+| | [访问者模式](#访问者模式) |||||
 
 - [Java源码](#Java源码)
     - [java.util.concurrent](#javautilconcurrent)
         - [ConcurrentHashMap源码及使用](#ConcurrentHashMap源码及使用)
         - [CountDownLatch源码及使用](#CountDownLatch源码及使用)
+        - [Semaphore源码及使用](#Semaphore源码及使用)
     - [java.net](#javanet)
         - [InetAddress源码及使用](#InetAddress源码及使用)
     
@@ -265,6 +253,10 @@
     - 从根节点到叶节点或空子节点的每条路径，必须包含相同数目的黑色节点（即相同的黑色高度）
 
 ![红黑树](../resources/static/images/redblackTree.PNG)
+
+- 实现一个数字线程安全自增的方式
+    - 原子类：[AtomicInteger](#CAS应用--AtomicInteger源码分析)
+    - 
     
 [返回目录](#目录)
 
@@ -383,7 +375,7 @@
 - 底层：哈希表
 - 唯一性保证：hashCode()和equals()
 - **线程安全HashSet**
-    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/leetcode/tree/master/java/src/util/ConcurrentHashSet.java)
+    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/util/ConcurrentHashSet.java)
     - `CopyOnWriteArraySet`
 
 #### LinkedHashSet
@@ -2699,17 +2691,27 @@ public static Optional<Integer> stringToInt(String s) {
 [返回目录](#目录)
 
 # 数据结构
+> [数据结构可视化工具](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html)
+
 ## 栈
+- `Stack` 允许在同一端进行删除插入和删除操作的特殊线性表。
+- 特性：先进后出(FILO)
+- 栈的实现：
+```java
+
+```
 
 ## 队列
 
 ## 链表
 
 ## 散列表
+`Hash Table` 也叫哈希表
 
-## 二叉树
+## 树
+### 二叉树
 
-## 红黑树
+### 红黑树
 - Red-Black Tree，是一种自平衡二叉查找树。在红黑树每个节点上都多出一个存储位表示节点的颜色，颜色只能是**红** 或者 **黑**。
 - **红黑树特性**：
     - 每个节点非黑即红。
@@ -2718,10 +2720,15 @@ public static Optional<Integer> stringToInt(String s) {
     - 如果一个节点是红色的，那它的子节点必须为黑色的。
     - 从一个节点到它的子孙节点的所有路径上都包含相同数量的黑色节点。
     - ![红黑树](../resources/static/images/redblackTree.PNG)
+    
+### B Tree
+
+### B+ Tree
 
 ## 图
 
 ## 位图
+`Bitmap` 通常基于数组实现
 
 [返回目录](#目录)
 
@@ -3065,6 +3072,7 @@ new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.print
 
 ### CountDownLatch源码及使用
 
+### Semaphore源码及使用
 
 ## java.net
 ### InetAddress源码及使用
