@@ -130,7 +130,7 @@
 
 - 访问一个不存在的key，缓存不起作用，请求会穿透到DB，流量大时DB就会挂掉。
 - 解决方案：
-  - 采用[布隆过滤器](#布隆过滤器)，使用一个足够大的bitmap，用于存储可能访问的key，不存在的key直接过滤掉。
+  - 采用[布隆过滤器](#布隆过滤器)，使用一个足够大的[bitmap](../java/java.md/#位图)，用于存储可能访问的key，不存在的key直接过滤掉。
     - 布隆过滤器可使用`guava`提供：[BloomFilterUtil](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/util/BloomFilterUtil.java) 
         - 但是guava只适用单机场景，分布式场景可使用[RedisBloom](https://github.com/RedisBloom/RedisBloom)
 
