@@ -2748,7 +2748,7 @@ public static Optional<Integer> stringToInt(String s) {
         - ...
         - 给定任一整数M，那么M的下标为：M / 32，M的位置：M % 32。
     
-    ![](../resources/static/images/bitmap存储.png)
+    ![bitmap存储](../resources/static/images/bitmap存储.png)
 
 - 添加：例如存放数字：5
     - 计算位置：5/32=0，5%32=5，即5应该在tmp[0]的第5个位置（00100000）。
@@ -2760,14 +2760,14 @@ public static Optional<Integer> stringToInt(String s) {
     b[0] = b[0] + (5/8) | (1<<(5%8))
     ```
   
-    ![](../resources/static/images/bitmap添加一个数.png)
+    ![bitmap添加一个数](../resources/static/images/bitmap添加一个数.png)
 
 - 删除：例如删除数字：6
     - 删除方法：只需将该数所在的位置为0即可：1左移6位，就到达6这个数字所代表的位，然后按位取反，最后与原数按位与。
         - b[0] = b[0] & (~(1<<6))
     - 公式：`b[0] = b[0] & (~(1<<(i%8)))`
     
-    ![](../resources/static/images/bitmap删除一个数.png)
+    ![删除一个数](../resources/static/images/bitmap删除一个数.png)
     
 - 查找：例如查找数字：3
     - 查找方法：判断该数所在的位是0还是1。
