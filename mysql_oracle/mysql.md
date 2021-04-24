@@ -651,9 +651,9 @@ MySQL中的默认存储引擎是InnoDB，支持事务处理，而MyISAM不支持
 3. 要删除所有二进制日志并再次从头开始，请执行`RESET MASTER`:
     - `mysql> RESET MASTER;`
     
-使用replication清除二进制日志是非安全的方法。安全的方法是使用**`mysqlbinlogpurge`**脚本（检查每一个从库读取的二进制日志的情况，然后删除它们）。
+使用replication清除二进制日志是非安全的方法。安全的方法是使用 **`mysqlbinlogpurge`** 脚本（检查每一个从库读取的二进制日志的情况，然后删除它们）。
 
-**`mysqlbinlogpurge`**的使用：  
+**`mysqlbinlogpurge`** 的使用：  
 原理：在一台服务器上执行mysqlbinlogpurge脚本，并指定主库和从库。该脚本连接所有的从库，并找出从库中最新的二进制日志被应用到什么位置，然后在主库上清除直到那个位置的二进制日志。  
 步骤：
 1. 随便连接到一台服务器，并执行mysqlbinlogpurge脚本：
