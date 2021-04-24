@@ -1,4 +1,5 @@
 > [MySQL 8 Cookbook]()
+> [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)
 
 # 目录
 - [mysql常用函数](#mysql常用函数)
@@ -8,35 +9,30 @@
         - [库操作](#库操作)
         - [表操作](#表操作)
     - [数据操作语言DML](#数据操作语言DML)
-        - [插入](#插入)
-        - [修改](#修改)
-        - [删除](#删除)
-        - [查询](#查询)
-    - [存储过程](#存储过程)
-    - [函数](#函数)
-    - [游标](#游标)
-    - [触发器](#触发器)
-    - [视图](#视图)
-    - [事件](#事件)
+        - [插入](#插入)，[修改](#修改)，[删除](#删除)，[查询](#查询)
+    - [存储过程](#存储过程)，[函数](#函数)，[游标](#游标)，[触发器](#触发器)，[视图](#视图)，[事件](#事件)
 - [事务](#事务)
     - [事务处理](#事务处理)
+    - [隔离级别](#隔离级别)
     - [锁](#锁)
-- [备份与恢复](#备份与恢复)
-    - [备份](#备份)
-    - [恢复](#恢复)
 - [二进制日志](#二进制日志)
+    - [二进制日志操作](#二进制日志操作)
+    - [二进制日志格式](#二进制日志格式)
+    - [从二进制日志中提取语句 TODO](#从二进制日志中提取语句)
+- [备份与恢复](#备份与恢复)
+    - [备份](#备份) ([mysqldump备份](#使用mysqldump备份)，[二进制日志备份](#使用二进制日志备份))
+    - [恢复](#恢复) ([从mysqldump恢复](#从mysqldump恢复)，[从普通文件备份中恢复](#从普通文件备份中恢复)，[执行时间点恢复](#执行时间点恢复))
 - [复制](#复制)
 - [性能优化](#性能优化)
     - [优化顺序](#优化顺序)
-    - [存储引擎](#存储引擎)
+    - [存储引擎](#存储引擎) ([InnoDB](#InnoDB)，[MyISAM](#MyISAM))
     - [explain](#explain)
     - [索引](#索引)
         - [什么时候使用索引](#什么时候使用索引)
         - [使用索引注意](#使用索引注意)
         - [添加索引](#添加索引)
         - [删除索引](#删除索引)
-    - [分析慢查询](#分析慢查询)
-        - [使用pt-query-digest分析慢查询](#使用pt-query-digest分析慢查询)
+    - [慢查询日志](#慢查询日志)
     - [优化数据类型](#优化数据类型)
     - [分库分表](#分库分表)
         - [分表](#分表)
@@ -563,24 +559,237 @@ delete from customers where id=4 and first_name='Rajiv';
 [返回目录](#目录)
 
 # 事务
+事务就是一组应该一起成功或一起失败的SQL 语句。
+
+事务应该具备：原子性(Atomicity)、一致性(Consistency)、隔离性(Isolation)、持久性(Durability)，简称ACID。
+
+MySQL中的默认存储引擎是InnoDB，支持事务处理，而MyISAM不支持事务处理。
+
 ## 事务处理
+1. 启动事务语句：`START TRANSACTION;` 或 `BEGIN;`
+2. 执行需要包含在事务中的语句
+3. 完成事务 提交数据：`COMMIT;`
+4. 撤销事务 回滚：`ROLLBACK;`
+
+默认`autocommit`的状态是`ON`，所有单独的语句－旦被执行就会被提交，除非该语句在`BEGIN ... COMMIT`块中。要禁用`autocommit`，执行：`SET autocommit=0;`
+
+## 隔离级别
+当两个或多个事务同时发生时，隔离级别定义了一个事务与其他事务在资源或者数据修改方面的隔离程度。
+
+要更改隔离级别，请执行`SET @@ transaction_isolation='READ-COMMITTED';`。
+
+4种类型隔离级别：
+
+|隔离级别|说明|
+|---|---|
+|读取未提交(read uncommitted) | 当前事务可以读取由另一个未提交的事务写人的数据，这也称为**脏读(dirty read)**。 |
+|读提交(read committed) | 当前事务只能读取另一个事务提交的数据，这也称为**不可重复读取(non-repeatable read)**。 |
+|可重复读取(repeatable read) | 一个事务通过第一条语句只能看到相同的数据，即使另一个事务已提交数据。在同一事务中，读取通过第一次读取建立快照是一致的。一个例外是，一个事务可以读取在同一事务中更改的数据。 当事务开始并执行第一次读取数据时，将创建读取视图并保持打开状态，直到事务结束。为了在事务结束之前提供相同的结果集，InnoDB使用行版本控制和UNDO 信息。假设事务1选择了几行，另一个事务删除了这些行并提交了数据。如果事务1处于打开状态，它应该能够看到向己在开始时选择的行。已被删除的行保留在UNDO 日志空间中以履行事务1。一旦事务1操作完成，那些行便被标记为从UNDO 日志中删除。这称为**多版本井发控制(MVCC)**。 |
+|序列化(serializable)| 通过把选定的所有行锁起来，序列化可以提供最高级别的隔离。此级别与REPEATABLE READ 类似，但如果禁用autocommit，则InnoDB会将所有普通SELECT语句隐式转换为`SELECT ... LOCK IN SHARE MODE;` 如果启用autocommit ， 则SELECT就是它自己的事务 |
 
 [返回目录](#目录)
 
 ## 锁
+- 内部锁： MySQL 在自身服务器内部执行内部锁，以管理多个会话对表内容的争用。
+    - 行级锁：行级锁是细粒度的。只有被访问的行会被锁定。这允许通过多个会话同时进行写出问，使其适用于多用户、高度并发和OLTP 的应用程序。只有InnoDB支持行级锁。
+    - 表级锁： MySQL 对MyISAM 、MEMORY和MERGE 表使用表级锁， 一次只允许一个会话更新这些表。这种锁定级别使得这些存储引擎更适用于只读的或以读取操作为主的或单用户的应用程序。
+- 外部锁： MySQL 为客户会话提供选项来显式地获取表锁， 以阻止其他会话访问表。可以使用LOCK TABLE 和UNLOCK TABLES 语句来控制锁定。
+    - READ锁：当一个表被锁定为READ 时， 多个会话可以从表中读取数据而不需要获取锁。此外，多个会话可以在同一个表上获得锁，这就是为什么READ 锁也被称为**共享锁**。当READ 锁被保持时，没有会话可以将数据写人表格中（包括持有该锁的会话）。如果有任何写入尝试，该操作将处于等待状态，直到READ 锁被释放。
+    - WRITE锁：当一个表被锁定为WRITE 时，除持有该锁的会话之外，其他任何会话都不能读取或向表中写人数据。除非现有锁被释放，否则其他任何会话都不能获得任何锁。这就是为什么WRITE 锁被称为**排他锁**。如果有任何读取/写入尝试，该操作将处于等待状态，直到WRITE 锁被释放。
+
+[返回目录](#目录)
+
+# 二进制日志
+- 二进制日志包含数据库的所有更改记录，包括数据和结构两方面。二进制日志不记录SELECT 或SHOW 等不修改数据的操作。
+- 二进制日志能保证数据库出故障时数据是安全的。只有完整的事件或事务会被记录或回读。
+- 运行带有二进制日志的服务器会带来轻微的性能影响。
+
+作用：
+- 复制：使用二进制日志，可以把对服务器所做的更改以流式方式传输到另一台服务器上。从（slave）服务器充当镜像副本，也可用于分配负载。接受写入的服务器称为主（master）服务器。
+- 时间点恢复：假设你在星期日的00:00 进行了备份，而数据库在星期日的08: 00 出现故障。使用备份可以恢复到周日00:00 的状态；而使用二进制日志可以恢复到周日08:00 的状态。
+
+## 二进制日志操作
+**启用二进制日志：**
+1. 启用二进制日志并设置`server_id`。在自己常用的编辑器中打开MySQL 配置文件并添加以下代码。选择`server_id`，使其在基础架构中对每个MySQL 服务器都是唯一的。
+    - 也可以简单地把log_bin 变量放在my.cnf 中，不赋予任何值。在这种情况下，二进制日志是在数据目录中创建的。可以使用主机名作为目录名称。
+
+    `shell> sudo vi /etc/my.cnf`
+    ```shell script
+    [mysqld]
+    log_bin = /data/mysql/binlogs/server1
+    server_id = 100
+    ```
+2. 重新启动MySQL 服务器：
+    `shell> sudo systemctl restart mysql`
+
+3. 验证是否创建了二进制日志：  
+    `mysql> SHOW VARIABLES LIKE 'log_bin%';`
+    `mysql> SHOW MASTER LOGS;`
+    `shell> sudo ls -lhtr /data/mysql/binlogs`
+
+4. 显示服务器的所有二进制日志：`SHOW BINARY LOGS;` 或`SHOW MASTER LOGS;`。
+5. 执行命令`SHOW MASTER STATUS;` 以获取当前的二进制日志位置：
+    `mysql> SHOW MASTER STATUS;`  
+    一旦server1.000001达到max_binlog_size（默认为1GB），一个新文件server1.000002 就会被创建，并被添加到server1.index中。可以使用`SET @@ global.max_binlog_size = 536870912` 动态设置`max_binlog_size`。
+
+**禁用会话的二进制日志:**  
+    - `mysql> SET SQL_LOG_BIN = 0;` 之后的SQL都不会记录到二进制文件中，但仅针对该会话。
+    - 启用二进制日志：`mysql> SET SQL_LOG_BIN = 1;`
+
+**关闭当前的二进制日志并打开一个新的二进制日志：**
+    - `mysql> FLUSH LOGS;`
+
+**清理二进制日志:**
+1. 使用`binlog_expire_logs_seconds` 和`expire_logs_days` 设置日志的到期时间。两个参数效果叠加
+    - 删除两天之前的所有二进制日志：`SET @@ global.expire_logs_days=2`。值设置为0，则禁用设置会自动到期。
+    - 每1.5 天清除一次：设置`expire_logs_days=1`和`binlog_expire_logs_seconds=43200`
+    - 在MySQL8.0 中，`binlog_expire_logs_seconds` 和`expire_logs_days`必须设置为0 ，以禁止自动清除二进制日志。
+2. 要手动清除日志，请执行`PURGE BINARY LOGS TO '<file_name>'`。
+    - 如果执行`PURGE BINARY LOGS TO 'server1.000004'`，则从server1.000001 到server1.000003 的所有文件都会被删除，但文件server1.000004 不会被删除。
+    - 其他命令：`PURGE BINARY LOGS BEFORE '2017-08-03 15:45:00'`
+    - 也可以用MASTER，效果一样：`PURGE MASTER LOGS TO 'server1.000004'`
+3. 要删除所有二进制日志并再次从头开始，请执行`RESET MASTER`:
+    - `mysql> RESET MASTER;`
+    
+使用replication清除二进制日志是非安全的方法。安全的方法是使用**`mysqlbinlogpurge`**脚本（检查每一个从库读取的二进制日志的情况，然后删除它们）。
+
+**`mysqlbinlogpurge`**的使用：  
+原理：在一台服务器上执行mysqlbinlogpurge脚本，并指定主库和从库。该脚本连接所有的从库，并找出从库中最新的二进制日志被应用到什么位置，然后在主库上清除直到那个位置的二进制日志。  
+步骤：
+1. 随便连接到一台服务器，并执行mysqlbinlogpurge脚本：
+    - `shell> mysqlbinlogpurge --master=dbadmin:<pass>@master:3306 --slaves=dbadmin:<pass>@slave1:3306,dbadmin:<pass>@slave2:3306`
+    - `mysql> SHOW BINARY LOGS;`
+    - `shell> mysqlbinlogpurge --master=dbadmin:<pass>@master:3306 --slaves=dbadmin:<pass>@slave1:3306,dbadmin:<pass>@slave2:3306`
+2. 如果不想在命令行里指定所有从库而是希望自动发现它们，则应该在所有的从库上设置report_host 和report_port，并重新启动MySQL服务器。在每一个从库上：
+    - `shell> sudo vi /etc/my.cnf`
+        ```shell script
+        [mysqld]
+        report-host = slave1
+        report-port = 3306
+        ```
+    - `shell> sudo systemctl restart mysql`
+    - `mysql> SHOW VARIABLES LIKE 'report%';`
+3. 执行带`discover-slaves-login`选项的mysqlbinlogpurge:
+    - `shell> mysqlbinlogpurge --master=dbadmin:<pass>@master -discover slaves-login=dbadmin:<pass>`
+
+[返回目录](#目录)
+
+## 二进制日志格式
+1. `STATEMENT`：记录实际的SQL语句。
+2. `ROW`：记录每行所做的更改。
+    - 例如，更新语句更新10行，所有10行的更新信息都会被写入日志。而在基于语句的复制中，只有更新语句会被写入日志，默认格式是ROW。
+3. `MIXED`：当需要时，MySQL会从STATEMENT切换到ROW。
+
+**设置二进制日志格式：**
+- 可以使用兼具全局和会话范围作用域的动态变量`binlog_format`来设置格式。对所有客户端生效。
+    - `mysql> SET GLOBAL binlog_format = 'STATEMENT';`
+- [各种格式的优缺点](https://dev.mysql.com/doc/refman/8.0/en/replication-sbr-rbr.html)
+
+## 从二进制日志中提取语句
+TODO
+
+## 忽略要写入二进制日志的数据库
+TODO
+
+## 迁移二进制日志
+TODO
 
 [返回目录](#目录)
 
 # 备份与恢复
 ## 备份
+### 使用mysqldump备份
+mysqldump 与mysql二进制文件是一起提供的，因此不需要单独安装mysqldump。
+
+由于数据被存储为SQL语句，因此这称为逻辑备份。
+
+语法：`shell> mysqldump [options]`
+- 连接到数据库的用户名、密码：`mysqldump -u <username> -p<password>`
+- 完整备份所有数据库：`mysqldump --all-databases > dump.sql`
+- 包含存储过程和事件：`mysqldump --all-databases --routines --events > dump.sql`
+- 要获得时间点恢复：`mysqldump --all-databases --routines --events --single-transaction --master-data > dump.sql`
+- 从主服务器上进行二进制日志备份：`mysqldump --all-databases --routines --events --single-transaction --dump-slave > dump.sql` 否则使用`--master-data`
+- 仅备份指定的数据库：`mysqldump --databases employees > employees_backup.sql`
+- 仅备份指定的表：`mysqldump --databases employees --tables employees > employees_backup.sql`
+- 忽略表：`mysqldump --databases employees --ignore-table=employees.salary > employees_backup.sql` 忽略多个表多次使用--ignore指令
+- 指定行：`mysqldump --databases employees --tables employees --databases employees --tables employees --where = "hire_date > '2000-01-01'" > employees_after_2000.sql`
+- 从远程服务器备份：`mysqldump --all-databases --routines --events --triggers --hostname <remote hostname > dump.sql`
+- 仅备份不包含数据的schema：`mysqldump --all-databases --routines --events --triggers --no-data > schema.sql`
+- 仅备份不包含schema的数据：`mysqldump --all-databases no-create-db --no-create-info --complete-insert > data.sql`
+- 用新数据替换：`mysqldump --databases employees --skip-add-drop-table --no-create-info --replace > to_development.sql`
+- 忽略数据：在写入dump 文件时可以使用INSERT IGNORE 语句代替REPLACE 。这将保留服务器上的现有数据并插入新数据。
+
+### 使用二进制日志备份
+
+1. 在服务器上创建一个复制用户，并设置一个强密码：`mysql> GRANT REPLICATION SLAVE ON *.* TO 'binlog_user'@'%' IDENTIFIED BY 'binlog_pass';`
+2. 检查服务器上的二进制日志：`mysql> SHOW BINARY LOGS;` 从第一个可用的二进制日志开始备份，例如：server1.000008。
+3. 登录到备份服务器并执行以下命令，会将二进制日志从MySQL 服务器复制到备份服务器。可以使用nohup 或disown:
+    - `shell> mysqlbinlog -u <user> -p<pass> -h <server> --read-from-remote-server --stop-never --to-last-log --raw server1.000008 &` 
+    - 或者`shell> disown -a`
+4. 验证是否正在备份二进制日志：`shell> ls -lhtr server1.0000*`
 
 [返回目录](#目录)
 
 ## 恢复
+### 从mysqldump恢复
+1. 登录备份所在的服务器：
+    - `shell> cat /backups/full_backup.sql | mysql -u <user> -p`
+    - 或者`shell> mysql -u <user> -p < /backups/full_backup.sql`
+2. 如果是在远程服务器上恢复：`shell> cat /backups/full_backup.sql | mysql -u <user> -p -h <remote hostname>`
+3. 当恢复一个备份时，该备份的语句将被记录到二进制日志中，这可能会拖慢恢复过程。如果不希望恢复过程被写入二进制日志，则可以使用`SET SQL_LOG_BIN = 0;` 选项在session（会话）级别关闭这个功能：
+    - `shell> (echo "SET SQL_LOG_BIN=O;"; cat /backups/full_backup.sql) | mysql -u <user> -p -h <remote hostname>`
+    - 或者：`mysql> SET SQL_LOG_BIN=0; SOURCE full_backup.sql`
 
-[返回目录](#目录)
+- 由于备份恢复需要很长时间，因此建议在screen 会话内启动恢复过程， 即使断开与服务器的连接，备份的恢复也会继续。
+- 有时候，在恢复期间可能会出现故障。如果将`--force `选项传递给MySQL，恢复过程将继续：
+    - `shell> (echo "SET SQL_LOG_BIN=0;"; cat /backups/full_backup.sql) | mysql -u <user> -p -h <remote hostname> -f`
 
-# 二进制日志
+### 从普通文件备份中恢复
+从普通文件备份中恢复， 要先关闭MySQL服务器，替换所有文件，更改权限，然后再启动MySQL。
+
+1. 停止MySQL 服务器的运行：`shell> sudo systemctl stop mysql`
+2. 将文件移至数据目录：`shell> sudo mv /backup/mysql /var/lib`
+3. 将所有权更改为mysql：`shell> sudo chown -R mysql:mysql /var/lib/mysql`
+4. 启动MySQL：`shell> sudo systemctl start mysql`
+
+为了最大限度地减少停机时间，如果磁盘上有足够的空间，可以将备份复制到/var/lib/mysql2，然后停止MySQL的运行，重命名目录并启动服务器：
+```shell script
+shell> sudo mv /backup/mysql /var/lib/mysql2
+shell> sudo systemctl stop mysql
+shell> sudo mv /var/lib/mysql2 /var/lib/mysql
+shell> sudo chown -R mysql:mysql /var/lib/mysql
+shell> sudo systemctl start mysql
+```
+
+### 执行时间点恢复
+一旦恢复完整的备份后，就需要恢复二进制日志以获得时间点（point-in-time）恢复。备份集提供截止到备份可用时的二进制日志坐标。
+
+根据传给mysqldump的选项，二进制日志信息被作为`CHANGE MASTER TO` 命令存储在SQL文件中。
+
+1. 如果使用了`--master-data`，则应使用从服务器的二进制日志：
+`shell> head -30 /backups/dump.sql`
+```shell script
+...
+...
+-- position to start replication or point-in-time recovery from
+--
+CHANGE MASTER TO MASTER_LOG_FILE='server1.000008',
+MASTER_LOG_POS=154;
+```
+在这种情况下，应该从位于从服务器，位置为154处的server1.000008 文件开始恢复。
+`shell> mysqlbinlog --start-position=154 --disable-log-bin /backups/binlogs/server1.000008 | mysql -u<user> -p -h <host> -f`
+
+2. 如果使用了`--dump-slave`， 则应该使用主服务器上的二进制日志：
+```shell script
+--
+-- position to start replication or point-in-time recovery from
+(the master of this slave)
+--
+CHANGE MASTER TO MASTER_LOG_FILE='centos7-bin.000001',
+MASTER_LOG_POS=463;
+```
+在这种情况下，应该从位于主服务器，位置为463处的centos7-bin.000001文件开始恢复。
+`shell> mysqlbinlog --start-position=463 --disable-log-bin /backups/binlogs/centos7-bin.000001 | mysql -u<user> -p -h <host> -f`
 
 [返回目录](#目录)
 
@@ -630,6 +839,34 @@ delete from customers where id=4 and first_name='Rajiv';
     - 支持灾难恢复（通过bin-log日志等）。
     - 支持外键约束，只有InnoDB支持外键。
     - 支持自动增加列属性auto_increment。
+    
+#### 底层为什么使用B+Tree，不使用其他数据结构
+- 链表：数据查找时，可能是范围查找，使用链表存储 需要挨个遍历当前节点中的数据，效率低下，时间复杂度O(n)比较高。
+- hash表：上层是数组，下层是链表
+    - 需要好的hash算法，避免造成哈希碰撞或者哈希冲突，浪费空间。
+    - 不支持范围查询。数据经过散列后无规律存储到hash表中，如果范围查找某个数据的话，需要挨个遍历，时间复杂度O(n)。
+    - 需要大量的内存空间。使用时需要把哈希表的数据全部加载到内存中进行读取。
+- 红黑树：
+    - BST(Binary Search Tree)、AVL Tree、红黑树区别：
+        - 都是二叉树
+        - BST：**顺序插入会造成子节点全都是右节点，查询时需要挨个遍历，效率差。**
+        - AVL Tree：平衡二叉树，左右子树高度之差不大于1，大于1时就会进行平衡操作。进行平衡会浪费性能，**浪费了插入性能来提升查询性能**。
+        - [红黑树](../java/java.md/#红黑树)：也是平衡二叉树，但是是非严格的，近似平衡。**当数据足够多时，树就会变高，IO就会变多，查询就会变慢**。
+- B-Trees：
+    - 度：设置度为n后，每个节点最多能放n-1个值。
+    - 每个节点存储索引键和数据，其中数据占了大量空间，导致节点(或者磁盘块)能存储的值非常少。
+    - 假设每个值1K，键忽略大小，每个节点只能存储四千多条数据。
+
+![BTree](../resources/static/images/BTree.png)
+    
+- B+Trees：
+    - 每个非叶子结点只存储索键，数据全部放到叶子结点。
+    - 每个非叶子结点能存储约四千万条记录。
+    - 由于磁盘块的大小是确定的，怎样保证磁盘块能存储更多的数据？
+        - 磁盘存储多少跟索引值的大小相关，跟指针大小无关。（是使用int还是varchar做索引？如果指定的varchar小于4字节，使用varchar类型；大于4字节使用int类型。）
+        - 索引值越大表示的存储范围越小，范围越小导致子节点范围越小，导致乘积也就是存储数据变小。为了保证树足够低，索引key要尽可能少的占用空间。
+    
+![B+Tree](../resources/static/images/B+Tree.png)
 
 ### MyISAM
 - 缺点：
@@ -641,56 +878,50 @@ delete from customers where id=4 and first_name='Rajiv';
 [返回目录](#目录)
 
 ## explain
-- 关注type、rows、filtered、Extra。
-```
-1. id //select查询的序列号，包含一组数字，表示查询中执行select子句或操作表的顺序
-2. select_type //查询类型
-3. table //正在访问哪个表
-4. partitions //匹配的分区
-5. type //访问的类型
-6. possible_keys //显示可能应用在这张表中的索引，一个或多个，但不一定实际使用到
-7. key //实际使用到的索引，如果为NULL，则没有使用索引
-8. key_len //表示索引中使用的字节数，可通过该列计算查询中使用的索引的长度
-9. ref //显示索引的哪一列被使用了，如果可能的话，是一个常数，哪些列或常量被用于查找索引列上的值
-10. rows //根据表统计信息及索引选用情况，大致估算出找到所需的记录所需读取的行数
-11. filtered //查询的表行占表的百分比
-12. Extra //包含不适合在其它列中显示但十分重要的额外信息 
-```
 
-[explain](https://segmentfault.com/a/1190000021458117?utm_source=tag-newest)
-
-### 使用explain查看执行计划
-- 以json格式显示
-```mysql
-explain format=json select dept_name from dept_tmp 
-join employees on dept_emp.emp_no=employees.emp_no
-join departments on departments.dept_no=dept_emp.dept_no
-where employees.first_name='Aamer';
-```
+- 使用explain查看执行计划，以json格式显示
+    ```mysql
+    explain format=json select dept_name from dept_tmp 
+    join employees on dept_emp.emp_no=employees.emp_no
+    join departments on departments.dept_no=dept_emp.dept_no
+    where employees.first_name='Aamer';
+    ```
 - 使用explain连接正在进行的会话，需要指定connection ID。
     - 获取connection ID：`select CONNECTION_ID();`
     - 连接：`explain format=json for CONNECTION 778;`
 
-### Type
-- 自上到下，效率由低到高。
 
-|type|说明|
-|---|---|
-| ALL | 全表扫描 |
-| index | 索引全扫描 |
-| range | 索引范围扫描，常用语<,<=,>=,between,in等操作 |
-| ref | 指的是使用普通的索引（normal index），使用非唯一索引扫描或唯一索引前缀扫描，返回单条记录，常出现在关联查询中 |
-| eq_ref | 类似ref，区别在于使用的是唯一索引，使用主键的关联查询 |
-| consts/system | 单表中最多只有一个匹配行，系统会把匹配行中的其他列作为常数处理，在优化阶段即可读取到数据，如主键或唯一索引查询 |
-| null | MySQL不访问任何表或索引，直接返回结果 |
+1. **id**：select查询的序列号，包含一组数字，表示查询中执行select子句或操作表的顺序。
+2. select_type：查询类型
+3. table：正在访问哪个表
+4. partitions：匹配的分区
+5. **type**：访问的类型
 
-### Extra
-|extra|说明|
-|---|---|
-| Using filesort | MySQL需要额外的一次传递，以找出如何按排序顺序检索行。通过根据联接类型浏览所有行并为所有匹配WHERE子句的行保存排序关键字和行的指针来完成排序。然后关键字被排序，并按排序顺序检索行。 |
-| Using temporary | 使用了临时表保存中间结果，性能特别差，需要重点优化 |
-| Using index | 表示相应的 select 操作中使用了覆盖索引（Coveing Index）,避免访问了表的数据行，效率不错！如果同时出现 using where，意味着无法直接通过索引查找来查询到符合条件的数据。 |
-| Using index condition | MySQL5.6之后新增的ICP，using index condtion就是使用了ICP（索引下推），在存储引擎层进行数据过滤，而不是在服务层过滤，利用索引现有的数据减少回表的数据。 |
+    |type|说明（自上到下，效率由低到高）|
+    |---|---|
+    | ALL | 全表扫描 |
+    | index | 索引全扫描 |
+    | range | 索引范围扫描，常用语<,<=,>=,between,in等操作 |
+    | ref | 指的是使用普通的索引（normal index），使用非唯一索引扫描或唯一索引前缀扫描，返回单条记录，常出现在关联查询中 |
+    | eq_ref | 类似ref，区别在于使用的是唯一索引，使用主键的关联查询 |
+    | const/system | 单表中最多只有一个匹配行，系统会把匹配行中的其他列作为常数处理，在优化阶段即可读取到数据，如主键或唯一索引查询 |
+    | null | MySQL不访问任何表或索引，直接返回结果 |
+6. possible_keys：显示可能应用在这张表中的索引，一个或多个，但不一定实际使用到
+7. **key**：实际使用到的索引列是什么，如果为NULL，则没有使用索引
+8. key_len：表示索引中使用的字节数，可通过该列计算查询中使用的索引的长度
+9. ref：显示索引的哪一列被使用了，如果可能的话，是一个常数，哪些列或常量被用于查找索引列上的值
+10. rows：根据表统计信息及索引选用情况，大致估算出找到所需的记录所需读取的行数
+11. filtered：查询的表行占表的百分比
+12. **Extra**：包含不适合在其它列中显示但十分重要的额外信息 
+
+    |extra|说明|
+    |---|---|
+    | Using filesort | 说明mysql无法利用索引进行排序，只能利用排序算法进行排序，会消耗额外的位置。 |
+    | Using temporary | 使用了临时表保存中间结果，性能特别差，需要重点优化 |
+    | Using index | 表示当前select操作中使用了覆盖索引(Coveing Index)，直接从索引中读取数据，避免访问表的数据行，效率不错！如果同时出现`using where`，表示无法直接通过索引查找来查询到符合条件的数据。 |
+    | Using index condition | MySQL5.6之后新增的ICP，using index condtion就是使用了ICP（索引下推），在存储引擎层进行数据过滤，而不是在服务层过滤，利用索引现有的数据减少回表的数据。 |
+
+[explain](https://segmentfault.com/a/1190000021458117?utm_source=tag-newest)
 
 [返回目录](#目录)
 
@@ -716,7 +947,7 @@ where employees.first_name='Aamer';
     - 如果一本书需要知道第11章是什么标题，会翻开第11章对应的那一页吗？目录浏览一下就好，这个目录就是起到覆盖索引的作用。
 7. 【推荐】利用延迟关联或者子查询优化超多分页场景。
     - 正例：先快速定位需要获取的id段，然后再关联：`SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b where a.id=b.id`
-8. 【推荐】SQL性能优化的目标：至少要达到 range 级别，要求是ref级别，如果可以是consts最好。
+8. 【推荐】SQL性能优化的目标：至少要达到 range 级别，要求是ref级别，如果可以是const最好。
 9. 【推荐】建组合索引的时候，区分度最高的在最左边。
     - 说明：存在非等号和等号混合判断条件时，在建索引时，请把等号条件的列前置。如：`where a>? and b=?` 那么即使a的区分度更高，也必须把b放在索引的最前列。
 10. 【参考】创建索引时避免有如下极端误解： 
@@ -751,9 +982,25 @@ where employees.first_name='Aamer';
 
 [返回目录](#目录)
 
-## 分析慢查询
+## 慢查询日志
+- 慢查询日志指包含了执行时间超过`long_query_time`秒，以及至少扫描了`min_examined_row_limit`行的SQL语句。
+- 要记录所有查询，可以将`long_query_time`的值设置为0。`long_query_time`的默认值是10 秒，`min_examined_row_limit`的默认值为0 。
+- 启用慢查询日志，可以动态设置`slow_query_log=1`，可以使用`slow_query_log_file`来设置文件名。要指定日志目标文件，可以使用`--log-output`。
 
-### 通过慢查日志等定位那些执行效率较低的SQL语句
+**慢查询日志操作：**
+- 查看、设置慢查询时间`long_query_time`：
+    - `SELECT @@GLOBAL.LONG_QUERY_TIME;`
+    - `SET @@GLOBAL.LONG_QUERY_TIME=1;`
+- 查看、设置慢查询文件：
+    - `SELECT @@GLOBAL.slow_query_log_file;`
+    - `SET @@GLOBAL.slow_query_log_file='/var/log/mysql/mysql_slow.log';`
+    - `FLUSH LOGS`
+- 查看、启用慢查询日志：
+    - `SELECT @@GLOBAL.slow_query_log;`
+    - `SET @@GLOBAL.slow_query_log=1;`
+- 验证查询是否被记录：
+    - `SELECT SLEEP(2);`
+    - `sudo less /var/log/mysql/mysql_slow.log;`
 
 ### show profile分析
 - 了解SQL执行的线程的状态及消耗的时间。
@@ -765,20 +1012,7 @@ show profile for query #{id};
 
 ### 使用pt-query-digest分析慢查询
 - pt-query-digest是Percona工具包的一部分，用于对查询进行分析。
-- 慢查询日志：
-    - 查看、设置`long_query_time`：
-        - `SELECT @@GLOBAL.LONG_QUERY_TIME;`
-        - `SET @@GLOBAL.LONG_QUERY_TIME=1;`
-    - 查看、设置慢查询文件：
-        - `SELECT @@GLOBAL.slow_query_log_file;`
-        - `SET @@GLOBAL.slow_query_log_file='/var/log/mysql/mysql_slow.log';`
-        - `FLUSH LOGS`
-    - 查看、启用慢查询日志：
-        - `SELECT @@GLOBAL.slow_query_log;`
-        - `SET @@GLOBAL.slow_query_log=1;`
-    - 验证查询是否被记录：
-        - `SELECT SLEEP(2);`
-        - `sudo less /var/log/mysql/mysql_slow.log;`
+
 - 分析慢查询日志：`sudo pt-query-digest /var/lib/mysql/ubuntu-slow.log > query_digest`
 - 分析通用查询日志：`sudo pt-query-digest --type genlog /var/lib/mysql/db1.log > general_query_digest`
 - 进程列表
