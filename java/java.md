@@ -120,17 +120,17 @@
     
 - [函数式编程](#函数式编程)
     - [Lambda](#Lambda)
-        - [Lambda表达式语法](#Lambda表达式语法)
-        - [在哪里以及如何使用Lambda](#在哪里以及如何使用Lambda)
-        - [编译器对Lambda做类型检查、类型推断、限制-×](#编译器对Lambda做类型检查类型推断限制)
+        - [Lambda语法](#Lambda语法)
+        - [Lambda使用](#Lambda使用)
     - [方法引用](#方法引用)
         - [构建方法引用](#构建方法引用)
         - [复合Lambda表达式 ](#复合Lambda表达式)
     - [流(java.util.stream.Stream)](#Stream)
         - [流的基本操作](#流的基本操作)
-        - [用流收集数据](#用流收集数据)
-        - [并行流处理数据-×](#并行流处理数据)
-        - [Optional类(java.util.Optional<T>)](#Optional类javautilOptional)
+        - [并行流](#并行流)
+        - [流的性能](#流的性能)
+        - [Optional类(java.util.Optional<T>)](#Optional类)
+
 - [数据结构](#数据结构)
     - [数组](#数组)，[栈](#栈)，[队列](#队列)，[链表](#链表)，[散列表](#散列表)
     - [二叉树](#二叉树)，[红黑树](#红黑树)，[B Tree](#B-Tree)，[B+ Tree](#B+-Tree)
@@ -2246,9 +2246,8 @@ public List<String> setInfo() {
 
 # 函数式编程
 ## Lambda
-### Lambda表达式语法  
-    (parameters) -> expression  
-    (parameters) -> { statements; }
+### Lambda语法  
+
 ```
 (String s) -> s.length()  //具有一个String类型的参数并返回一个int。Lambda没有return语句，因为已经隐含了return，使用return要加花括号
 (Apple a) -> a.getWeight() > 150  //有一个Apple 类型的参数并返回一个boolean（苹果的重量是否超过150克）
@@ -2271,15 +2270,14 @@ public List<String> setInfo() {
 比较两个对象： (Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())  函数式接口：Comparator<Apple>或BiFunction<Apple, Apple, Integer>或ToIntBiFunction<Apple, Apple>
 ```
 
-[返回目录](#目录)
-
-### 在哪里以及如何使用Lambda
+### Lambda使用
 1. Lambda表达式可以被赋给一个变量
 2. 传递给一个 接受函数式接口作为参数 的方法  
-- **函数式接口上使用Lambda**  
-    函数式接口：只定义一个抽象方法的接口。  
-        Lambda表达式允许直接以内联的形式为函数式接口的抽象方法提供实现，并把整个表达式作为函数式接口的实例。（要比使用匿名内部类简洁许多）  
-        可以使用@FunctionalInterface标注函数式接口，若被标记接口不是函数式接口，编译器会返回错误：“Multiple non-overriding abstract methods found in interface Foo”表示存在多个抽象方法。
+
+**函数式接口上使用Lambda**  
+- 函数式接口：只定义一个抽象方法的接口。  
+- Lambda表达式允许直接以内联的形式为函数式接口的抽象方法提供实现，并把整个表达式作为函数式接口的实例。（要比使用匿名内部类简洁许多）  
+- 可以使用@FunctionalInterface标注函数式接口，若被标记接口不是函数式接口，编译器会返回错误：“Multiple non-overriding abstract methods found in interface Foo”表示存在多个抽象方法。
 ```java
 //使用Lambda
 Runnable r1 = () -> System.out.println("Hello World 1");
@@ -2387,29 +2385,27 @@ List<Integer> l = map(
 
 [返回目录](#目录)
 
-### 编译器对Lambda做类型检查、类型推断、限制
-~~略~~
-
 ## 方法引用
 使用方式：目标引用放在分隔符::前，方法的名称放在后面，方法不需要括号，因为没有实际调用这个方法。  
+
 针对单一方法的Lambda
 ```java
 //例如排序
 先前：inventory.sort((Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight()));
 之后：inventory.sort(comparing(Apple::getWeight)); //使用方法引用和java.util.Comparator.comparing；Apple::getWeight就是引用了Apple类中定义的方法getWeight。
 ```
+
 |Lambda|等效方法引用|
 |---|---|
 |(Apple a) -> a.getWeight()|Apple::getWeight|
 |() -> Thread.currentThread().dumpStack()|Thread.currentThread()::dumpStack|
 |(str, i) -> str.substring(i)|String::substring|
 |(String s) -> System.out.println(s)|System.out::println|
-### 构建方法引用  
-    (1) 指向静态方法的方法引用（例如Integer的parseInt方法，写作Integer::parseInt）。  
-    (2) 指向任意类型实例方法的方法引用（例如String 的length 方法，写作String::length）。  
-    (3) 指向现有对象的实例方法的方法引用（假设你有一个局部变量expensiveTransaction用于存放Transaction类型的对象，它支持实例方法getValue，那么你就可以写expensiveTransaction::getValue）  
 
-[返回目录](#目录)
+### 构建方法引用  
+1. 指向静态方法的方法引用（例如Integer的parseInt方法，写作Integer::parseInt）。  
+2. 指向任意类型实例方法的方法引用（例如String 的length 方法，写作String::length）。  
+3. 指向现有对象的实例方法的方法引用（假设你有一个局部变量expensiveTransaction用于存放Transaction类型的对象，它支持实例方法getValue，那么你就可以写expensiveTransaction::getValue）  
 
 ### 复合Lambda表达式  
 ```java
@@ -2422,6 +2418,7 @@ List<Integer> l = map(
     inventory.sort(comparing(Apple::getWeight)
              .reversed()
              .thenComparing(Apple::getCountry));
+
 2、谓词复合：negate(非)、and、or
 and和or方法是按照在表达式链中的位置，从左向右确定优先级的。a.or(b).and(c)可以看作(a || b) && c。
     //不是红的苹果
@@ -2431,6 +2428,7 @@ and和or方法是按照在表达式链中的位置，从左向右确定优先级
     //或者是大于150克的红苹果，或者是绿苹果
     Predicate<Apple> redAndHeavyAppleOrGreen = redApple.and(a -> a.getWeight() > 150)
                                                        .or(a -> "green".equals(a.getColor()));
+
 3、函数复合：
 andThen方法会返回一个函数，它先对输入应用一个给定函数，再对输出应用另一个函数。
 compose方法先把给定的函数用作compose的参数里面给的那个函数，然后再把函数本身用于结果。
@@ -2462,15 +2460,15 @@ compose方法先把给定的函数用作compose的参数里面给的那个函数
 [返回目录](#目录)
 
 ## Stream
-### 流的基本操作
-流：从支持数据处理操作的源生成的元素序列  
-流只能消费一次
-```java
-流的使用包含三部分：
-    一个数据源（如集合）来执行一个查询；
-    一个中间操作链，形成一条流的流水线；
-    一个终端操作，执行流水线，并能生成结果。
+流是一种内部迭代方式，流只能消费一次。
 
+### 流的基本操作
+流的使用包含三部分：
+1. 一个数据源（如集合）来执行一个查询；
+2. 一个中间操作链，形成一条流的流水线；
+3. 一个终端操作，执行流水线，并能生成结果。
+
+```java
 List<String> names = menu.stream() //获取流
                          .filter(d -> d.getCalories() > 300) //中间操作(返回Stream)，过滤大于300卡路里的菜
                          .map(Dish::getName) //中间操作(返回Stream)，获取菜名
@@ -2487,6 +2485,7 @@ List<Dish> menu = Arrays.asList(
         new Dish("pizza", true, 550, Dish.Type.OTHER),
         new Dish("prawns", false, 300, Dish.Type.FISH),
         new Dish("salmon", false, 450, Dish.Type.FISH) );
+
 public class Dish {
     private final String name;
     private final boolean vegetarian;
@@ -2517,7 +2516,8 @@ public class Dish {
     public enum Type { MEAT, FISH, OTHER }
 }
 ```
-- **中间操作**
+
+**中间操作**
 
 操作|参数|描述  
 ---|---|---  
@@ -2534,7 +2534,7 @@ skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个
 | | |③由文件生成流：java.nio.file.Files中的很多静态方法都会返回一个流，如：Files.lines
 | | |④由函数生成流：创建无限流：Stream.iterate和Stream.generate。如：Stream.iterate(0, n -> n + 2).limit(10).forEach(System.out::println);生成了一个正偶数流，iterate应该在依次生成一系列值的时候使用。Stream.generate(Math::random).limit(5).forEach(System.out::println);生成一个有五个0到1之间的随机双精度数的流
 
-- **终端操作**  
+**终端操作**  
 
 操作|返回类型|目的
 ---|---|---
@@ -2549,13 +2549,7 @@ findFirst|Optional<T>|返回第一个元素。
 reduce| |归约，接收两个参数：①初始值，②一个BinaryOperator<T>来将两个元素结合起来产生一个新值。如求和操作，①int sum = numbers.stream().reduce(0, (a, b) -> a + b);②int sum = numbers.stream().reduce(0, Integer::sum);
 | | |reduce求最大/最小值，如：Optional<Integer> max = numbers.stream().reduce(Integer::max);  reduce(Integer::min);
 
-[返回目录](#目录)
-
-### 用流收集数据
-```java
-//todo
-```
-- **Collectors类的静态工厂方法**  
+**Collectors类的静态工厂方法**  
 
 工厂方法|返回类型|作用|示例
 ---|---|---|---
@@ -2574,16 +2568,44 @@ collectingAndThen|转换函数返回的类型|包裹另一个收集器，对其�
 groupingBy|Map<K, List<T>>|根据项目的一个属性的值对流中的项目作问组，并将属性值作为结果Map 的键|Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
 partitioningBy|Map<Boolean,List<T>>|根据对流中每个项目应用谓词的结果来对项目进行分区|Map<Boolean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));
 
-[返回目录](#目录)
+### 并行流
+在底层，并行流还是沿用了fork/join 框架。fork 递归式地分解问题，然后每段并行执行，最终由join 合并结果，返回最后的值。
 
-### 并行流处理数据
 ```java
-//todo
+// 计算一组专辑的曲目总长度。它拿到每张专辑的曲目信息，然后得到曲目长度，最后相加得出曲目总长度。
+public int parallelArraySum() {
+    return albums.parallelStream()
+                .flatMap(Album::getTracks)
+                .mapToInt(Track::getLength)
+                .sum();
+}
 ```
 
+### 流的性能
+影响并行流性能的因素：
+1. 数据大小。将问题分解后并行化处理，之后再将结果合并会带来额外的开销，因此只有数据量足够大、每个管道处理数据花费时间足够长时，并行化处理才有意义。
+2. 源数据结构。每个管道的操作都是基于一些初始数据源，通常是集合。将不同数据源分割的开销是否远远小于管道中并行处理数据的时间。
+3. 系统核数。单核情况下就没有必要并行化。核越多性能提升幅度越大。
+4. 装箱。处理基本类型比处理装箱类型要快。
+
+对于多核服务器：(并行流性能最好)
+- 简单数据类型(int等基本数据类型、string等)：并行流 > for循环 > 串行流
+- 复杂数据类型(对象，对象列表等)：并行流 > for循环 ≈ 串行流
+
+对于单核服务器：(并行流性能最差)
+- 简单数据类型：for循环 > 串行流 > 并行流
+- 复杂数据类型：for循环 ≈ 串行流 > 并行流
+
+对于并行流来说，性能好坏取决于数据结构能否被分解，所以对于核心类库提供的通用数据结构性能：
+- 性能好：ArrayList、数组、IntStream、range。这些数据结构支持随机读取，即能被任意分解。
+- 性能一般：HashSet、TreeSet，这些数据结构不易公平地被分解，但是大多数时候分解是可能的。
+- 性能差：LinkedList，对半分解太难了。还有Streams.iterate 和BufferedReader.lines，长度未知，因此很难预测该在哪里分解。
+
 [返回目录](#目录)
 
-### Optional类(java.util.Optional<T>)
+### Optional类
+java.util.Optional<T>
+
 ```
 对存在或缺失(null)的变量值进行建模：
 变量存在时，Optional类只是对类简单封装。
@@ -2716,7 +2738,11 @@ public static Optional<Integer> stringToInt(String s) {
     
 ### B Tree
 
+![BTree](../resources/static/images/BTree.png)
+
 ### B+ Tree
+
+![B+Tree](../resources/static/images/B+Tree.png)
 
 ## 图
 
