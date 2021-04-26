@@ -1,30 +1,33 @@
 - [深入理解Nginx：模块开发与架构解析（第2版）](../resources/static/doc/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
-
+- [http://nginx.org/en/docs/](http://nginx.org/en/docs/)
 
 # 目录
-- [Nginx](#Nginx)
+- [Nginx概述](#Nginx概述)
     - [Nginx特点](#Nginx特点)
-    - [Nginx作用](#Nginx作用)
-    - [安装使用Nginx](#安装使用Nginx)
-- [Nginx配置](#Nginx配置)
+    - [Nginx安装](#Nginx安装)
     - [Nginx进程间关系](#Nginx进程间关系)
+- [Nginx配置](#Nginx配置)
     - [配置语法](#配置语法)
     - [Nginx基本配置](#Nginx基本配置)
-    - [Nginx配置文件详解](https://www.cnblogs.com/dongye95/p/11096785.html)
-    - [Nginx配置文件详解](https://www.cnblogs.com/hunttown/p/5759959.html)
+    - [nginx.conf](#nginxconf)
+- [Nginx模块 TODO](#Nginx模块)
+
 - [HTTP模块](#HTTP模块)
     - [用HTTP核心模块配置一个静态web服务器](#用HTTP核心模块配置一个静态web服务器)
     - [反向代理配置](#反向代理配置)
     - [将HTTP模块编译到Nginx中](#将HTTP模块编译到Nginx中)
     - [定义一个HTTP模块](#定义一个HTTP模块)
-- [数据库基本操作](#数据库基本操作)
-    - [MySQL](#MySQL)
-    - [Redis](#redis)
-    - [PostgreSQL](#PostgreSQL)
-    - [Memcached](#Memcached)
-    - [MongoDB](#MongoDB)
-- [Nginx核心技术](#Nginx核心技术)
-    -[Nginx架构](#Nginx架构)
+-[Nginx架构](#Nginx架构)
+    - [事件驱动](#事件驱动)
+    - [异步多阶段处理](#异步多阶段处理)
+    - [模块化设计](#模块化设计)
+    - [负载均衡](#负载均衡)
+    - [内存池](#内存池)
+    - [连接池](#连接池)
+    - [时间缓存](#时间缓存)
+    - [延迟关闭](#延迟关闭)
+    - [keepalive](#keepalive)
+    - [pipeline](#pipeline)
 - [Nginx工作流程](#Nginx工作流程)
     - [Nginx启动流程](#Nginx启动流程)
     - [Nginx管理进程的工作流程 //TODO](#Nginx管理进程的工作流程)
@@ -34,14 +37,19 @@
     - [HTTP模块调用流程](#HTTP模块调用流程)
     - [HTTP请求处理流程](#HTTP请求处理流程)
 
-- [nginx.conf](#nginxconf)
-
-- [Nginx高可用-keepalived](#Nginx高可用)
+- [Nginx高可用keepalived](#Nginx高可用keepalived)
 - [共享内存](#共享内存)
+
+- [数据库基本操作](#数据库基本操作)
+    - [MySQL](#MySQL)
+    - [Redis](#redis)
+    - [PostgreSQL](#PostgreSQL)
+    - [Memcached](#Memcached)
+    - [MongoDB](#MongoDB)
 
 [目录](#目录)
 
-# Nginx
+# Nginx概述
 ## Nginx特点
 - **速度更快：** 不论单次请求还是高峰大量的并发请求，Nginx都可以快速的响应。
 - **高扩展性：** Nginx的设计极具扩展性，它完全是由多个不同功能、不同层次、不同类型且耦合度极低的模块组成。Nginx的模块都是嵌入到二进制文件中执行的，所以无论官方发布的模块还是第三方模块都一样具备很好的性能。
@@ -51,7 +59,7 @@
 - **热部署：** master管理进程与worker工作进程分离设计可支持热部署，支持更新配置、更换日志等功能。
 - **开源协议友好：** BSD开源协议不仅允许用户免费使用，还允许直接使用、修改源码并发布。
 
-## Nginx作用
+**Nginx作用：**
 - 反向代理
 - 正向代理
 - 负载均衡
@@ -59,7 +67,7 @@
 
 [返回目录](#目录)
 
-## 安装使用Nginx
+## Nginx安装
 - Linux2.6以上版本才支持epoll，查询Linux内核版本：uname -a
 - 使用Nginx必备软件：
     1. GCC编译器：用来编译C语言，安装方式：yum install -y gcc
@@ -97,52 +105,54 @@
     net.ipv4.tcp_syncookies = 1     # 解决TCP的SYN攻击。
     net.ipv4.tcp_max_syn_backlog = 1024     #表示TCP 三次握手阶段SYl叫请求队列最大值，默认为1024 。调置为更大的值可以使Nginx 在非常繁忙的情况下，若来不及接收新的连接时， Linux 不至于丢失客户端新创建的连接请求。
     ```
-- 获取安装Nginx：
-    1. [Nginx官网下载](http://nginx.org/en/download.html)
-    2. 将下载的nginx-x.x.x.tar.gz源码压缩包放到Nginx源码目录，解压：tar -zxvf nginx-x.x.x.tar.gz
-    3. 编译安装Nginx：进入nginx-x.x.x目录执行以下3个命令：
-        1. **./configure**：检测操作系统内核和已安装软件、解析参数、生成中间目录及根据参数生成各种C源码文件、Makefile文件等  
-            （或者指定安装目录：./configure --prefix=/opt/nginx --sbin-path=/opt/nginx/sbin/nginx）
-        2. **make**：根据configure命令生成的Makefile文件编译Nginx工程，生成目标文件、最终的二进制文件
-        3. **make install**：根据configure执行时的参数将Nginx部署到指定安装目录，包括相关目录的创建和二进制文件、配置文件的复制
-    4. 默认情况下Nginx被安装在：usr/local/nginx
-        二进制文件路径：usr/local/nginx/sbin/nginx
-        配置文件路径：usr/local/nginx/conf/nginx.conf
+
+**获取安装Nginx：**
+1. [Nginx官网下载](http://nginx.org/en/download.html)
+2. 将下载的nginx-x.x.x.tar.gz源码压缩包放到Nginx源码目录，解压：tar -zxvf nginx-x.x.x.tar.gz
+3. 编译安装Nginx：进入nginx-x.x.x目录执行以下3个命令：
+    1. **./configure**：检测操作系统内核和已安装软件、解析参数、生成中间目录及根据参数生成各种C源码文件、Makefile文件等  
+        （或者指定安装目录：./configure --prefix=/opt/nginx --sbin-path=/opt/nginx/sbin/nginx）
+    2. **make**：根据configure命令生成的Makefile文件编译Nginx工程，生成目标文件、最终的二进制文件
+    3. **make install**：根据configure执行时的参数将Nginx部署到指定安装目录，包括相关目录的创建和二进制文件、配置文件的复制
+4. 默认情况下Nginx被安装在：usr/local/nginx
+    - 二进制文件路径：usr/local/nginx/sbin/nginx
+    - 配置文件路径：usr/local/nginx/conf/nginx.conf
+
 - configure分析：//TODO  
     使用configure 命令参数可以在新编译的Nginx 程序里打包指定的模块，或去除指定的模块，这样可以自定义Nginx 功能，同时可以减少内存占用。
-- Nginx命令：
-    1. 启动：
-        1. 默认启动：usr/local/nginx/sbin/nginx，会读取usr/local/nginx/conf/nginx.conf  
-            （或者指定Nginx目录：/opt/nginx/sbin/nginx **-p** /opt/nginx/）
-        2. 指定配置文件启动：usr/local/nginx/sbin/nginx -c tmpnginx.conf
-        3. 指定全局配置项启动：usr/local/nginx/sbin/nginx -g "pid var/nginx/test.pid;"，会把pid文件写到var/nginx/test.pid
-            停止Nginx服务：usr/local/nginx/sbin/nginx -g "pid var/nginx/test.pid;" -s stop
-    2. 检查配置文件是否有错：
-        1. usr/local/nginx/sbin/nginx -t
-        2. 检查时不输出error级别以下信息：usr/local/nginx/sbin/nginx -t -q
-    3. 显示版本信息：
-        1. usr/local/nginx/sbin/nginx -v
-        2. 显示编译阶段信息（版本、参数）：usr/local/nginx/sbin/nginx -V
-    4. 停止：
-        1. usr/local/nginx/sbin/nginx -s stop （指定目录：/opt/nginx/sbin/nginx -p /opt/nginx -s stop）
-        2. kill -s SIGTERM/SIGINT <nginx master进程ID>，效果同上
-        3. 优雅停止：usr/local/nginx/sbin/nginx -s quit，先关闭监听端口，再停止接收新请求，最后处理完正在处理的请求后退出进程
-        4. 优雅停止kill：kill -s SIGQUIT/SIGWINCH <nginx master pid>，效果同上
-    5. 重新加载配置：
-        1. usr/local/nginx/sbin/nginx -s reload （指定目录：/opt/nginx/sbin/nginx -p /opt/nginx -s reload）
-        2. kill -s SIGHUP <nginx master pid>
-    6. 日志文件回滚;
-        1. usr/local/nginx/sbin/nginx -s reopen
-        2. kill -s SIGUSR1 <nginx master pid>
-    7. 平滑升级Nginx：
-        1. 通知旧版本Nginx准备升级：kill -s SIGUSR2 <nginx master pid>
-        2. 启动新版本Nginx，执行"1"
-        3. 停止旧版本Nginx：kill -s SIGQUIT <nginx master pid>
-    8. 帮助：usr/local/nginx/sbin/nginx -h
+
+**Nginx命令：**
+1. 启动：
+    1. 默认启动：usr/local/nginx/sbin/nginx，会读取usr/local/nginx/conf/nginx.conf  
+        （或者指定Nginx目录：/opt/nginx/sbin/nginx **-p** /opt/nginx/）
+    2. 指定配置文件启动：usr/local/nginx/sbin/nginx -c tmpnginx.conf
+    3. 指定全局配置项启动：usr/local/nginx/sbin/nginx -g "pid var/nginx/test.pid;"，会把pid文件写到var/nginx/test.pid
+        停止Nginx服务：usr/local/nginx/sbin/nginx -g "pid var/nginx/test.pid;" -s stop
+2. 检查配置文件是否有错：
+    1. usr/local/nginx/sbin/nginx -t
+    2. 检查时不输出error级别以下信息：usr/local/nginx/sbin/nginx -t -q
+3. 显示版本信息：
+    1. usr/local/nginx/sbin/nginx -v
+    2. 显示编译阶段信息（版本、参数）：usr/local/nginx/sbin/nginx -V
+4. 停止：
+    1. usr/local/nginx/sbin/nginx -s stop （指定目录：/opt/nginx/sbin/nginx -p /opt/nginx -s stop）
+    2. kill -s SIGTERM/SIGINT <nginx master进程ID>，效果同上
+    3. 优雅停止：usr/local/nginx/sbin/nginx -s quit，先关闭监听端口，再停止接收新请求，最后处理完正在处理的请求后退出进程
+    4. 优雅停止kill：kill -s SIGQUIT/SIGWINCH <nginx master pid>，效果同上
+5. 重新加载配置：
+    1. usr/local/nginx/sbin/nginx -s reload （指定目录：/opt/nginx/sbin/nginx -p /opt/nginx -s reload）
+    2. kill -s SIGHUP <nginx master pid>
+6. 日志文件回滚;
+    1. usr/local/nginx/sbin/nginx -s reopen
+    2. kill -s SIGUSR1 <nginx master pid>
+7. 平滑升级Nginx：
+    1. 通知旧版本Nginx准备升级：kill -s SIGUSR2 <nginx master pid>
+    2. 启动新版本Nginx，执行"1"
+    3. 停止旧版本Nginx：kill -s SIGQUIT <nginx master pid>
+8. 帮助：usr/local/nginx/sbin/nginx -h
 
 [返回目录](#目录)
 
-# Nginx配置
 ## Nginx进程间关系
 - 1个master进程管理多个worker进程
 - worker进程数量=服务器cpu核心数（默认情况，可配置）
@@ -151,14 +161,15 @@
     2. 多个worker进程处理请求可以提高服务健壮性
     3. 1个worker进程同时处理的请求数只受限于内存大小，多个worker进程处理并发请求时几乎没有同步锁的限制，worker进程一般不会睡眠，因此worker进程数等于cpu核心数时，进程间切换代价最小
 
-- 连接数：worker_connection
-    - 发送请求，占用worker的2 或者 4个连接数。
-    - nginx有1个master，有四个worker，每个worker支持最大连接数1024，支持的最大并发数是多少？
-        - 普通静态访问最大并发数：`worker_connections * worker_processes / 2`
-        - 若是HTTP做反向代理，最大并发数：`worker_connections * worker_processes / 4`
+连接数：`worker_connection`
+- 发送请求，占用worker的2 或者 4个连接数。
+- nginx有1个master，有四个worker，每个worker支持最大连接数1024，支持的最大并发数是多少？
+    - 普通静态访问最大并发数：`worker_connections * worker_processes / 2`
+    - 若是HTTP做反向代理，最大并发数：`worker_connections * worker_processes / 4`
 
 [返回目录](#目录)
-  
+
+# Nginx配置
 ## 配置语法
 - 块配置项用大括号包括，配置项名后用空格分隔
 - 块配置项可以嵌套，内层块会继承外层块，当内外层块配置冲突时-取决于解析这个配置项的模块
@@ -174,6 +185,7 @@
 [返回目录](#目录)
 
 ## Nginx基本配置
+
 **按使用功能分为四类：**  
 - **用于调试、定位问题的配置**
 
@@ -215,6 +227,59 @@
 |批量建立新连接|***multi_accept "on/off";***|multi_accept off;|当事件模型通知有新连接时，尽可能地对本次调度中客户端发起的所有TCP请求都建立连接。|
 |选择事件模型|***use*** "kqueue/rtsig/***epoll***/'/dev/poll'/select/poll/eventport";|Nginx会自动使用最适合的事件模型。|对于Linux操作系统来说，可供选择的事件驱动模型有poll、select、epoll三种。epoll是性能最高的一种|
 |每个worker的最大连接数|***worker_connections "number";***|无|定义每个worker进程可以同时处理的最大连接数。1个请求占用worker的2或者4个连接数|
+
+[返回目录](#目录)
+
+# nginx.conf
+Nginx 的工作流程是：在编译阶段选择要使用的模块并编译进整体工程中去。模块和业务的使用通过nginx.conf 配置文件中配置指令的配置得以控制和实现，复杂的业务和自定义的业务逻辑使用Lua 脚本实现。
+```shell script
+user root;
+worker_processes 4;
+worker_rlimit_nofile 1000000;
+error_log logs/error.log;
+
+events {
+    use epoll;
+    worker connections 300000;
+}
+
+http {
+    include mime.types;
+    default_type text/html;
+    #log_format main '$remote_addr - $remote_user [$time_local] $request' 'status $body_bytes_sent "$http_referer"' '"$http_user_agent" "$http_x_forwarded_for"' 'upstream_response_time $upstream_response_time' 'msec $msec request_time $request_time';
+    access_log off;
+    server_tokens off;
+    sendfile on;
+    keepalive_timeout 65;
+
+    upstream bk_redis {
+        server 10.185.220.120:6009;
+        keepalive 1000;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+        charset utf-8;
+
+        location /test {
+            proxy_pass http://localhost:8000;
+        }
+  
+        location ^~ /api/ {
+            proxy_pass http://localhost:9000;
+        }
+    }
+}
+```
+[nginx.conf](./nginx.conf)
+
+- [Nginx配置文件详解](https://www.cnblogs.com/dongye95/p/11096785.html)
+- [Nginx配置文件详解](https://www.cnblogs.com/hunttown/p/5759959.html)
+
+[返回目录](#目录)
+
+# Nginx模块
 
 [返回目录](#目录)
 
@@ -606,6 +671,302 @@ typedef struct ngx_chain_s ngx_chain_t; struct ngx_chain_s {
 ## event模块
 
 ## 负载均衡机制
+
+[返回目录](#目录)
+
+# Nginx架构
+## 事件驱动
+- Nginx 是事件驱动型服务，注册各种事件处理器以处理事件。对于Nginx，事件主要来源于网络和磁盘。事件（`event`）模块负责事件收集、管理和分发事件，其他的模块都是事件的处理者和消费者，会根据注册的事件得到事件的分发。
+- Linux内核2.6以上版本使用`epoll`机制（`ngx_epoll_module`事件模块），epoll 是Linux 操作系统上最强大的事件管理机制。
+- 在`nginx.conf`的`event{}`块中配置相应的事件模块，就可以启用对应事件模型。而且可以根据应用场景随时切换事件模块，这也实现了Nginx 的跨平台机制。这个具体的event 模块被核心的`ngx_events_module` 管理，`ngx_events_module`是核心模块。
+
+## 异步多阶段处理
+- Nginx 的异步多阶段处理是基于事件驱动架构的。
+- Nginx 把一个请求划分成多个阶段，每个阶段都可以由事件、分发器来分发，注册的阶段管理器（消费者、handler）进行对应阶段的处理。
+    - 例如，获取一个静态文件的HTTP请求可以划分为下面的几个阶段：
+        - 1）**建立TCP 连接阶段**：收到TCP 的SYN 包。
+        - 2）**开始接收请求**：接收到TCP 中的ACK 包表示连接建立成功。
+        - 3）**接收到用户请求并分析请求是否完整**：接收到用户的数据包。
+        - 4）**接收到完整用户请求后开始处理**：接收到用户的数据包。
+        - 5）**由静态文件读取部分内容**：接收到用户数据包或接收到TCP 中的ACK 包，TCP窗口向前划动。这个阶段可多次触发，直到把文件完全读完。不一次性读完是为了避免长时间阻塞事件分发器。
+        - 6）**发送完成后**：收到最后一个包的ACK。对于非keepalive请求，发送完成后主动关闭连接。
+        - 7）**用户主动关闭连接**：收到TCP 中的FIN 报文。
+    - Nginx阶段划分方法：
+        - 将系统本身的事件和网络异步事件划分为阶段。如上面的7个阶段网络模型的划分。
+        - 将阻塞进程的方法按照相关的触发事件分解为两个阶段。第一阶段：将阻塞的方法改为非阻塞方法；第二阶段：处理非阻塞方法回调。
+        - 将阻塞方法按调用时间分解为多个阶段调用。在阻塞方法不能按上面方法划分多阶段情况下（如触发事件不可以被捕获），使用按照执行时间拆分方法。
+        - 在必须等待的情况下，使用定时器切分阶段。
+        - 阻塞方法无法继续划分，则必须使用独立的进程执行这个阻塞方法。
+## 模块化设计
+- Nginx 模块化设计的特点和技术：
+    - **使用模块接口**。所有的模块遵循统一的接口设计规范，接口设计规范定义在`ngx_module_t` 中，这样使接口简化、统一、可扩展。
+    - **配置功能接口化**。Nginx 将配置信息也定义和开发成模块，配置模块专注于配置的解析和数据保存，是唯一一个只有一个模块的模块类型。`ngx_module_t` 接口中定义了一个type 成员，用于描述和定义模块类型。配置模块是`ngx_conf_module`，是其他模块的基础模块，因为Nginx 模块全部使用配置模块来定义和配置，依赖于配置模块。
+    - **模块分层设计**。Nginx 设计了6个基础类型模块（称为核心模块），实现了Nginx 的6 个主要部分，以及HTTP 协议主流程。
+        - event模块、HTTP模块、mail模块的非核心模块中有一个对应的core模块，代理核心模块的行为。
+    - **核心模块接口简单化**。将`ngx_module_t` 中的ctx 上下文实例化为`ngx_core_module_t` 结构，该结构是以配置项的解析为基础的。nginx.conf 中解析出来的配置项会放到这个数据结构，通过提供的`init_conf` 回调使用解析出的配置项初始化核心模块。
+- 核心模块`ngx_core_module`：这6个核心模块只是定义了6 类业务的业务流程，具体的工具并不由这些模块执行，
+    - `ngx_events_module` ： 管理所有事件类模块。
+    - `ngx_http_module`： 管理所有HTTP 类型模块。
+    - `ngx_mail_module`： 管理所有邮件类型模块。
+    - `ngx_errlog_module` ： 管理所有日志类模块。
+    - `ngx_openssl_module` ： 管理所有TLS/SSL 模块
+    - `ngx_core_module`： 管理配置等全局模块。
+    
+## 负载均衡
+- **系统级的负载均衡**，实现方法是使用一个Nginx 服务通过upstream 机制将请求分配到上游后端服务器，而这里可以使用模块内置的一些负载均衡机制将请求均衡地分配到服务器组中。
+- **单Nginx 服务内部工作进程间的负载均衡**，Nginx 内部有一个`ngx_accept_disabled` 变量，设置的是负载均衡的阈值，是一个整数数值。
+    - `ngx_accept_disabled`是一个进程内的全局变量，在Nginx启动时是负数，每次接收一个新连接时都会赋值，值为连接总数的7/8 。
+    - 当本变量值为负数时，不会进行负载均衡操作，会参与到新连接的接收尝试中，尝试获取同步锁；
+    - 当值为正数时，表示连接已经过多，则会放弃一次争夺，并将值减l。值为正数表示本进程处理的进程已经过多了，已经达到了上限的7/8 ，所以，只有值为正数时才启动均衡算法
+
+## 内存池
+- Nginx 在内部设计并使用了一个简单的内存池，特点是，每一个TCP 连接建立时分配一个内存池，而在请求结束时销毁整个内存池，把曾经分配的内存一次性归还给操作系统。
+- Nginx 不负责回收内存池中已经分配出去的内存，这些内存由请求方负责回收。内存池减少了分配内存带来的资师、消耗，同时减少了内存碎片。
+- Nginx 内部内存池模式：
+    - ①申请了永远保存；
+    - ②申请了，请求结束全部释放。
+
+## 连接池
+- Nginx 为了减少反复创建TCP连接以及创建套接字的次数，从而提高网络响应速度。
+- 连接池在Nginx 启动阶段，由管理进程在配置文件中解析出来对应的配置项，配置项放到配置结构体中。
+- 在event 核心模块`ngx_events_module` 初始化事件模型时，`ngx_event_core_module` 模块第一个被初始化，这个模块将根据配置结构体中的连接池大小配置创建连接池，如果没有配置项，则使用系统默认值创建连接池。
+- `注意`，配置指令`worker_connections` 配置的连接池大小是工作进程级别的，所以实际的连接池大小是`worker_connections` * `worker _processes`。
+- Nginx 内部链接池方法：`ngx_get_connection` 和`ngx_free_connection`
+
+## 时间缓存
+- `nginx.conf` 中的`timer_resolution` 配置可以指定多长时间更新一次时间缓存。
+- 时间缓存在系统初始化时被赋值，另一个修改的机会是在`ngx_epoll_process_events` 调用`epoll_wait` 返回时有可能会更新。
+
+## 延迟关闭
+- 延迟关闭，即当Nginx 要关闭连接时，并不马上关闭连接，而是先关闭TCP 连接的写操作，等待一段时间后再关掉连接的读操作。
+
+## keepalive
+- keepalive 是HTTP长连接，可以提高传输效率。
+- 一般来说，当客户端的一次访问，需要多次访问同一个服务器时，打开keepalive 的优势非常大，如对于图片服务器，通常一个网页会包含很多图片，打开keepalive 会大量减少time-wait 状态。
+
+## pipeline
+
+[返回目录](#目录)
+
+# Nginx工作流程
+
+## Nginx启动流程
+1. 从命令行得到配置文件路径
+2. 如是平滑升级，则监听环境变量传进的监听句柄
+3. 调用所有核心模块的create_conf方法，生成配置项结构体
+4. 解析nginx.conf 核心模块部分
+5. 调用所有核心模块的init_conf 方法
+6. 创建目录、打开文件、初始化共享内存
+7. 打开各模块配置的监听端口
+8. 调用所有模块的init_module 方法
+9. Nginx运行模式  
+    - 9.1 master模式运行 -> 11
+    - 9.2 single模式运行 -> 10
+10. 调用所有模块的`init_process` 方法 -> 结束
+11. 管理进程
+12. 启动工作进程
+13. 启动`cache_manager` 进程
+14. 启动`cache_loader` 进程
+15. 调用所有模块的`init_process` 方法 -> 结束
+
+![Nginx启动流程](../resources/static/images/Nginx启动流程.PNG)
+
+[返回目录](#目录)
+
+## Nginx管理进程的工作流程
+//TODO
+
+![管理进程的工作流程](../resources/static/images/管理进程的工作流程.PNG)
+
+## 工作进程的工作流程
+- worker进程是通过工作进程协调各模块组件完成任务的。工作进程由管理进程管理，它们之间的工作机制是通过信号实现的，worker进程关注的4个信号对应4个全局变量：
+    - `ngx_exiting`：标志位（退出时作为标志位使用）。
+    - `ngx_terminate` : TERM 信号，对应强制退出操作。
+    - `ngx_reopen` : USR1 信号，重新打开文件。
+    - `ngx_quit`: QUIT 信号，"优雅"地退出。
+
+![工作进程的工作流程](../resources/static/images/工作进程的工作流程.PNG)
+
+[返回目录](#目录)
+
+## 配置加载流程
+- 一个典型的nginx.conf
+    ```shell script
+    #user nobody;
+    worker_processes 1;
+    
+    events {
+      worker_connections 1024;
+    }
+  
+    http {
+      include mime.types;
+      default_type application/octet-stream;
+  
+      sendfile on;
+      keepalive_timeout 65;
+      
+      server {
+        listen 80;
+        server_name localhost;
+  
+        #access_log logs/host.access.log main;
+        
+        location / {
+          root html;
+          index index.html index.htm;
+        }
+        
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+          root html;
+        }
+      }
+    }
+    ```
+- 框架程序在解析配置文件时，通过3个HTTP模块的回调函数将配置信息传给HTTP模块：
+    - `create_main_conf`：对应配置块`http{}`，只被调用一次
+    - `create_svr_conf`：对应配置块`server{}`，可调用多次
+    - `create_loc_conf`：对应配置块`location{}`，可调用多次
+
+- **配置文件加载、解析**
+    - 从Nginx命令行获取配置文件路径
+    - 调用所有核心模块的create_conf方法，生成配置项结构体
+    - 框架代码解析nginx.conf核心模块部分
+    - 调用所有核心模块的init_conf方法，解析对应的配置块
+- **HTTP配置块解析** 
+
+![HTTP配置项解析过程](../resources/static/images/HTTP配置项解析过程.PNG)
+
+[返回目录](#目录)
+
+## HTTP框架初始化流程
+- HTTP部分由核心模块`ngx_http_moudle`、`ngx_http_core_moudle`、`ngx_http_upstream_moudle`模块组成。
+1. 初始化`ngx_module` 数据中所有HTTP 模块的`ctx_index` 字段，从0 开始递增。这个索引就是请求响应时调用的顺序，而这个顺序最终是由编译Nginx 时的模块顺序决定的，同时初始化存放配置信息的`ngx_http_conf_ctx_t` 数据结构。
+2. 依次调用所有HTTP 模块的`create_main_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`main_conf` 数组。
+3. 依次调用所有HTTP 模块的`create_svr_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`svr_conf` 数组。
+4. 依次调用所有HTTP 模块的`create_loc_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`loc_conf` 数组。
+5. 依次调用所有模块的`preconfiguration` 方法，`preconfiguration` 回调函数完成了对应模块的预处理操作，其主要工作是创建模块用到的变量。
+6. 调用所有HTTP 模块的`init_conf` 方法，告诉模块配置解析完成。
+7. 合并配置项。
+8. Nginx 将HTTP 处理过程划分成了11 个阶段，使多个模块可以介入到不同的阶段进行流水线式操作，充分发挥模块式架构的优势，并实现请求过程异步化。
+    - 其中有7 个阶段是允许用户介入的： 
+        - NGX_HTTP_POST_READ_PHASE 
+        - NGX_HTTP_SERVER_REWRITE_PHASE
+        - NGX_HTTP_REWRITE_PHASE
+        - NGX_HTTP_PREACCESS_PHASE
+        - NGX_HTTP_ACCESS_PHASE
+        - NGX_HTTP_CONTENT_PHASE
+        - NGX_HTTP_LOG_PHASE
+    - 调用`ngx_http＿init_phases` 方法初始化这7 个动态数组，数据保存在phases 数组中。
+9. 依次调用所有HTTP 模块的`postconfiguration` 方法，使HTTP 模块可以处理HTTP阶段，将HTTP 模块的`ngx_http_handler_pt` 处理方法添加到HTTP 阶段中。
+10. 构建虚拟主机的查找散列表。虚拟主机配置在`server{}`中，为了提高请求时查找的速度，使用散列表对主机server name 进行了索引。
+11. 建立server 与监听端口间的关联，同时设置新连接的回调方法。
+
+[返回目录](#目录)
+
+## HTTP模块调用流程
+- 全异步方式
+#### 一个简略的HTTP模块调用流程，去除了异步的处理机制
+- 工作进程在主循环调用事件模型，检测网络事件，当有新连接请求时，则建立TCP 连接，然后根据nginx.conf 配置，将请求交由HTTP 框架处理。
+- 框架首先尝试接收HTTP 头部，接收到完整HTTP 头部后，将请求分发到具体的HTTP 模块处理。
+    - 通常根据URI 和  nginx.conf 里的location 匹配程度决定分发策略。
+- 请求处理结束时，通常都向客户端发送响应，这时一般自动依次调用所有的HTTP 过滤模块，每个模块根据配置文件中定义的策略决定自己的行为。
+    - 如可调用gzip 模块根据nginx.conf 中`gzip on|off;`决定是否将响应压缩。
+    - 如果设置了子请求调用，在返回前还会执行异步的子请求调用。
+
+![HTTP模块调用流程](../resources/static/images/HTTP模块调用流程.PNG)
+
+[返回目录](#目录)
+
+## HTTP请求处理流程
+- 对于Nginx 来说，从`ngx_http_init_request`开始处理一个请求
+    - 在这个函数中，会设置读事件为`ngx_http_process_request_line` ，表示接下来的网络事件，会由`ngx_http_process_request_line` 执行，来处理请求行。
+    - 通过`ngx_http_read_request_header` 读取请求数据，然后调用`ngx_http_parse_request_line` 函数解析请求行。
+- 在解析完请求行后， Nginx 会使用`ngx_http_process_request_headers` 设置读事件的handler ，然后后续的请求就在`ngx_http_process_request_headers` 中进行读取与解析。
+- 当Nginx解析到 两个回车换行符时，就表示请求头已经结束，此时会调用`ngx_http_process_request` 处理请求。
+    - `ngx_http_process_request` 会设置当前连接的读写事件处理函数为`ngx_http_request_handler` ，然后调用`ngx_http_handler` 真正开始处理一个完整的HTTP 请求。
+
+[返回目录](#目录)
+
+# Nginx高可用keepalived
+1. 配置Nginx高可用集群：
+    - 需要两台服务器安装 nginx：192.168.17.129 、192.168.17.131
+    - 需要两台服务器安装 keepalived
+    - ~~需要虚拟 ip~~
+
+![nginx高可用](../resources/static/images/nginx高可用.png)
+
+2. 在两台服务器安装 keepalived
+   - 使用 yum 命令进行安装：`yum install keepalived -y`
+   - 安装之后，在 etc 里面生成目录 keepalived ，有文件`keepalived.conf`
+3. 完成高可用配置（主从配置）
+    - （1）修改 /etc/keepalived/keepalivec.conf 配置文件
+    ```
+    global_defs {
+        notification_email {
+            acassen@firewall.loc
+            failover@firewall.loc
+            sysadmin@firewall.loc
+        }
+        notification_email_from Alexandre.Cassen@firewall.loc
+        smtp_server 1 92.168.17.129
+        smtp_connect_timeout 30
+        router_id LVS_DEVEL
+    }
+    
+    vrrp_script chk_http_port {
+        script "/usr/local/src/nginx_check.sh"
+        interval 2 #（检测脚本执行的间隔）
+        weight 2
+    }
+    
+    vrrp_instance VI_1 {
+        state BACKUP # 备份服务器上将 MASTER 改为 BACKUP
+        interface ens33 // 网卡
+        virtual_router_id 51 # 主、备机的 virtual_router_id 必须相同
+        priority 90 # 主、备机取不同的优先级，主机值较大，备份机值较小
+        advert_int 1 
+        authentication {
+            auth_type PASS
+            auth_pass 1111
+        }
+        virtual_ipaddress {
+            192.168.17.50 # VRRP H 虚拟地址
+        }
+    }
+    ```
+    - （2）在 /usr/local/src 添加检测脚本
+    ```
+    #!/bin/bash
+    A=`ps C nginx no header |wc l`
+    if [ $A eq 0 ];then
+        /usr/local/nginx/sbin/nginx
+        sleep 2
+        if [ `ps C nginx no header |wc l` eq 0 ];then
+            killall keepalived
+        fi
+    fi
+    ```
+    - （3）把两台服务器上 nginx 和 keepalived 启动
+        - 启动 nginx：`./nginx`
+        - 启动 keepalived：`systemctl start keepalived.service`
+4. 测试：
+    - （1）在浏览器地址栏输入 虚拟 ip 地址 `192.168.17.50`
+    ![](../resources/static/images/nginx高可用测试1.png)
+    ![](../resources/static/images/nginx高可用测试2.png)
+
+    - （2）把主服务器 `192.168.17.129` nginx 和 keepalived 停止，再输入 `192.168.17.50`
+    ![](../resources/static/images/nginx高可用测试3.png)
+    ![](../resources/static/images/nginx高可用测试4.png)
+
+[返回目录](#目录)
+
+# 共享内存
+
+[返回目录](#目录)
+
+------
 
 # 数据库基本操作
 Nginx使用Redis作数据缓存，使用Memcached作文件缓存，使用MongoDB持久化NoSQL数据，使用MySQL集群作关系型数据库。  
@@ -1017,302 +1378,5 @@ dbpath=/var/lib/mongo
 # 更多参数查看：
 # mongod -h
 ```
-
-[返回目录](#目录)
-
-# Nginx核心技术
-
-## Nginx架构
-#### 事件驱动
-- Nginx 是事件驱动型服务，注册各种事件处理器以处理事件。对于Nginx，事件主要来源于网络和磁盘。事件（`event`）模块负责事件收集、管理和分发事件，其他的模块都是事件的处理者和消费者，会根据注册的事件得到事件的分发。
-- Linux内核2.6以上版本使用`epoll`机制（`ngx_epoll_module`事件模块），epoll 是Linux 操作系统上最强大的事件管理机制。
-- 在`nginx.conf`的`event{}`块中配置相应的事件模块，就可以启用对应事件模型。而且可以根据应用场景随时切换事件模块，这也实现了Nginx 的跨平台机制。这个具体的event 模块被核心的`ngx_events_module` 管理，`ngx_events_module`是核心模块。
-#### 异步多阶段处理
-- Nginx 的异步多阶段处理是基于事件驱动架构的。
-- Nginx 把一个请求划分成多个阶段，每个阶段都可以由事件、分发器来分发，注册的阶段管理器（消费者、handler）进行对应阶段的处理。
-    - 例如，获取一个静态文件的HTTP请求可以划分为下面的几个阶段：
-        - 1）**建立TCP 连接阶段**：收到TCP 的SYN 包。
-        - 2）**开始接收请求**：接收到TCP 中的ACK 包表示连接建立成功。
-        - 3）**接收到用户请求并分析请求是否完整**：接收到用户的数据包。
-        - 4）**接收到完整用户请求后开始处理**：接收到用户的数据包。
-        - 5）**由静态文件读取部分内容**：接收到用户数据包或接收到TCP 中的ACK 包，TCP窗口向前划动。这个阶段可多次触发，直到把文件完全读完。不一次性读完是为了避免长时间阻塞事件分发器。
-        - 6）**发送完成后**：收到最后一个包的ACK。对于非keepalive请求，发送完成后主动关闭连接。
-        - 7）**用户主动关闭连接**：收到TCP 中的FIN 报文。
-    - Nginx阶段划分方法：
-        - 将系统本身的事件和网络异步事件划分为阶段。如上面的7个阶段网络模型的划分。
-        - 将阻塞进程的方法按照相关的触发事件分解为两个阶段。第一阶段：将阻塞的方法改为非阻塞方法；第二阶段：处理非阻塞方法回调。
-        - 将阻塞方法按调用时间分解为多个阶段调用。在阻塞方法不能按上面方法划分多阶段情况下（如触发事件不可以被捕获），使用按照执行时间拆分方法。
-        - 在必须等待的情况下，使用定时器切分阶段。
-        - 阻塞方法无法继续划分，则必须使用独立的进程执行这个阻塞方法。
-#### 模块化设计
-- Nginx 模块化设计的特点和技术：
-    - **使用模块接口**。所有的模块遵循统一的接口设计规范，接口设计规范定义在`ngx_module_t` 中，这样使接口简化、统一、可扩展。
-    - **配置功能接口化**。Nginx 将配置信息也定义和开发成模块，配置模块专注于配置的解析和数据保存，是唯一一个只有一个模块的模块类型。`ngx_module_t` 接口中定义了一个type 成员，用于描述和定义模块类型。配置模块是`ngx_conf_module`，是其他模块的基础模块，因为Nginx 模块全部使用配置模块来定义和配置，依赖于配置模块。
-    - **模块分层设计**。Nginx 设计了6个基础类型模块（称为核心模块），实现了Nginx 的6 个主要部分，以及HTTP 协议主流程。
-        - event模块、HTTP模块、mail模块的非核心模块中有一个对应的core模块，代理核心模块的行为。
-    - **核心模块接口简单化**。将`ngx_module_t` 中的ctx 上下文实例化为`ngx_core_module_t` 结构，该结构是以配置项的解析为基础的。nginx.conf 中解析出来的配置项会放到这个数据结构，通过提供的`init_conf` 回调使用解析出的配置项初始化核心模块。
-- 核心模块`ngx_core_module`：这6个核心模块只是定义了6 类业务的业务流程，具体的工具并不由这些模块执行，
-    - `ngx_events_module` ： 管理所有事件类模块。
-    - `ngx_http_module`： 管理所有HTTP 类型模块。
-    - `ngx_mail_module`： 管理所有邮件类型模块。
-    - `ngx_errlog_module` ： 管理所有日志类模块。
-    - `ngx_openssl_module` ： 管理所有TLS/SSL 模块
-    - `ngx_core_module`： 管理配置等全局模块。
-    
-#### 负载均衡
-- **系统级的负载均衡**，实现方法是使用一个Nginx 服务通过upstream 机制将请求分配到上游后端服务器，而这里可以使用模块内置的一些负载均衡机制将请求均衡地分配到服务器组中。
-- **单Nginx 服务内部工作进程间的负载均衡**，Nginx 内部有一个`ngx_accept_disabled` 变量，设置的是负载均衡的阈值，是一个整数数值。
-    - `ngx_accept_disabled`是一个进程内的全局变量，在Nginx启动时是负数，每次接收一个新连接时都会赋值，值为连接总数的7/8 。
-    - 当本变量值为负数时，不会进行负载均衡操作，会参与到新连接的接收尝试中，尝试获取同步锁；
-    - 当值为正数时，表示连接已经过多，则会放弃一次争夺，并将值减l。值为正数表示本进程处理的进程已经过多了，已经达到了上限的7/8 ，所以，只有值为正数时才启动均衡算法
-
-#### 内存池
-- Nginx 在内部设计并使用了一个简单的内存池，特点是，每一个TCP 连接建立时分配一个内存池，而在请求结束时销毁整个内存池，把曾经分配的内存一次性归还给操作系统。
-- Nginx 不负责回收内存池中已经分配出去的内存，这些内存由请求方负责回收。内存池减少了分配内存带来的资师、消耗，同时减少了内存碎片。
-- Nginx 内部内存池模式：
-    - ①申请了永远保存；
-    - ②申请了，请求结束全部释放。
-
-#### 连接池
-- Nginx 为了减少反复创建TCP连接以及创建套接字的次数，从而提高网络响应速度。
-- 连接池在Nginx 启动阶段，由管理进程在配置文件中解析出来对应的配置项，配置项放到配置结构体中。
-- 在event 核心模块`ngx_events_module` 初始化事件模型时，`ngx_event_core_module` 模块第一个被初始化，这个模块将根据配置结构体中的连接池大小配置创建连接池，如果没有配置项，则使用系统默认值创建连接池。
-- `注意`，配置指令`worker_connections` 配置的连接池大小是工作进程级别的，所以实际的连接池大小是`worker_connections` * `worker _processes`。
-- Nginx 内部链接池方法：`ngx_get_connection` 和`ngx_free_connection`
-
-#### 时间缓存
-- `nginx.conf` 中的`timer_resolution` 配置可以指定多长时间更新一次时间缓存。
-- 时间缓存在系统初始化时被赋值，另一个修改的机会是在`ngx_epoll_process_events` 调用`epoll_wait` 返回时有可能会更新。
-#### 延迟关闭
-- 延迟关闭，即当Nginx 要关闭连接时，并不马上关闭连接，而是先关闭TCP 连接的写操作，等待一段时间后再关掉连接的读操作。
-#### keepalive
-- keepalive 是HTTP长连接，可以提高传输效率。
-- 一般来说，当客户端的一次访问，需要多次访问同一个服务器时，打开keepalive 的优势非常大，如对于图片服务器，通常一个网页会包含很多图片，打开keepalive 会大量减少time-wait 状态。
-#### pipeline
-
-[返回目录](#目录)
-
-# Nginx工作流程
-
-## Nginx启动流程
-1. 从命令行得到配置文件路径
-2. 如是平滑升级，则监听环境变量传进的监听句柄
-3. 调用所有核心模块的create_conf方法，生成配置项结构体
-4. 解析nginx.conf 核心模块部分
-5. 调用所有核心模块的init_conf 方法
-6. 创建目录、打开文件、初始化共享内存
-7. 打开各模块配置的监听端口
-8. 调用所有模块的init_module 方法
-9. Nginx运行模式  
-    - 9.1 master模式运行 -> 11
-    - 9.2 single模式运行 -> 10
-10. 调用所有模块的`init_process` 方法 -> 结束
-11. 管理进程
-12. 启动工作进程
-13. 启动`cache_manager` 进程
-14. 启动`cache_loader` 进程
-15. 调用所有模块的`init_process` 方法 -> 结束
-
-![Nginx启动流程](../resources/static/images/Nginx启动流程.PNG)
-
-[返回目录](#目录)
-
-## Nginx管理进程的工作流程
-//TODO
-
-![管理进程的工作流程](../resources/static/images/管理进程的工作流程.PNG)
-
-## 工作进程的工作流程
-- worker进程是通过工作进程协调各模块组件完成任务的。工作进程由管理进程管理，它们之间的工作机制是通过信号实现的，worker进程关注的4个信号对应4个全局变量：
-    - `ngx_exiting`：标志位（退出时作为标志位使用）。
-    - `ngx_terminate` : TERM 信号，对应强制退出操作。
-    - `ngx_reopen` : USR1 信号，重新打开文件。
-    - `ngx_quit`: QUIT 信号，"优雅"地退出。
-
-![工作进程的工作流程](../resources/static/images/工作进程的工作流程.PNG)
-
-[返回目录](#目录)
-
-## 配置加载流程
-- 一个典型的nginx.conf
-    ```shell script
-    #user nobody;
-    worker_processes 1;
-    
-    events {
-      worker_connections 1024;
-    }
-  
-    http {
-      include mime.types;
-      default_type application/octet-stream;
-  
-      sendfile on;
-      keepalive_timeout 65;
-      
-      server {
-        listen 80;
-        server_name localhost;
-  
-        #access_log logs/host.access.log main;
-        
-        location / {
-          root html;
-          index index.html index.htm;
-        }
-        
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-          root html;
-        }
-      }
-    }
-    ```
-- 框架程序在解析配置文件时，通过3个HTTP模块的回调函数将配置信息传给HTTP模块：
-    - `create_main_conf`：对应配置块`http{}`，只被调用一次
-    - `create_svr_conf`：对应配置块`server{}`，可调用多次
-    - `create_loc_conf`：对应配置块`location{}`，可调用多次
-
-- **配置文件加载、解析**
-    - 从Nginx命令行获取配置文件路径
-    - 调用所有核心模块的create_conf方法，生成配置项结构体
-    - 框架代码解析nginx.conf核心模块部分
-    - 调用所有核心模块的init_conf方法，解析对应的配置块
-- **HTTP配置块解析** 
-
-![HTTP配置项解析过程](../resources/static/images/HTTP配置项解析过程.PNG)
-
-[返回目录](#目录)
-
-## HTTP框架初始化流程
-- HTTP部分由核心模块`ngx_http_moudle`、`ngx_http_core_moudle`、`ngx_http_upstream_moudle`模块组成。
-1. 初始化`ngx_module` 数据中所有HTTP 模块的`ctx_index` 字段，从0 开始递增。这个索引就是请求响应时调用的顺序，而这个顺序最终是由编译Nginx 时的模块顺序决定的，同时初始化存放配置信息的`ngx_http_conf_ctx_t` 数据结构。
-2. 依次调用所有HTTP 模块的`create_main_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`main_conf` 数组。
-3. 依次调用所有HTTP 模块的`create_svr_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`svr_conf` 数组。
-4. 依次调用所有HTTP 模块的`create_loc_conf`方法，产生的配置结构体指针按照各模块的`ctx_index`字段顺序放入`ngx_http_conf_ctx_t` 的`loc_conf` 数组。
-5. 依次调用所有模块的`preconfiguration` 方法，`preconfiguration` 回调函数完成了对应模块的预处理操作，其主要工作是创建模块用到的变量。
-6. 调用所有HTTP 模块的`init_conf` 方法，告诉模块配置解析完成。
-7. 合并配置项。
-8. Nginx 将HTTP 处理过程划分成了11 个阶段，使多个模块可以介入到不同的阶段进行流水线式操作，充分发挥模块式架构的优势，并实现请求过程异步化。
-    - 其中有7 个阶段是允许用户介入的： 
-        - NGX_HTTP_POST_READ_PHASE 
-        - NGX_HTTP_SERVER_REWRITE_PHASE
-        - NGX_HTTP_REWRITE_PHASE
-        - NGX_HTTP_PREACCESS_PHASE
-        - NGX_HTTP_ACCESS_PHASE
-        - NGX_HTTP_CONTENT_PHASE
-        - NGX_HTTP_LOG_PHASE
-    - 调用`ngx_http＿init_phases` 方法初始化这7 个动态数组，数据保存在phases 数组中。
-9. 依次调用所有HTTP 模块的`postconfiguration` 方法，使HTTP 模块可以处理HTTP阶段，将HTTP 模块的`ngx_http_handler_pt` 处理方法添加到HTTP 阶段中。
-10. 构建虚拟主机的查找散列表。虚拟主机配置在`server{}`中，为了提高请求时查找的速度，使用散列表对主机server name 进行了索引。
-11. 建立server 与监听端口间的关联，同时设置新连接的回调方法。
-
-[返回目录](#目录)
-
-## HTTP模块调用流程
-- 全异步方式
-#### 一个简略的HTTP模块调用流程，去除了异步的处理机制
-- 工作进程在主循环调用事件模型，检测网络事件，当有新连接请求时，则建立TCP 连接，然后根据nginx.conf 配置，将请求交由HTTP 框架处理。
-- 框架首先尝试接收HTTP 头部，接收到完整HTTP 头部后，将请求分发到具体的HTTP 模块处理。
-    - 通常根据URI 和  nginx.conf 里的location 匹配程度决定分发策略。
-- 请求处理结束时，通常都向客户端发送响应，这时一般自动依次调用所有的HTTP 过滤模块，每个模块根据配置文件中定义的策略决定自己的行为。
-    - 如可调用gzip 模块根据nginx.conf 中`gzip on|off;`决定是否将响应压缩。
-    - 如果设置了子请求调用，在返回前还会执行异步的子请求调用。
-
-![HTTP模块调用流程](../resources/static/images/HTTP模块调用流程.PNG)
-
-[返回目录](#目录)
-
-## HTTP请求处理流程
-- 对于Nginx 来说，从`ngx_http_init_request`开始处理一个请求
-    - 在这个函数中，会设置读事件为`ngx_http_process_request_line` ，表示接下来的网络事件，会由`ngx_http_process_request_line` 执行，来处理请求行。
-    - 通过`ngx_http_read_request_header` 读取请求数据，然后调用`ngx_http_parse_request_line` 函数解析请求行。
-- 在解析完请求行后， Nginx 会使用`ngx_http_process_request_headers` 设置读事件的handler ，然后后续的请求就在`ngx_http_process_request_headers` 中进行读取与解析。
-- 当Nginx解析到 两个回车换行符时，就表示请求头已经结束，此时会调用`ngx_http_process_request` 处理请求。
-    - `ngx_http_process_request` 会设置当前连接的读写事件处理函数为`ngx_http_request_handler` ，然后调用`ngx_http_handler` 真正开始处理一个完整的HTTP 请求。
-
-[返回目录](#目录)
-
-# nginx.conf
-Nginx 的工作流程是：在编译阶段选择要使用的模块并编译进整体工程中去。模块和业务的使用通过nginx.conf 配置文件中配置指令的配置得以控制和实现，复杂的业务和自定义的业务逻辑使用Lua 脚本实现。
-
-[nginx.conf](./nginx.conf)
-
-[返回目录](#目录)
-
-# Nginx高可用
-1. 配置Nginx高可用集群：
-    - 需要两台服务器安装 nginx：192.168.17.129 、192.168.17.131
-    - 需要两台服务器安装 keepalived
-    - ~~需要虚拟 ip~~
-
-![nginx高可用](../resources/static/images/nginx高可用.png)
-
-2. 在两台服务器安装 keepalived
-   - 使用 yum 命令进行安装：`yum install keepalived -y`
-   - 安装之后，在 etc 里面生成目录 keepalived ，有文件`keepalived.conf`
-3. 完成高可用配置（主从配置）
-    - （1）修改 /etc/keepalived/keepalivec.conf 配置文件
-    ```
-    global_defs {
-        notification_email {
-            acassen@firewall.loc
-            failover@firewall.loc
-            sysadmin@firewall.loc
-        }
-        notification_email_from Alexandre.Cassen@firewall.loc
-        smtp_server 1 92.168.17.129
-        smtp_connect_timeout 30
-        router_id LVS_DEVEL
-    }
-    
-    vrrp_script chk_http_port {
-        script "/usr/local/src/nginx_check.sh"
-        interval 2 #（检测脚本执行的间隔）
-        weight 2
-    }
-    
-    vrrp_instance VI_1 {
-        state BACKUP # 备份服务器上将 MASTER 改为 BACKUP
-        interface ens33 // 网卡
-        virtual_router_id 51 # 主、备机的 virtual_router_id 必须相同
-        priority 90 # 主、备机取不同的优先级，主机值较大，备份机值较小
-        advert_int 1 
-        authentication {
-            auth_type PASS
-            auth_pass 1111
-        }
-        virtual_ipaddress {
-            192.168.17.50 # VRRP H 虚拟地址
-        }
-    }
-    ```
-    - （2）在 /usr/local/src 添加检测脚本
-    ```
-    #!/bin/bash
-    A=`ps C nginx no header |wc l`
-    if [ $A eq 0 ];then
-        /usr/local/nginx/sbin/nginx
-        sleep 2
-        if [ `ps C nginx no header |wc l` eq 0 ];then
-            killall keepalived
-        fi
-    fi
-    ```
-    - （3）把两台服务器上 nginx 和 keepalived 启动
-        - 启动 nginx：`./nginx`
-        - 启动 keepalived：`systemctl start keepalived.service`
-4. 测试：
-    - （1）在浏览器地址栏输入 虚拟 ip 地址 `192.168.17.50`
-    ![](../resources/static/images/nginx高可用测试1.png)
-    ![](../resources/static/images/nginx高可用测试2.png)
-
-    - （2）把主服务器 `192.168.17.129` nginx 和 keepalived 停止，再输入 `192.168.17.50`
-    ![](../resources/static/images/nginx高可用测试3.png)
-    ![](../resources/static/images/nginx高可用测试4.png)
-
-[返回目录](#目录)
-
-# 共享内存
 
 [返回目录](#目录)
