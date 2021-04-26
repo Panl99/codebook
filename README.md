@@ -19,7 +19,7 @@
 | |[Pulsar.md TODO](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/Pulsar.md)|
 |服务注册与发现|[zookeeper.md 1/n](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/zookeeper.md)|
 |Nginx|[nginx.md 1/n](https://github.com/Panl99/codebook/blob/master/nginx/nginx.md)|
-| |[nginx.conf 1/n](https://github.com/Panl99/codebook/blob/master/nginx/nginx.conf)|
+| |[openresty.md TODO](nginx/openresty.md)|
 | |TODO --> [APISIX]() 、 [Envoy Proxy]() 、 [Consul]() 、[Nacos]()|
 |ElasticSearch|[elasticsearch.md TODO](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)|
 |容器|[docker.md TODO](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/docker.md)|

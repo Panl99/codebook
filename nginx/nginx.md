@@ -1,7 +1,4 @@
-- [章亦春-Nginx教程](http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)  
 - [深入理解Nginx：模块开发与架构解析（第2版）](../resources/static/doc/深入理解Nginx模块开发与架构解析第2版LinuxUnix技术丛书-4.pdf)
-- [Nginx Lua开发实战](https://github.com/Panl99/codebook/blob/master/nginx_lvs/Nginx&ensp;Lua开发实战.zip)
-- [OpenResty最佳实践](https://github.com/Panl99/openresty-best-practices)
 
 
 # 目录
@@ -26,11 +23,6 @@
     - [PostgreSQL](#PostgreSQL)
     - [Memcached](#Memcached)
     - [MongoDB](#MongoDB)
-- [OpenResty](#OpenResty)
-    - [OpenResty概述](#OpenResty概述)
-    - [OpenResty组成](#OpenResty组成)
-    - [OpenResty安装](#OpenResty安装)
-    - [Nginx多实例](#Nginx多实例)
 - [Nginx核心技术](#Nginx核心技术)
     -[Nginx架构](#Nginx架构)
 - [Nginx工作流程](#Nginx工作流程)
@@ -41,12 +33,11 @@
     - [HTTP框架初始化流程](#HTTP框架初始化流程)
     - [HTTP模块调用流程](#HTTP模块调用流程)
     - [HTTP请求处理流程](#HTTP请求处理流程)
-- [Lua](#Lua)
-    - [Lua教程](#Lua教程)
-    - [Lua通用库](#Lua通用库)
+
 - [nginx.conf](#nginx.conf)
 
 - [Nginx高可用-keepalived](#Nginx高可用)
+- [共享内存](#共享内存)
 
 [目录](#目录)
 
@@ -229,7 +220,6 @@
 
 # HTTP模块
 ## 用HTTP核心模块配置一个静态web服务器 
-- [nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)  
 
 **主要介绍：ngx_http_core_module模块**  
 - 所有的HTTP配置项都必须直属于http块、server块、location块、upstream块或if块等  
@@ -1030,127 +1020,6 @@ dbpath=/var/lib/mongo
 
 [返回目录](#目录)
 
-# OpenResty
-## OpenResty概述
-OpenResty 是一个基于Nginx 与Lua 的高性能Web 平台，集成了大量精良的Lua 库、第三方模块以及大多数的依赖项，用于方便地搭建能够处理超高并发、扩展性极高的动态Web 应用、Web 服务和动态网关。  
-Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持的各种C 以及Lua 模块，快速构造出足以胜任10K 乃至1000K 以上单机并发连接的高性能Web 应用系统。  
-
-[返回目录](#目录)
-
-## OpenResty组成
-- 标准Lua 5.1 解释器；
-- Drizzle Nginx 模块；
-- Postgres Nginx 模块；
-- Iconv Nginx 模块。
-
-**注意：**
-- 上面4 个模块默认并未启用，需要分别加入`--with-lua51`、`--with-http_drizzle_module`、`--with-http_postgres_module` 和`--with-http_iconv_module` 编译选项开启它们。
-- 在1.5.8.1 版本之前，OpenResty 默认使用标准Lua5.1 解释器。所以对于老版本，需要显式地加入`--with-luajit` 编译选项（1.5.8.1以后的版本已默认开启）来启用LuaJIT 组件。
-- 非必要时，不推荐启用标准Lua 5.1 解释器，而应尽量使用LuaJIT 组件。
-- OpenResty支持的模块：
-    ```shell script
-    LuaJIT;
-    ArrayVarNginxModule;
-    AuthRequestNginxModule;
-    CoolkitNginxModule;
-    DrizzleNginxModule;
-    EchoNginxModule;
-    EncryptedSessionNginxModule;
-    FormInputNginxModule;
-    HeadersMoreNginxModule;
-    IconvNginxModule;
-    StandardLualnterpreter;
-    MemcNginxModule;
-    Nginx;
-    NginxDevelKit;
-    LuaCjsonLibrary;
-    LuaNginxModule;
-    LuaRdsParserLibrary;
-    LuaRedisParserLibrary;
-    LuaRestyCoreLibrary;
-    LuaRestyDNSLibrary;
-    LuaRestyLockLibrary;
-    LuaRestyLrucacheLibrary;
-    LuaRestyMemcachedLibrary;
-    LuaRestyMySQLLibrary;
-    LuaRestyRedisLibrary;
-    LuaRestyStringLibrary;
-    LuaRestyUploadLibrary;
-    LuaRestyUpstreamHealthcheckLibrary;
-    LuaRestyWebSocketLibrary;
-    LuaRestyLimitTrafficLibrary;
-    LuaUpstreamNginxModule;
-    PostgresNginxModule;
-    RdsCsvNginxModule;
-    RdsJsonNginxModule;
-    RedisNginxModule;
-    Redis2NginxModule;
-    RestyCLI;
-    OPM;
-    SetMiscNginxModule;
-    SrcacheNginxModule;
-    XssNginxModule。
-    ```
-
-[返回目录](#目录)
-
-## OpenResty安装
-- 官网： `https://openresty.org/cn/installation.html`
-- 添加资源库：
-    - 创建一个名为`/etc/yum.repos.d/OpenResty.repo`的文件，内容如下：
-        ```shell script
-        [openresty]
-        name=Official OpenResty Repository
-        baseurl=https://copr-be.cloud.fedoraproject.org/results/openresty/openresty/epel-$releasever-$basearch/
-        skip_if_unavailable=True
-        gpgcheck=1
-        gpgkey=https://copr-be.cloud.fedoraproject.org/results/openresty/openresty/pubkey.gpg
-        enabled=1
-        enabled_metadata=1
-        ```
-    - 也可以直接运行命令添加仓库： `sudo yum-config-manager --add-repo https://openresty.org/yum/centos/OpenResty.repo`
-    - 国内用户可以把baseurl 改成后面链接，速度会更快：`baseurl= https://openresty.org/yum/openresty/openresty/epel-$releasever$basearch/`
-    - 或者运行下面命令直接添加仓库：`sudo yum-config-manager --add-repo https://openresty.org/yum/cn/centos/OpenResty.repo`
-- 列出资源库中所有的OpenResty 包： `sudo yum --disablerepo="*"--enablerepo="openresty" list available`
-- 安装： `sudo yum install openresty`
-    - 使用yum 安装OpenResty 可能会因为缺少GeoIP 库失败，需要先安装GeoIP：`yum install GeoIP-devel`
-    - GeoIP 库的安装可能会因为仓库里没有Extra 库而失败，需要先添加Extra 库： `yum install epel-release`
-- 测试：
-    - 启动Nginx： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/`，在浏览器里输入`http://127.0.0.1（或主机IP）`，看到 `Welcome to OpenResty！` 表示已经启动成功。
-    - 修改`/usr/local/openresty/nginx/conf/nginx.conf`，测试Lua 是否正常工作：
-        ```shell script
-        worker_processes 1;
-        error_log logs/error.log;
-      
-        events {
-          worker connections 1024;
-        }
-      
-        http {
-            server {
-                listen 8080;
-                location / {
-                    default_type text/html;
-                    content_by_lua 'ngx.say("<p>hello, world</p>")';
-                }
-            }
-        }
-        ```
-    - 测试配置文件正确性： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/ -t`
-    - 重新加载配置文件： `/usr/local/openresty/nginx/sbin/nginx -p /usr/local/openresty/nginx/ -s reload`
-    - 在浏览器里输入`http://127.0.0.1:8080`，如果看到了`hello world`就表示可以正常工作了。
-    - 也可以使用curl命令： `curl http://localhost:8080`，<p>hello, world</p>
-    
-[返回目录](#目录)
-
-## Nginx多实例
-- OpenRestry 安装成功后，包里的Nginx 可以部署多个实例，可以实例化多个不同的服务：或用于对外提供服务，或用于不同的开发任务，或用于学习。
-- 只需要把OpenRestry 中的Nginx 目录复制一份就可以启动不同的实例： `cp -r /usr/local/openrestry/nginx /usr/local/openrestry/nginx_9090`
-- 然后修改`nginx_9090/conf/nginx.conf`，把端口从8080 修改为9090 ，把"hello world"修改为"hello world2"，修改完成后启动实例： `/usr/local/openrestry/nginx_9090/sbin/nginx -p /usr/local/openrestry/nginx_9090/`
-- 在浏览器里输入`http://127.0.0.l:9090 `，可以得到：`hello world2` 表示新实例启动成功。
-
-[返回目录](#目录)
-
 # Nginx核心技术
 
 ## Nginx架构
@@ -1364,138 +1233,10 @@ Web 开发人员和系统工程师可以使用Lua 脚本语言调动Nginx 支持
 
 [返回目录](#目录)
 
-# Lua
-## Lua教程
-#### Lua特点
-- 轻量级：Lua使用标准C语言编写并以源码形式开放，编译后仅一百余字节，可以很方便嵌入其他程序中。
-- 可扩展：Lua提供了非常容易使用的扩展接口 和机制，由宿主语言(如C/C++)提供功能，Lua可以像内置功能一样使用它们。
-- 其他特性：
-    - 支持面向过程 和函数式编程。
-    - 自动内存管理：通过只提供的一种类型表(table)，实现数组、hash标、集合、对象。
-    - 语言内置模式匹配
-#### Lua安装
-- Linux下载源码包、解压、编译：
-    ```shell script
-    curl -R -O http://www.lua.org/ftp/lua-5.3.0.tar.gz
-    tar zxf lua-5.3.0.tar.gz
-    cd lua-5.3.0
-    make linux test
-    make install
-    ```
-- 测试：
-    - 创建HelloWorld.lua文件，文件内容： `print("Hello World!");`
-    - 执行命令： `lua HelloWorld.lua`
-        - 输出结果：Hello World!
-
-#### Lua语法
-- Lua语法与C/C++相似
-- 开启Lua交互模式：lua -i
-- lua脚本编程：将代码保存为xxx.lua，执行`lua xxx.lua`
-    - 或者指定lua解释器来执行脚本：
-        ```shell script
-        #!/usr/local/bin/lua
-        print ("Hello World!")
-        ```
-    - 执行：./test.lua
-- **注释**：
-    - 单行注释： `--注释`
-    - 多行注释：
-        ```shell script
-        --[[
-        多行注释
-        多行注释
-        --]]
-        ```
-- **标识符**：
-    - 标识符以字母或下划线开头，后加0-n个字母、下划线、数字，不能其他特殊字符（如：@、#、$、%等）
-    - 最好不要使用下划线 + 大写字母的标识符，防止与保留字冲突
-    - 区分大小写
-- 保留字：and、break、false、true、local、if、else、elseif、end、in、repeat、function、or、until、nil、not、return、then、while、do、for
-- 全局变量：
-    - 默认即全局变量
-    - 访问没有初始化的变量，返回结果为 nil
-    - 删除一个全局变量，只需要将变量值赋为 nil
-    
-#### Lua数据类型
-1. **nil**： 无效值，在条件表达式中相当于false。只有nil 这一个值
-2. **boolean**： 包含两个值：false 和true
-3. **number**： 表示双精度类型的实浮点数
-4. **string**： 字符串由一对双引号或单引号表示。或者两个方括号`[[]]`来表示“一块”字符串：
-5. **function**： 由C 或Lua 编写的函数
-6. **userdata**： 表示任意存储在变盘中的C 数据结构
-7. **thread**： 执行的独立线程，用于执行协同程序
-8. **table**：Lua 中的表实际上是一个“关联数组”，索引可以是数字或字符串。Lua中，表通过构造表达式完成。最简单的表达式是{}，用来创建一个空表
-
-- 使用type()函数获取变量或值的类型： `print(type("Hello world"))  --> string`
-
-#### Lua变量
-- 全局变量：`a = 5`
-- 局部变量：`local b = 6`
-- 表中的域
-
-- 赋值：
-    - 多变量赋值： a, b = 10, 2*x  -->  a=10; b=2*x
-    - 变量个数 跟值的个数不一致：
-        - 变量个数 > 值的个数，按变量个数补足nil 。
-        - 变量个数 < 值的个数，多余的值会被忽略。
-
-- 索引：对table的索引使用方括号[]。Lua也提供了．（点）操作
-    - t[i]
-    - t.i  --当索引为字符串类型时的一种简化写法
-
-#### Lua循环
-//TODO
-#### Lua流程控制
-//TODO
-#### Lua函数
-//TODO
-#### Lua运算符
-//TODO
-#### Lua字符串
-//TODO
-#### Lua数组
-//TODO
-#### Lua迭代器
-//TODO
-#### Lua表
-//TODO
-#### Lua模块与包
-//TODO
-#### Lua元表
-//TODO
-#### Lua协同程序
-//TODO
-#### Lua错误处理
-//TODO
-#### Lua调试
-//TODO
-#### Lua垃圾回收
-//TODO
-#### Lua面向对象
-//TODO
-#### Lua数据库访问
-//TODO
-
-[返回目录](#目录)
-
-## Lua通用库
-#### 字符串库
-//TODO
-#### 表库
-//TODO
-#### 文件I/O库
-//TODO
-#### 数学库
-//TODO
-#### 操作系统库
-//TODO
-
-[返回目录](#目录)
-
 # nginx.conf
 Nginx 的工作流程是：在编译阶段选择要使用的模块并编译进整体工程中去。模块和业务的使用通过nginx.conf 配置文件中配置指令的配置得以控制和实现，复杂的业务和自定义的业务逻辑使用Lua 脚本实现。
 
-[nginx.conf](https://github.com/Panl99/codebook/blob/master/nginx_lvs/nginx.conf)
+[nginx.conf](./nginx.conf)
 
 [返回目录](#目录)
 
@@ -1569,5 +1310,9 @@ Nginx 的工作流程是：在编译阶段选择要使用的模块并编译进�
     - （2）把主服务器 `192.168.17.129` nginx 和 keepalived 停止，再输入 `192.168.17.50`
     ![](../resources/static/images/nginx高可用测试3.png)
     ![](../resources/static/images/nginx高可用测试4.png)
+
+[返回目录](#目录)
+
+# 共享内存
 
 [返回目录](#目录)
