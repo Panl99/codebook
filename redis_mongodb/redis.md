@@ -618,11 +618,31 @@ ziplistLen|返回压缩列表目前包含的节点数量|节点数小于65535时
 # 分布式锁
 - 使用`SETNX`命令获取锁(只会在键不存在的情况下为键设置值)，获取失败会一直重试，直到获取成功或者超时。
 - [RedissonLockDemo](https://github.com/Panl99/demo/tree/master/demo-redis/src/main/java/com/lp/demoredis/redisson/RedissonLockDemo.java)
+    ```
+    if (redis.call('exists', KEYS[1]) == 0) then 
+    	redis.call('hincrby', KEYS[1], ARGV[2], 1); 
+    	redis.call('pexpire', KEYS[1], ARGV[1]); 
+    	return nil; 
+    end; 
+    if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then 
+    	redis.call('hincrby', KEYS[1], ARGV[2], 1); 
+    	redis.call('pexpire', KEYS[1], ARGV[1]); 
+    	return nil; 
+    end; 
+    return redis.call('pttl', KEYS[1]);
+    ```
     - Redisson锁续命机制（看门狗）
         - 异步操作，加了一个监听器监听加锁操作
         - 任务使用lua脚本：如果key存在，是当前线程(传入线程id)加的锁，就重新把超时时间设置为30秒(默认)
         - 任务周期：加锁后10秒(超时时间的1/3)
         - 操作完后又会回调自己，执行异步机制：加锁、续命
+        ```
+        if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then 
+        	redis.call('pexpire', KEYS[1], ARGV[1]); 
+        	return 1; 
+        end; 
+        return 0; 
+        ```
 
 
 - **严格意义上的分布式锁，要用zookeeper或者etcd**
@@ -631,10 +651,10 @@ ziplistLen|返回压缩列表目前包含的节点数量|节点数小于65535时
 分布式锁的本质：就是在所有进程都能访问到的地方，设置一个锁资源，让这些进程都来竞争锁资源。
 
 Redis实现分布式锁：
-    - `SETNX key value`：当可以不存在时，设置key为value，并返回1；如果key不存在，不进行操作，返回0。
-    - `EXPIRE key locktime`：设置key的过期时间
-    - `DEL key`：删除key
-    - `GETSET key value`：先GET 再SET，先返回key对应的值，没有的话就返回空；再将key设置为value。
+- `SETNX key value`：当可以不存在时，设置key为value，并返回1；如果key不存在，不进行操作，返回0。
+- `EXPIRE key locktime`：设置key的过期时间
+- `DEL key`：删除key
+- `GETSET key value`：先GET 再SET，先返回key对应的值，没有的话就返回空；再将key设置为value。
 
 ```java
 public class RedissonLockDemo {
@@ -751,11 +771,10 @@ public class RedissonLockDemo {
 
 # 集群
 - Redis集群通过分片来进行数据共享，并提供复制和故障转移功能。
-- Redis服务器启动时是否开启集群配置：`cluster-enabled yes`
+- Redis服务器启动时开启集群配置命令：`cluster-enabled yes`
 
 ## 节点
-- 一个Redis集群一般包含多个节点，要组成一个可工作集群，需要将各独立节点连接起来。
-- 连接各节点命令：`CLUSTER MEET <ip> <port>`。
+- 一个Redis集群一般包含多个节点，将各独立节点连接起来组成一个工作集群，使用命令：`CLUSTER MEET <ip> <port>`。
     - 向一个节点node发送命令`CLUSTER MEET <ip> <port>`，实现node节点与ip和port指定的节点握手，使得node节点将ip和port指定的节点加入到node节点所在的集群中。
         ```
         假设有三个独立节点：127.0.0.1:7000、127.0.0.1:7001、127.0.0.1:7002
@@ -773,7 +792,7 @@ public class RedissonLockDemo {
 - 槽分配算法：CRC16
 - 集群是上线状态(ok)：数据库中的16384个槽都有节点在处理。
     - 集群是下线状态(fail)：数据库中任何一个槽都没有得到处理。
-- 将槽指派给节点负责：`CLUSTER ADDSLOTS <slot> <slot...>`
+- 将槽指派给节点负责：**`CLUSTER ADDSLOTS <slot> <slot...>`**
     - 例如：`CLUSTER ADDSLOTS 0 1 2 3 4 ... 5000`
     - 要让三个节点所在的集群进入上线状态：继续执行命令将剩下的槽分别指派给节点7001 和 7002
     - 查看集群状态：`CLUSTER INFO`
@@ -781,18 +800,28 @@ public class RedissonLockDemo {
 - 集群中所有槽的指派信息记录在：`cluster.h/clusterState`的`slots`数组中。
 - **查看键属于哪个槽**：`CLUSTER KEYSLOT <key>`
 
-[目录](#目录)
+### 为什么槽是16384个？
+按道理`CRC16`算法产生的hash值有16bit，可以产生2^16=65536个值，为什么mod时不是65536而是16384呢？
+- ① 如果槽是65536，发送心跳包的消息头会达到8k，发送的心跳包过于庞大。
+    - Redis节点每秒会发送一定数量的ping消息作为心跳包，如果槽位为65536，这个ping消息的消息头太大了，浪费带宽。
+    - 在消息头中，最占空间的是`myslots[CLUSTER_SLOTS/8]` 当槽位为65536时，这块的大小是：`65536÷8÷1024=8kb`
+    - 当槽位为2^14=16384时，大小只有：`16384÷8÷1024=2kb`，即使用2k的内存空间创建了16k的槽。
+- ② redis的集群主节点数量基本不会超过1000个，对于节点数在1000以内的redis集群，16384个槽位够用了。
+    - 集群节点越多，心跳包的消息体内携带的数据越多。如果节点过1000个，也会导致网络拥堵。因此redis作者，不建议redis集群节点数量超过1000个。
+- ③ 槽位越小，节点少的情况下，压缩比越高。
+    - Redis主节点的配置信息中，它所负责的哈希槽是通过一张bitmap的形式来保存的，在传输过程中，会对bitmap进行压缩，如果bitmap的填充率`slots/N`很高的话(N表示节点数)，bitmap的压缩率就很低。
+    - 如果节点数很少，而哈希槽数量很多的话，bitmap的压缩率就很高。
 
 ### 重新分片
-- 指将已分配给某节点的槽重新分配给另一节点。
-- 重新分片操作可以在线进行，集群不需要下线。
+指将已分配给某节点的槽重新分配给另一节点。重新分片可以在线操作，集群不需要下线。
+
 - 重新分片操作：
-    - redis-trib对目标节点发送`CLUSTER SETSLOT <slot> IMPORTING <source_id>`命令，让目标节点准备好从源节点导入(import)属于槽slot的键值对。
-    - redis-trib对源节点发送`CLUSTER SETSLOT <slot> MIGRATING <target_id>`命令，让源节点准备好将属于槽slot的键值对迁移(migrate)到目标节点。
-    - redis-trib向源节点发送`CLUSTER GETKEYSINSLOT <slot> <count>`命令，获取最多count个属于槽slot的键值对的键名。
-    - 对于上述获取到的每个键名，redis-trib都向源节点发送`MIGRATE <target_ip> <target_port> <key_name> 0 <timeout>`命令，将选中的键原子地从源节点迁移至目标节点。
+    - redis-trib对目标节点发送导入准备命令：`CLUSTER SETSLOT <slot> IMPORTING <source_id>`，让目标节点准备好从源节点导入(import)属于槽slot的键值对。
+    - redis-trib对源节点发送迁移准备命令：`CLUSTER SETSLOT <slot> MIGRATING <target_id>`，让源节点准备好将属于槽slot的键值对迁移(migrate)到目标节点。
+    - redis-trib向源节点发送查询键命令：`CLUSTER GETKEYSINSLOT <slot> <count>`，获取最多count个属于槽slot的键值对的键名。
+    - 对于上述查到的每个键名，redis-trib都向源节点发送迁移命令：`MIGRATE <target_ip> <target_port> <key_name> 0 <timeout>`，将选中的键原子地从源节点迁移至目标节点。
     - 重复上述两个步骤，直到源节点的属于槽slot的键值对都被迁移至目标节点。
-    - redis-trib向集群中的任一节点发送`CLUSTER SETSLOT <slot> NODE <target_id>`命令，将槽slot指派给目标节点，这一指派信息会通过消息通知到整个集群。
+    - redis-trib向集群中的任一节点发送槽指派命令：`CLUSTER SETSLOT <slot> NODE <target_id>`，将槽slot指派给目标节点，这一指派信息会通过消息通知到整个集群。
 - ASK错误：在重新分片期间，被迁移槽的一部分键保存在源节点，一部分键已经迁移到目标节点，此时客户端向源节点发送一个命令，要处理属于被迁移槽的键时：
     - 源节点先查自己的库，看有没有键，如果有，就执行客户端发来的命令。
     - 如果源节点没有找到键，键有可能被迁移到目标节点，源节点会向客户端返回ASK错误，引导客户端对目标节点发送命令。
@@ -806,23 +835,23 @@ public class RedissonLockDemo {
     - 例如：7000、7001、7002为主节点，现添加7003、7004为7000的从节点。
         - 当7000节点下线时，7003被选为新的主节点，接管原7000节点负责的槽。
         - 而7004节点改为复制7003节点。
-- **设置从节点**：`CLUSTER REPLICATE <node_id>`
+- **设置从节点：`CLUSTER REPLICATE <node_id>`**
 
 ### 故障转移
-- 故障检测：
-    - 集群中每个节点都会定期向集群中的其他节点发送PING消息，如果接收节点没有在指定时间回复PONG消息，那么发送节点就会将接收节点标记为疑似下线(PFAIL)。
-    - 一个集群中，半数以上负责处理槽的主节点都将某主节A点报告为疑似下线，那么主节点A将被标记为已下线(FAIL)，并向集群其他主节点进行通知，所有收到的节点都会将节点A标记为已下线。
+**故障检测：**
+- 集群中每个节点都会定期向集群中的其他节点发送PING消息，如果接收节点没有在指定时间回复PONG消息，那么发送节点就会将接收节点标记为主观下线状态(PFAIL)。
+- 当一个集群中，半数以上负责处理槽的主节点都将某主节A点报告为主观下线状态，那么主节点A将被标记为客观下线状态(FAIL)，并向集群其他主节点进行通知，所有收到的节点都会将节点A标记为已下线。
     
-- 故障转移：
-    - 当一个从节点发现自己正在复制的主节点已下线时，从节点开始对下线主节点进行故障转移：
-        - 复制下线主节点的从节点中会进行选举，选出一个新的主节点。
-        - 被选举的从节点会执行`SLAVEOF no one`命令，成为主节点。
-        - 新的主节点会撤销所有对已下线主节点的槽指派，并将这些槽全部指派给自己。
-        - 新的主节点会向集群广播一条PONG消息，通知其他节点自己变成了主节点。
-        - 新的主节点开始接收和处理自己负责的槽的命令请求，故障转移完成。
-    - **选举新的主节点**：
-        - //TODO
-        - 类似[节点选举](#节点选举)
+**故障转移：**
+- 当一个从节点发现自己正在复制的主节点已下线时，从节点开始对下线主节点进行故障转移操作：
+    - 复制下线主节点的从节点中会进行选举，选出一个新的主节点。
+    - 被选举的从节点会执行 **`SLAVEOF no one`** 命令，成为主节点。
+    - 新的主节点会撤销所有对已下线主节点的槽指派，并将这些槽全部指派给自己。
+    - 新的主节点会向集群广播一条PONG消息，通知其他节点自己变成了主节点。
+    - 新的主节点开始接收和处理自己负责的槽的命令请求，故障转移完成。
+- 选举新的主节点：
+    - //TODO
+    - 类似[节点选举](#节点选举)
 
 [目录](#目录)
 
