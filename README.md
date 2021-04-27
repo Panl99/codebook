@@ -2,7 +2,7 @@
 |技术|文档|
 |---|---|
 |Java|[java.md ✔](java/java.md) <br/> [Java诊断工具：arthas  TODO](arthas/arthas.md) <br/> [annotation.md 1/n](java/annotation.md)|
-|数据结构、算法|[数据结构可视化工具](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html)|
+|数据结构<br/>算法<br/>设计模式|[数据结构可视化工具](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html) <br/> <br/>|
 |NIO|[netty.md TODO](java/netty.md)|
 |Spring|[SpringAll.md ✔](spring/SpringAll.md) <br/> [~~spring.md 1/n~~](spring/spring.md) 、 [~~springboot.md 1/n~~](spring/springboot.md) 、 [~~springcloud.md 1/n~~](spring/springcloud.md)|
 |NoSQL|[redis.md ✔](redis_mongodb/redis.md) <br/> [mongodb.md TODO](redis_mongodb/mongodb.md) 、[Cassandra TODO]()|
