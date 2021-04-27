@@ -1,5 +1,6 @@
-文档：[https://github.com/apache/apisix/tree/master/docs/zh/latest](https://github.com/apache/apisix/tree/master/docs/zh/latest)
+[https://github.com/apache/apisix/tree/master/docs/zh/latest](https://github.com/apache/apisix/tree/master/docs/zh/latest)
 
+[芋道 APISIX 极简入门](https://www.iocoder.cn/APISIX/install/)
 
 # APISIX概述
 
