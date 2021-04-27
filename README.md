@@ -6,17 +6,17 @@
 |NIO|[netty.md TODO](java/netty.md)|
 |Spring|[SpringAll.md ✔](spring/SpringAll.md) <br/> [~~spring.md 1/n~~](spring/spring.md) 、 [~~springboot.md 1/n~~](spring/springboot.md) 、 [~~springcloud.md 1/n~~](spring/springcloud.md)|
 |NoSQL|[redis.md ✔](redis_mongodb/redis.md) <br/> [mongodb.md TODO](redis_mongodb/mongodb.md) 、[Cassandra TODO]()|
-|数据库|[mysql.md √](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
+|数据库|[mysql.md ✔](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
 |Linux|[shell.md ✔](shell/shell.md) <br/> [Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
 |消息中间件|[kafka.md 1/n](kafka_zookeeper_Pulsar/kafka.md) <br/> [Pulsar.md TODO](kafka_zookeeper_Pulsar/Pulsar.md)|
 |服务注册中心|[zookeeper.md 1/n](kafka_zookeeper_Pulsar/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Consul--TODO]()|
-|配置中心|[Apollo.md √](apollo/Apollo.md)|
-|Nginx|[nginx.md 1/n](nginx/nginx.md) <br/> [openresty.md TODO](nginx/openresty.md) <br/> [APISIX--TODO]()|
+|配置中心|[Apollo.md ✔](apollo/Apollo.md)|
+|Nginx|[nginx.md 1/n](nginx/nginx.md) <br/> [openresty.md 1/n](nginx/openresty.md) <br/> [APISIX 1/n](nginx/apisix.md)|
 |ElasticSearch|[elasticsearch.md TODO](elasticsearch/elasticsearch.md)|
 |容器|[docker.md TODO](docker_kubernetes/docker.md) <br/> [kubernetes.md TODO](docker_kubernetes/kubernetes.md)|
 |Python|[python.md ✔](python/python.md) <br/> [python.py](python/python.py) <br/> [Python-100天从新手到大师](https://github.com/jackfrued/Python-100-Days)|
 |Go|[go.md TODO](go/go.md)|
-|项目管理工具|[git.md √](git_maven/git.md) <br/> [maven.md √](git_maven/maven.md)|
+|项目管理工具|[git.md ✔](git_maven/git.md) <br/> [maven.md ✔](git_maven/maven.md)|
 |BigData|[hadoop.md](bigdata/hadoop.md) <br/> [spark.md](bigdata/spark.md) <br/> [flink.md](bigdata/flink.md) <br/> [hive.md](bigdata/hive.md) <br/> [hbase.md](bigdata/hbase.md)|
 |MinIo|对象存储服务|
 
