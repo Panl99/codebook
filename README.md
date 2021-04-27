@@ -1,42 +1,25 @@
 # MyDoc
 |技术|文档|
 |---|---|
-|Java|[java.md ✔](https://github.com/Panl99/codebook/blob/master/java/java.md)|
-| |[Java诊断工具：arthas  TODO](https://github.com/Panl99/codebook/blob/master/arthas/arthas.md)|
-| |[annotation.md 1/n](https://github.com/Panl99/codebook/blob/master/java/annotation.md)|
-| |[netty.md TODO](https://github.com/Panl99/codebook/blob/master/java/netty.md)|
-| |[数据结构可视化工具：https://www.cs.usfca.edu/~galles/visualization/Algorithms.html](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html)|
-|Spring|[SpringAll.md ✔](https://github.com/Panl99/codebook/tree/master/spring/SpringAll.md)|
-| |[~~spring.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/spring.md) 、 [~~springboot.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/springboot.md) 、 [~~springcloud.md 1/n~~](https://github.com/Panl99/codebook/tree/master/spring/springcloud.md)|
-|NoSQL|[redis.md ✔](https://github.com/Panl99/codebook/blob/master/redis_mongodb/redis.md)|
-| |[mongodb.md TODO](https://github.com/Panl99/codebook/blob/master/redis_mongodb/mongodb.md)|
-| |[Cassandra TODO]()|
-|数据库|[mysql.md 3/7](https://github.com/Panl99/codebook/blob/master/mysql_oracle/mysql.md)|
-| |[oracle.md 1/n](https://github.com/Panl99/codebook/blob/master/mysql_oracle/oracle.md)|
-|Linux|[linux.md ✔](https://github.com/Panl99/codebook/blob/master/linux/linux.md)|
-| |[Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
-|消息中间件|[kafka.md 1/n](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/kafka.md)|
-| |[Pulsar.md TODO](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/Pulsar.md)|
-|服务注册中心|[zookeeper.md 1/n](https://github.com/Panl99/codebook/blob/master/kafka_zookeeper_Pulsar/zookeeper.md)|
+|Java|[java.md ✔](java/java.md) <br/> [Java诊断工具：arthas  TODO](arthas/arthas.md) <br/> [annotation.md 1/n](java/annotation.md)|
+|数据结构、算法|[数据结构可视化工具](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html)|
+|NIO|[netty.md TODO](java/netty.md)|
+|Spring|[SpringAll.md ✔](spring/SpringAll.md) <br/> [~~spring.md 1/n~~](spring/spring.md) 、 [~~springboot.md 1/n~~](spring/springboot.md) 、 [~~springcloud.md 1/n~~](spring/springcloud.md)|
+|NoSQL|[redis.md ✔](redis_mongodb/redis.md) <br/> [mongodb.md TODO](redis_mongodb/mongodb.md) 、[Cassandra TODO]()|
+|数据库|[mysql.md 3/7](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
+|Linux|[shell.md ✔](shell/shell.md) <br/> [Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
+|消息中间件|[kafka.md 1/n](kafka_zookeeper_Pulsar/kafka.md) <br/> [Pulsar.md TODO](kafka_zookeeper_Pulsar/Pulsar.md)|
+|服务注册中心|[zookeeper.md 1/n](kafka_zookeeper_Pulsar/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Consul]()|
 |配置中心|[Apollo.md](apollo/Apollo.md)|
-|Nginx|[nginx.md 1/n](https://github.com/Panl99/codebook/blob/master/nginx/nginx.md)|
-| |[openresty.md TODO](nginx/openresty.md)|
-| |TODO --> [APISIX]() 、 [Envoy Proxy]() 、 [Consul]() 、[Nacos]()|
-|ElasticSearch|[elasticsearch.md TODO](https://github.com/Panl99/codebook/blob/master/elasticsearch/elasticsearch.md)|
-|容器|[docker.md TODO](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/docker.md)|
-| |[kubernetes.md TODO](https://github.com/Panl99/codebook/blob/master/docker_kubernetes/kubernetes.md)|
-|Python|[python.md ✔](https://github.com/Panl99/codebook/blob/master/python/python.md)|
-| |[python.py](https://github.com/Panl99/codebook/blob/master/python/python.py)|
-| |[Python-100天从新手到大师：https://github.com/jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days)|
-|Go|[go.md TODO](https://github.com/Panl99/codebook/blob/master/go/go.md)|
-|Git|[git.md 1/n](https://github.com/Panl99/codebook/blob/master/git_maven/git.md)|
-|Maven|[maven.md √](https://github.com/Panl99/codebook/blob/master/git_maven/maven.md)|
-|BigData|[hadoop.md](https://github.com/Panl99/codebook/blob/master/bigdata/hadoop.md)|
-| |[spark.md](https://github.com/Panl99/codebook/blob/master/bigdata/spark.md)|
-| |[hive.md](https://github.com/Panl99/codebook/blob/master/bigdata/hive.md)|
-| |[hbase.md](https://github.com/Panl99/codebook/blob/master/bigdata/hbase.md)|
-| |[flink.md ×](https://github.com/Panl99/codebook/blob/master/bigdata/flink.md)|
+|Nginx|[nginx.md 1/n](nginx/nginx.md) <br/> [openresty.md TODO](nginx/openresty.md) <br/> [APISIX--TODO]()|
+|ElasticSearch|[elasticsearch.md TODO](elasticsearch/elasticsearch.md)|
+|容器|[docker.md TODO](docker_kubernetes/docker.md) <br/> [kubernetes.md TODO](docker_kubernetes/kubernetes.md)|
+|Python|[python.md ✔](python/python.md) <br/> [python.py](python/python.py) <br/> [Python-100天从新手到大师](https://github.com/jackfrued/Python-100-Days)|
+|Go|[go.md TODO](go/go.md)|
+|项目管理工具|[git.md 1/n](git_maven/git.md) <br/> [maven.md √](git_maven/maven.md)|
+|BigData|[hadoop.md](bigdata/hadoop.md) <br/> [spark.md](bigdata/spark.md) <br/> [flink.md ×](bigdata/flink.md) <br/> [hive.md](bigdata/hive.md) <br/> [hbase.md](bigdata/hbase.md)|
 |MinIo|对象存储服务|
+
 
 # 项目
 - [fullstack-tutorial：🚀 fullstack tutorial 2020，后台技术栈/架构师之路/全栈开发社区](https://github.com/Panl99/fullstack-tutorial)
