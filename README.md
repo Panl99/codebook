@@ -2,14 +2,14 @@
 |技术|文档|
 |---|---|
 |Java|[java.md ✔](java/java.md) <br/> [Java诊断工具：arthas  TODO](arthas/arthas.md) <br/> [annotation.md 1/n](java/annotation.md)|
-|数据结构<br/>算法<br/>设计模式|[数据结构可视化工具](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html) <br/> <br/>|
+|数据结构、算法、设计模式|[DataStructures_Algorithms_DesignPatterns.md](DataStructures_Algorithms_DesignPatterns/DataStructures_Algorithms_DesignPatterns.md) <br/> [*数据结构可视化工具*](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html) |
 |NIO|[netty.md TODO](java/netty.md)|
 |Spring|[SpringAll.md ✔](spring/SpringAll.md) <br/> [~~spring.md 1/n~~](spring/spring.md) 、 [~~springboot.md 1/n~~](spring/springboot.md) 、 [~~springcloud.md 1/n~~](spring/springcloud.md)|
 |NoSQL|[redis.md ✔](redis_mongodb/redis.md) <br/> [mongodb.md TODO](redis_mongodb/mongodb.md) 、[Cassandra TODO]()|
 |数据库|[mysql.md ✔](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
 |Linux|[shell.md ✔](shell/shell.md) <br/> [Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
 |消息中间件|[kafka.md 1/n](kafka_zookeeper_Pulsar/kafka.md) <br/> [Pulsar.md TODO](kafka_zookeeper_Pulsar/Pulsar.md)|
-|服务注册中心|[zookeeper.md 1/n](kafka_zookeeper_Pulsar/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Consul--TODO]()|
+|服务注册中心|[zookeeper.md 1/n](kafka_zookeeper_Pulsar/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Eureka--TODO]()、[Consul--TODO]()|
 |配置中心|[Apollo.md ✔](apollo/Apollo.md)|
 |Nginx|[nginx.md 1/n](nginx/nginx.md) <br/> [openresty.md 1/n](nginx/openresty.md) <br/> [APISIX 1/n](nginx/apisix.md)|
 |ElasticSearch|[elasticsearch.md TODO](elasticsearch/elasticsearch.md)|
