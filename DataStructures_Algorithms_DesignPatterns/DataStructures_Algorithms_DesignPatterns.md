@@ -1,13 +1,15 @@
 # 目录
 - [数据结构](#数据结构)
-    - [数组](#数组)，[集合](#集合)，[栈](#栈)，[队列](#队列)，[散列表](#散列表)，[链表](#链表)
-    - [二叉树](#二叉树)，[红黑树](#红黑树)，[B Tree](#B-Tree)，[B+ Tree](#B+-Tree)
-    - [图](#图)，[Bitmap](#Bitmap)
+    - [数组](#数组)，[集合](#集合)，[栈--TODO](#栈)，[队列--TODO](#队列)，[散列表--TODO](#散列表)，[链表](#链表)
+    - [二叉树](#二叉树)，[红黑树](#红黑树)，[B Tree--TODO](#B-Tree--TODO)，[B+ Tree](#B+-Tree)
+    - [图](#图)（[广度优先搜索--TODO](#广度优先搜索BFS)，[深度优先搜索--TODO](#深度优先搜索DFS)，[最短路径问题](#最短路径问题)）
+    - [Bitmap](#Bitmap)
 
 - [算法](#算法)
     - [二分查找](#二分查找)
-    - [冒泡排序](#冒泡排序)，[选择排序](#选择排序)- [插入排序](#插入排序)
+    - [冒泡排序](#冒泡排序)，[选择排序](#选择排序)，[插入排序](#插入排序)
     - [快速排序](#快速排序)
+    - [递归](#递归)
 
 - [设计模式](#设计模式)
     - [设计模式的7个原则](#设计模式的7个原则)
@@ -15,14 +17,33 @@
     - 结构型模式：[适配器模式](#适配器模式)，[装饰者模式](#装饰者模式)，[代理模式 √](#代理模式)，[外观模式](#外观模式)，[桥接模式](#桥接模式)，[组合模式](#组合模式)，[享元模式](#享元模式)，[~~过滤器模式~~](#过滤器模式)
     - 行为型模式：[观察者模式 ](#观察者模式)，[责任链模式](#责任链模式)，[迭代器模式](#迭代器模式)，[命令模式](#命令模式)，[备忘录模式](#备忘录模式)，[中介者模式](#中介者模式)，[解释器模式](#解释器模式)，[策略模式](#策略模式)，[模板方法](#模板方法)，[状态模式](#状态模式)，[访问者模式](#访问者模式)
 
+- [算法题](https://github.com/Panl99/leetcode)
 ------
 
 # 数据结构
 > [数据结构可视化工具](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html)
 
 ## 数组
+[数组——leetcode](https://github.com/Panl99/leetcode/tree/master/java/src/leetcode/ArrayDemo.java)
+```java
+String[] array = {"apples", "bananas", "cucumbers", "dates", "elderberries"};
+int[][] matrix = {{1,2,8,9},{2,4,9,12},{4,7,10,13},{6,8,11,15}};
+```
+- **读取：** 查看某个索引所指的数据值。`String s = array[0];`
+- **查找：** 找出某个数据值的所在的位置。
+- **插入：** 增加一个数据值。(数组下标越界：`array[5] = "sss";`)
+- **删除：** 移走一个数据值。
+
+***不能直接操作***
 
 ## 集合
+```java
+Set<String> strs = new HashSet<>();
+strs.add("apples");
+strs.remove("apples");
+strs.contains("bananas");
+```
+- 元素不重复
 
 ## 栈
 - `Stack` 允许在同一端进行删除插入和删除操作的特殊线性表。
@@ -38,12 +59,114 @@
 `Hash Table` 也叫哈希表
 
 ## 链表
+[链表——leetcode](https://github.com/Panl99/leetcode/tree/master/java/src/leetcode/ListDemo.java)
 
+每个结点除了保存数据，它还保存着链表里的下一结点的内存地址。
+
+![链表结构](../resources/static/images/链表结构.png)
+
+**读取：** 
+- 链表的结点可以分布在内存的任何地方，程序只知道第1 个结点的内存地址，要读取一个节点的值，程序必须先读取索引0 的链，然后顺着该链去找索引1。接着再读取索引1 的链，去找索引2，以此类推，找到最终索引中的值。
+- 时间复杂度：O(N)
+
+**查找：** 从第一格开始逐个格子地找，直至找到。如果是最坏情况，即所找的值在列表末尾，或完全不在列表里，那就要花O(N)步。
+
+**插入：** 
+- 时间复杂度：理论上O(1)，实际上是：O(N)：理论上只需要将上一个节点索引指向自己，自己指向下一个节点。但是要找到上一个节点的查询效率需要O(N)
+![](../resources/static/images/链表的插入效率.png)
+
+**删除：** 跟插入类似
+- 时间复杂度：O(N) ：删除链表的最后一个结点，其实际的删除动作只需1 步——令倒数第二的结点的链指向null。然而，要找出倒数第二的结点，得花N 步
+
+**链表与数组性能对比：**
+
+![链表与数组性能对比](../resources/static/images/链表与数组性能对比.png)
+
+### 双向链表
+每个结点都含有两个链：一个指向下一结点，另一个指向前一结点。此外，它还能直接访问第一个和最后一个结点。
+
+![双向链表结构](../resources/static/images/双向链表结构.png)
+
+应用：使用双向链表作为队列实现的底层，可以使队列的插入和删除都为O(1)。
+- 队列插入数据只能在末尾。
+- 若使用数组、链表插入比较：在数组的末尾插入时间复杂度为O(1)。链表则要O(N)。
+- 若使用数组、链表删除比较：链表只要O(1)，而数组是O(N)。
+- 使用双向链表：因为双向链表能直接访问前端和末端的结点，所以在两端插入的效率都为O(1)，在两端删除的效率也为O(1)。
 
 [目录](#目录)
 
 ## 树
 ### 二叉树
+[树——leetcode](https://github.com/Panl99/leetcode/tree/master/java/src/leetcode/TreeDemo.java)
+
+![二叉树](../resources/static/images/二叉树.png)
+
+**查找：** 二叉树的查找算法先从根结点开始。
+1. 检视该结点的值。
+2. 如果正是所要找的值，返回！
+3. 如果要找的值小于当前结点的值，则在该结点的左子树查找。
+4. 如果要找的值大于当前结点的值，则在该结点的右子树查找。
+
+```java
+// 树节点表示
+public static class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode(int x) { val = x; }
+}
+
+// 构造树
+TreeNode tree = new TreeNode(3);
+tree.left = new TreeNode(9);
+tree.right = new TreeNode(20);
+tree.right.left = new TreeNode(15);
+tree.right.right = new TreeNode(7);
+
+/**
+ * 剑指offer23:层序遍历二叉树
+ * @return [3, 9, 20, 15, 7]
+ * 解法一：迭代，间复杂度：O(n)，空间复杂度：O(n)
+ */
+public static ArrayList<Integer> PrintFromTopToBottom(TreeNode root) {
+    ArrayList<Integer> list = new ArrayList<>();
+    if (root == null) {
+        return list;
+    }
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+        TreeNode node = queue.poll();
+        list.add(node.val);
+        if (node.left != null) {
+            queue.offer(node.left);
+        }
+        if (node.right != null) {
+            queue.offer(node.right);
+        }
+    }
+    return list;
+}
+
+/**
+ * 翻转一棵二叉树。
+ * 示例：给定二叉树 [4,2,7,1,3,6,9]。返回 [4,7,2,9,6,3,1]
+ * 思路：递归：从根节点开始，递归地对树进行遍历，并从叶子结点先开始翻转。如果当前遍历到的节点 root 的左右两棵子树都已经翻转，那么我们只需要交换两棵子树的位置，即可完成以 root 为根节点的整棵子树的翻转。
+ * 时间复杂度：O(N)
+ * 空间复杂度：O(logN)。而在最坏情况下，树形成链状，空间复杂度为 O(N)
+ */
+public static TreeNode invertTree(TreeNode root) {
+    if (root == null) {
+        return null;
+    }
+    TreeNode left = invertTree(root.left);
+    TreeNode right = invertTree(root.right);
+    root.left = right;
+    root.right = left;
+    return root;
+}
+```
+
 
 ### 红黑树
 - Red-Black Tree，是一种自平衡二叉查找树。在红黑树每个节点上都多出一个存储位表示节点的颜色，颜色只能是**红** 或者 **黑**。
@@ -63,7 +186,45 @@
 
 ![B+Tree](../resources/static/images/B+Tree.png)
 
+
+[目录](#目录)
+
 ## 图
+每个结点都是一个顶点，每条线段都是一条边。当两个顶点通过一条边联系在一起时，称这两个顶点是相邻的。
+
+![图的结构](../resources/static/images/图的结构.png)
+
+单向关联关系的图：有向图。相互关联关系的图：无向图。
+
+### 广度优先搜索BFS
+
+
+### 深度优先搜索DFS
+
+
+### 最短路径问题
+如何以最低的价钱从Atlanta 飞往ElPaso？：可以使用加权图来解决
+
+![最短路径问题--如何花费最少从Atlanta飞到ElPaso](../resources/static/images/最短路径问题--如何花费最少从Atlanta飞到ElPaso.png)
+
+**狄克斯特拉(Dijkstra)算法：** 可以应用于：地图软件、GPS等
+1. 以起步的顶点为当前顶点。
+2. 检查当前顶点的所有邻接点，计算起点到所有已知顶点的权重，并记录下来。
+3. 从未访问过（未曾作为当前顶点）的邻接点中，选取一个起点能到达的总权重最小的顶点，作为下一个当前顶点。
+4. 重复前3 步，直至图中所有顶点都被访问过。
+
+**Dijkstra算法特点：**
+
+Dijkstra算法使用了广度优先搜索解决赋权有向图或者无向图的单源最短路径问题，算法最终得到一个最短路径树。该算法常用于路由算法或者作为其他图算法的一个子模块。
+
+该算法的时间复杂度是n的平方，可以使用堆优化。
+
+但是，要注意一点，Dijkstra算法只能适用于权值为正的情况下；如果权值存在负数，则不能使用。
+
+
+[Dijkstra--leetcode](https://github.com/Panl99/leetcode/tree/master/java/src/leetcode/Dijkstra.java)
+
+[目录](#目录)
 
 ## Bitmap
 - `Bitmap`：使用一个bit位标记某个元素对应的Value，Key即该元素。
@@ -139,6 +300,219 @@
 ------
 
 # 算法
+**时间复杂度：** `O(1) > O(log N) > O(N)`
+![时间复杂度曲线](../resources/static/images/时间复杂度曲线.png)
+
+![时间复杂度O(n)和O(logN)对比](../resources/static/images/时间复杂度O(n)和O(logN)对比.png)
+
+## 二分查找
+要求元素有序，否则要先排序
+- 时间复杂度：`O(log N)`，对数时间：表示数据量翻倍时，查找步数+1。
+```java
+public static void main(String[] args) {
+    int[] nums = {3,4,6,20,40,45,51,62,70,99,110};
+    System.out.println(binarySearch(nums, 20)); //3
+}
+public static int binarySearch(int[] nums, int a) {
+    int low = 0;
+    int high = nums.length - 1;
+    int mid;
+
+    while (low <= high) {
+        mid = (low + high) / 2;
+        if (nums[mid] == a) {
+            return mid;
+        } else if (a > nums[mid]) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return -1;
+}
+```
+
+## 冒泡排序
+时间复杂度：`O(N^2)`
+```java
+/**
+ * 冒泡排序
+ * 原理：依次比较相邻两个元素，如果左边大于右边，则二者交换位置。如此重复。
+ * 示例：[4,5,6,3,2,1]
+ *      第1趟：[4,5,3,2,1,6]
+ *      第2趟：[4,3,2,1,5,6]
+ *      第3趟：[3,2,1,4,5,6]
+ *      第4趟：[2,1,3,4,5,6]
+ *      第5趟：[1,2,3,4,5,6]
+ */
+public static void main(String[] args) {
+    System.out.println(bubbleSort(nums));
+}
+public static int[] bubbleSort(int[] nums) {
+    // 外层循环控制轮数
+    for (int i = 0; i < nums.length - 1; i++) {
+        // 内层循环控制每趟次数
+        for (int j = 0; j < nums.length - 1 - i; j++) {
+            if (nums[j] > nums[j + 1]) {
+                int temp = nums[j];
+                nums[j] = nums[j + 1];
+                nums[j + 1] = temp;
+            }
+        }
+    }
+    for (int i = 0; i < nums.length; i++) {
+        System.out.print(nums[i] + " ");
+    }
+    return nums;
+}
+```
+
+## 选择排序
+时间复杂度：`O(N^2 / 2) = O(N^2)` 比冒泡快一倍
+![选择排序步骤](../resources/static/images/选择排序步骤.png)
+```java
+/**
+ * 选择排序
+ * 原理：从左至右检查数组的每个格子，找出值最小的那个。在此过程中，我们会用一个变量来记住检查过的数字的最小值（事实上记住的是索引，但为了看起来方便，下图就直接写出数值）。如果一个格子中的数字比记录的最小值还要小，就把变量改成该格子的索引
+ *      知道哪个格子的值最小之后，将该格与本次检查的起点交换。第1 次检查的起点是索引0，第2 次是索引1，以此类推。
+ *      重复第(1) (2)步，直至数组排好序。
+ * 示例：[2, 6, 1, 3]
+ *      第一趟：先从2开始跟后相邻比较，得到1是最小后，跟2交换位置：[1, 6, 2, 3]
+ *      第二趟：从6开始跟后边相邻比较，得到2最小，交换位置：[1, 2, 6, 3]
+ *      第三趟：[1, 2, 3, 6]
+ */
+public static int[] SelectSort(int[] nums) {
+    // 外层循环控制轮数
+    for (int i = 0; i < nums.length; i++) {
+        // 最小值的索引
+        int lowestNumberIndex = i;
+        // 内层循环控制每趟比较
+        for (int j = i + 1; j < nums.length; j++) {
+            if (nums[j] < nums[lowestNumberIndex]) {
+                lowestNumberIndex = j;
+            }
+        }
+
+        if (lowestNumberIndex != i) {
+            int temp = nums[i];
+            nums[i] = nums[lowestNumberIndex];
+            nums[lowestNumberIndex] = temp;
+        }
+    }
+    for (int i = 0; i < nums.length; i++) {
+        System.out.print(nums[i] + " ");
+    }
+    return nums;
+}
+```
+
+
+## 插入排序
+时间复杂度：`最好：O(N) 平均：O(N^2) 最坏：O(N^2)`  `O(N2+2N-2) = O(N^2)`
+```java
+/**
+ * 插入排序
+ * 原理：将序列分为两个子序列，L默认拿第一个数，然后每次从R中拿一个插入L中从右到左比自己大的后边，将L中比自己大的整体后移，L序总是有序的。
+ * 将一个数据插入已经拍好序的序列中，适用于少量数据排序，稳定。
+ * 示例：[ 6, 2, 5, 8, 7 ]
+ *      将该数组分为两个子集，L:[6];R:[2, 5, 8, 7 ]
+ *      每次从R中拿一个插入L中从右到左比自己大的后边，将L中比自己大的整体后移。
+ *      第1趟：L：[ 6 ]；            R：[2, 5, 7, 8 ]
+ *      第2趟：L：[ 2, 6 ]；         R：[5, 7, 8 ]
+ *      第3趟：L：[ 2, 5, 6 ]；      R：[7, 8 ]
+ *      第4趟：L：[ 2, 5, 6, 7 ]；   R：[ 8 ]
+ *      第5趟：L：[ 6, 2, 5, 7, 8 ]；R：[ ]
+ */
+public static int[] insertSort(int[] nums) {
+    for (int i = 1; i < nums.length; i++) {
+        int insertVal = nums[i];
+        //被插入位置(和前一个数比较)
+        int index = i - 1;
+        while (index >= 0 && insertVal < nums[index]) {
+            //将nums[index]向后移动
+            nums[index + 1] = nums[index];
+            //将index向前移动
+            index--;
+        }
+        nums[index + 1] = insertVal;
+    }
+    for (int i = 0; i < nums.length; i++) {
+        System.out.print(nums[i] + " ");
+    }
+    return nums;
+}
+```
+
+## 快速排序
+时间复杂度：`最好：O(N log N) 平均：O(N log N) 最坏：O(N2)`
+```java
+/**
+ * 快速排序
+ * 原理：一趟排序将序列分为两部分，其中一部分的所有数据都比另一部分所有数据小。
+ *      选择一个关键值作为基准值(一般第1个)，将比基准值大的放到右序列中，小的放到左序列中。
+ *      （1）从后向前比较，用基准值和最后一个值进行比较。如果比基 准值小，则交换位置；如果比基准值大，则继续比较下一个值，直到 找到第1个比基准值小的值才交换位置。
+ *      （2）在从后向前找到第1个比基准值小的值并交换位置后，从前向后开始比较。如果有比基准值大的，则交换位置；如果没有，则继续比较下一个，直到找到第1个比基准值大的值才交换位置。
+ *      （3）重复执行以上过程，直到从前向后比较的索引大于等于从后向前比较的索引，则结束一次循环。这时对于基准值来说，左右两边都是有序的数据序列。
+ *      （4）重复循环以上过程，分别比较左右两边的序列，直到整个数据序列有序。
+ * 示例：[6,9,5,7,8]
+ *      第一层递归：（基准值6前面的数据都比6小，6后面的数据都比6大）
+ *          第1趟（5和6交换）：[5,9,6,7,8]
+ *          第2趟（9和6交换）：[5,6,9,7,8]
+ *      重复上述递归过程。
+ */
+public static int[] quickSort(int[] nums, int low, int high) {
+    int start = low; //从前向后比较的索引
+    int end = high; //从后向前比较的索引
+    int key = nums[low]; //基准值
+
+    while (end > start) {
+        //从后向前比较
+        while (end > start && nums[end] >= key){
+            end--;
+        }
+        //如果没有比基准值小的，则比较下一个，直到有比基准值小的，就交换位置，然后又从前向后比较。
+        if (nums[end] <= key){
+            int temp = nums[end];
+            nums[end] = nums[start];
+            nums[start] = temp;
+        }
+        //从前向后比较
+        while (end > start && nums[start] <= key) {
+            start++;
+        }
+        //如果没有比基准值大的，则比较下一个，直到有比基准值大的，就交换位置。
+        if (nums[start] >= key){
+            int temp = nums[start];
+            nums[start] = nums[end];
+            nums[end] = temp;
+        }
+        //第一次循环比较结束
+    }
+    if (start > low) {
+        quickSort(nums, low, start-1);
+    }
+    if (end < high) {
+        quickSort(nums, end+1, high);
+    }
+
+    return nums;
+}
+```
+
+## 递归
+```java
+/**
+ * 返回一个数的阶乘
+ */
+public static String factorial(int num) {
+    if (num == 1) {
+        return Integer.toString(1);
+    }
+    return num + " * " + factorial(num - 1);
+}
+```
+
+实战：遍历文件系统
 
 
 [目录](#目录)
