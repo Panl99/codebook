@@ -1,5 +1,6 @@
 > [MySQL 8 Cookbook]()
 > [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)
+> [MySQL必知必会](../resources/static/doc/MySQL必知必会.pdf)
 
 # 目录
 - [mysql常用函数](#mysql常用函数)
