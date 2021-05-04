@@ -1,7 +1,7 @@
 # 目录
 - [数据结构](#数据结构)
     - [数组](#数组)，[集合](#集合)，[栈--TODO](#栈)，[队列--TODO](#队列)，[散列表--TODO](#散列表)，[链表](#链表)
-    - [二叉树](#二叉树)，[红黑树](#红黑树)，[B Tree--TODO](#B-Tree--TODO)，[B+ Tree](#B+-Tree)
+    - [二叉树](#二叉树)，[红黑树](#红黑树)，[B Tree--TODO](#B-Tree)，[B+ Tree--TODO](#B+-Tree)
     - [图](#图)（[广度优先搜索--TODO](#广度优先搜索BFS)，[深度优先搜索--TODO](#深度优先搜索DFS)，[最短路径问题](#最短路径问题)）
     - [Bitmap](#Bitmap)
 
@@ -812,6 +812,102 @@ String result = pipeline.apply("Aren't labdas really sexy?!!");
 
 ## 策略模式
 [策略模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/strategypattern)
+
+当if/else比较多的时候，可以考虑使用策略模式重构，比如以支付为例：支付宝、微信、京东、云闪付等
+- 普通代码：
+```java
+@PostMapping("/makeOrder")
+public ResultData makeOrder(@RequestBody  Order order){
+    // 生成自己的订单，并且设置订单的失效时间，并且定时回滚
+    //  ... 此处代码省略
+
+    // 处理支付方式
+    if(order.getType=="alipay"){ // 支付宝
+        this.payService.alipay(order);
+    }else if (order.getType=="weixin"){ // 微信
+        this.payService.weixinpay(order);
+    }else if (order.getType=="jd"){ // 京东支付
+        this.payService.jtpay(order);
+    }else if (order.getType=="yunshanfu"){ // 云闪付
+        this.payService.yunshanfupay(order);
+    }
+    // 发送到mq，进行广播。
+    return this.ok(order);
+}
+```
+
+- 引入策略模式
+1. 入口：
+```java
+private OrderService orderService;
+
+@PostMapping("/makeOrder")
+// 商品id
+// 支付类型
+public ResultData makeOrder(Long goodsId,String type){
+    // 生成本地的订单
+    Order order = this.orderService.makeOrder(goodsId);
+    //选择支付方式
+    PayType payType = PayType.getByCode(type);
+    //进行支付
+    payType.get().pay(order.getId(),order.getAmount());
+    return this.ok();
+}
+```
+2. 支付接口：
+```java
+public interface Payment {
+    public void pay(Long order, double amount);
+}
+```
+3. 支付实现：
+```java
+// 支付宝支付实现
+public class AliPay implements Payment {
+    @Override
+    public void pay(Long order, double amount) {
+        System.out.println("----支付宝支付----");
+        System.out.println("支付宝支付111元");
+    }
+}
+
+// 微信支付实现
+public class WechatPay implements Payment {
+    @Override
+    public void pay(Long orderId, double amount) {
+        System.out.println("---微信支付---");
+        System.out.println("支付222元");
+    }
+}
+```
+4. 支付方式：
+```java
+public enum PayType {
+    //支付宝        AliPay 是实现类
+    ALI_PAY("1",new AliPay()),
+    //微信
+    WECHAT_PAY("2",new WechatPay());
+
+    private String payType;
+    // 这是一个接口
+    private Payment payment;
+    PayType(String payType,Payment payment){
+        this.payment = payment;
+        this.payType = payType;
+    }
+    //通过get方法获取支付方式
+    public Payment get(){ return  this.payment;}
+
+    public static PayType getByCode(String payType) {
+        for (PayType e : PayType.values()) {
+            if (e.payType.equals(payType)) {
+                return e;
+            }
+        }
+        return null;
+    }
+}
+```
 
 ### 使用Lambda重构策略模式  
 解决某类算法的通用方案，包含三部分内容：  
