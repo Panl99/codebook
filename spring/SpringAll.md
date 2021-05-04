@@ -1,5 +1,6 @@
 - [Spring常见问题](https://mp.weixin.qq.com/s/u3U1l3HvG6Dm6UJRB1epIA)
 - [spring4all](http://www.spring4all.com/)
+- [https://docs.spring.io/spring-framework/docs/](https://docs.spring.io/spring-framework/docs/)
 
 # 目录
 - [Spring](#Spring)
@@ -10,6 +11,7 @@
     - [AOP](#AOP)
     - [Spring MVC](#SpringMVC)
         - [SpringMVC流程](#SpringMVC流程)
+    - [Spring Bean的生命周期](#SpringBean的生命周期)
     - [Spring事务](#Spring事务)
     - [访问数据库](#访问数据库)
     - [Web应用开发](#Web应用开发)
@@ -18,6 +20,7 @@
         - [Spring Data JPA](#SpringDataJPA)
     - [Spring注解](#Spring注解)
     - [Spring中使用的设计模式](#Spring中使用的设计模式)
+
 - [SpringBoot](#SpringBoot)
     - [项目构建](#项目构建)
     - [起步依赖](#起步依赖)
@@ -31,10 +34,11 @@
     - [Actuator：监控与管理](#Actuator监控与管理)
     - [SpringBoot注解](#SpringBoot注解)
         - [SpringBoot提供的自动配置中使用的条件化注解](#SpringBoot提供的自动配置中使用的条件化注解)
+
 - [SpringCloud](#SpringCloud)
-    - [Spring Cloud Config](#SpringCloudConfig)
-    - [~~Eureka-2.0已闭源~~](#Eureka)
-    - [Consul](#Consul)
+    - [Eureka](#Eureka)
+    - [Feign](#Feign)
+    - [Ribbon](#Ribbon)
     - [Hystrix](#Hystrix)
         - [客户端负载均衡模式](#客户端负载均衡模式)
         - [断路器模式](#断路器模式)
@@ -44,12 +48,7 @@
             - [构建后备策略](#构建后备策略)
         - [舱壁模式](#舱壁模式)
             - [舱壁模式实现](#舱壁模式实现)
-    - [Zuul -TODO](#Zuul)
-    - [Feign](#Feign)
-    - [Ribbon](#Ribbon)
-    - [Spring Cloud Bus -TODO](#SpringCloudBus)
-    - [Spring Cloud Cluster -TODO](#SpringCloudCluster)
-    - [Spring Cloud Stream -TODO](#SpringCloudStream)
+    - [Consul](#Consul)
 
 [返回目录](#目录)
 
@@ -68,6 +67,7 @@
 - Spring ORM：用于支持Hibernate等ORM工具。
 - Spring Web：为创建Web应用程序提供支持。
 - Spring Test：提供了对 JUnit 和 TestNG 测试的支持
+![](../resources/static/images/SpringFrameworkRuntime.png)
 
 [返回目录](#目录)
 
@@ -191,12 +191,19 @@
 
 ## SpringMVC
 ### SpringMVC流程
-- 用户发送请求到前端控制器DispatcherServlet；
-- DispatcherServlet收到请求后调用HandlerMapping处理器映射器；
-- 处理器映射器根据请求url找到具体的处理器，生成处理器对象和处理器拦截器(如果有则生成)，一并返回给DispatcherServlet；
-- DispatcherServlet之后通过HandlerAdapter处理器适配器执行处理器Controller(后端控制器)，执行完后返回ModelAndView；
-- DispatcherServlet将ModelAndView传给ViewReslover视图解析器进行解析；
-- DispatcherServlet对解析后的View进行渲染，并返回用户。
+1. 用户发送请求到**`DispatcherServlet`前端控制器**；
+2. `DispatcherServlet`收到请求后调用**`HandlerMapping`处理器映射器**；
+3. 处理器映射器根据请求url找到具体的处理器，生成处理器对象和处理器拦截器(如果有则生成)，一并返回给`DispatcherServlet`；
+4. `DispatcherServlet`之后通过**`HandlerAdapter`处理器适配器**调用、执行**处理器`Controller`(后端控制器)**，执行完后返回**`ModelAndView`**；
+5. `DispatcherServlet`将`ModelAndView`传给**`ViewReslover`视图解析器**进行解析，解析完后返回具体**`View`视图**；
+6. `DispatcherServlet`对解析后的`View`进行渲染(将模型数据填充到视图中)，并返回给用户。
+
+[返回目录](#目录)
+
+## SpringBean的生命周期
+
+[Spring 的 Bean 生命周期](https://mp.weixin.qq.com/s/Vb54HLVKmD99KU0gppriUA)
+
 
 [返回目录](#目录)
 
@@ -469,7 +476,11 @@ public class TestController {
 Spring MVC流程  
 Spring MVC核心入口类
 
-# SpingBoot
+[返回目录](#目录)
+
+------
+
+# SpringBoot
 **SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监护spring应用开发。**
 
 ## 项目构建
@@ -695,19 +706,19 @@ logging:
 
 HTTP方法 | 路径 | 描述  
 ---|---|---  
-GET | /autoconfig | 提供了一份自动配置报告，记录哪些自动配置条件通过了，哪些没通过
-GET | /configprops | 描述配置属性（包含默认值）如何注入Bean
-GET | /beans | 描述应用程序上下文里全部的Bean，以及它们的关系
-GET | /dump | 获取线程活动的快照
-GET | /env | 获取全部环境属性
-GET | /env/{name} | 根据名称获取特定的环境属性值
-GET | /health | 报告应用程序的健康指标，这些值由HealthIndicator的实现类提供
-GET | /info | 获取应用程序的定制信息，这些信息由info打头的属性提供
-GET | /mappings | 描述全部的URI路径，以及它们和控制器（包含Actuator端点）的映射关系
-GET | /metrics | 报告各种应用程序度量信息，比如内存用量和HTTP请求计数
-GET | /metrics/{name} | 报告指定名称的应用程序度量值
-GET | /trace | 提供基本的HTTP请求跟踪信息（时间戳、HTTP头等）
-POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置为true  
+/autoconfig | 提供了一份自动配置报告，记录哪些自动配置条件通过了，哪些没通过 | GET 
+/configprops | 描述配置属性（包含默认值）如何注入Bean | GET 
+/beans | 描述应用程序上下文里全部的Bean，以及它们的关系 | GET 
+/dump | 获取线程活动的快照 | GET 
+/env | 获取全部环境属性 | GET 
+/env/{name} | 根据名称获取特定的环境属性值 | GET 
+/health | 报告应用程序的健康指标，这些值由HealthIndicator的实现类提供 | GET 
+/info | 获取应用程序的定制信息，这些信息由info打头的属性提供 | GET 
+/mappings | 描述全部的URI路径，以及它们和控制器（包含Actuator端点）的映射关系 | GET 
+/metrics | 报告各种应用程序度量信息，比如内存用量和HTTP请求计数 | GET 
+/metrics/{name} | 报告指定名称的应用程序度量值 | GET 
+/trace | 提供基本的HTTP请求跟踪信息（时间戳、HTTP头等） | GET 
+/shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置为true | POST  
 
 - **查看配置明细**  
 向/beans（在本地运行时是`http://localhost:8080/beans`）发起GET请求后，返回一个描述每个Bean信息的JSON文档。  
@@ -753,7 +764,7 @@ POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置�
 
 [返回目录](#目录)
 
-[返回目录](#目录)
+------
 
 # SpringCloud
 - SpringCloud是一个解决微服务架构实施的综合性解决框架，它整合了许多被广泛实践和证明过的框架作为实施的基础部件，并在该体系基础上创建了一些优秀的边缘组件。通过一些简单的注解，就可以快速的在应用中配置一下常用模块并构建庞大的分布式系统。  
@@ -763,141 +774,12 @@ POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置�
 - [Spring Cloud 2020.0.0](https://docs.spring.io/spring-cloud/docs/2020.0.0/reference/html/)
 
 
-## SpringCloudConfig
-- 配置管理工具
-
 ## Eureka
 - 服务治理组件，包含服务注册中心、服务注册与发现机制的实现
 
-[目录](#目录)
 
-## Consul
+### [Eureka实战](https://github.com/Panl99/demo/tree/master/demo-eureka/src/main/java/com/lp/demoeureka/)
 
-[目录](#目录)
-
-## Hystrix
-- 容错管理组件，实现断路器模式，帮助服务依赖中出现延迟和为故障提供强大的容错能力
-- 客户端弹性模式：远程服务发生错误时保护远程资源的客户端免于崩溃。目的使客户端“快速失败”，避免消耗资源（如：数据库连接、线程池），防止远程服务的问题向客户端的消费者传播。
-    - 客户端负载均衡模式
-    - 断路器模式
-    - 后备模式
-    - 舱壁模式
-- 依赖：
-    ```xml
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-        <version>2.2.5.RELEASE</version>
-    </dependency>
-    <!--下依赖停更，不建议使用-->
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-hystrix</artifactId>
-        <version>1.4.7.RELEASE</version>
-    </dependency>
-    ```
-- 启动注解：`@EnableCircuitBreaker`（用于启动类Application.java）
-
-[目录](#目录)
-    
-### 客户端负载均衡模式
-- 让客户端从服务注册中心查找服务所有实例，然后缓存服务实例的物理位置。
-- 当消费者调用该服务实例时，客户端负载均衡器将从它维护的服务实例池中返回实例的一个位置。
-- 客户端负载均衡器位于服务客户端和服务消费者之间，可以检测服务实例的健康状态，当检测到服务实例不健康时，会将它从服务实例池中移除，并禁止服务调用访问该实例。
-- **[Ribbon](#Ribbon)** 提供客户端负载均衡功能。
-
-### 断路器模式
-- 远程服务被调用时间时间过长，断路器会中断此次调用。
-- 断路器会监视所有对远程资源的调用，如果对某一远程资源调用失败过多，断路器会快速断开调用，并阻止再次调用失败的远程资源。
-
-#### 断路器实现
-- 标记方法由Hystrix断路器管理的注解：`@HystrixCommand`
-    - 该注解会标示Spring生成一个动态代理包装该方法，并会通过专门用于处理远程调用的线程池来管理对该方法的所有调用。
-    - 当调用被`@HystrixCommand`标注的方法超过`1000ms`（默认1秒）时，断路器会中断对该方法的调用。
-- 自定义断路器超时时间：`@HystrixCommand(commandProperties = {@HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "3000")})`
-    - 设置最大超时时间`3s`。
-- 类级属性设置注解：`@DefaultProperties`
-    - 例如：类中所有资源超时时间均为10s
-        ```java
-        @DefaultProperties(
-            commandProperties = {
-                @HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "10000")
-            }
-        )
-        public class MyService {   }
-        ```
-    
-#### 调用远程资源失败过多断路器设置
-```java
-@HystrixCommand(
-    fallbackMethod = "buildFallbackLicenseList",
-    threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
-    threadPoolProperties = {
-         @HystrixProperty(name = "coreSize", value="30"),    //线程池中最大线程数
-         @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
-    },
-    commandProperties = {
-         @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"), //断路器跳闸之前，10s之内连续调用数量
-         @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),  //断路器跳闸之前，调用失败百分比
-         @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),   //断路器跳闸之后，Hystrix尝试进行服务调用之前的等待时间
-         @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),   //Hystrix监视服务调用问题的窗口大小，默认10000ms(10s)
-         @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")    //Hystrix在一个监控窗口中维护的度量桶的数量，监视窗口内桶数越多，监控故障时间越低
-    }
-)
-// 如上最后两个配置，Hystrix使用15s的窗口，将统计数据收集到长度为3s的5个桶中。
-// 注意：检查的统计窗口越小 且窗口中保留的桶的数量越多，就越会加剧高请求服务的CPU利用率 和内存利用率。
-```
-
-[目录](#目录)
-
-### 后备模式
-- 远程调用失败时，消费者会使用替代方式来执行操作，而不是生成异常。
-- 通常涉及，从另一数据源查询数据，或将请求排队后续再来处理。
-
-#### 构建后备策略
-- 添加属性`fallbackMethod`：`@HystrixCommand(fallbackMethod = "buildFallbackLicenseList")`
-    - 当调用该方法失败时，就会调用后备方法。
-- 实现后备方法（必须与原始方法位于同一类中，并且与原始方法的参数一致：原始方法的参数都会传递给后备方法），例如：
-    ```java
-    private List<License> buildFallbackLicenseList(String organizationId){
-        List<License> fallbackList = new ArrayList<>();
-        License license = new License()
-                .withId("0000000-00-00000")
-                .withOrganizationId( organizationId )
-                .withProductName("Sorry no licensing information currently available");
-    
-        fallbackList.add(license);
-        return fallbackList;
-    }
-    ```
-
-[目录](#目录)
-
-### 舱壁模式
-- 应用于必须与多个远程资源交互的服务。
-- 使用舱壁模式：可以把远程资源的调用分别分配到各自线程池中，降低了一个缓慢的远程资源调用拖垮整个应用程序的风险。
-    - 默认，所有Hystrix命令会共享同一线程池来处理请求。
-    - 每个远程资源都是隔离的，并分配给线程池。
-    - 一个服务响应缓慢，那么这种服务调用的线程池会饱和并停止处理请求，但其他服务的调用会被分配给其他线程池而不受影响。
-
-#### 舱壁模式实现
-- 解决：在大量请求下，一个服务出现性能问题导致Java容器所有线程被刷爆，无法再继续处理请求，导致Java容器崩溃。
-- 实现隔离的线程池：
-    ```java
-    @HystrixCommand(
-        fallbackMethod = "buildFallbackLicenseList",  //后备方法
-        threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
-        threadPoolProperties = {
-             @HystrixProperty(name = "coreSize", value="30"),    //线程池中最大线程数
-             @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
-        }
-    )
-    ```
-
-[目录](#目录)
-
-## Zuul
-- 网关组件，提供智能路由、访问过滤等功能
 
 [目录](#目录)
 
@@ -925,16 +807,122 @@ POST | /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置�
 
 [目录](#目录)
 
-## SpringCloudBus
-- 事件、消息总线，用于传播集群中的状态变化或事件，以触发后续的处理
+## Hystrix
+- 容错管理组件，实现断路器模式，帮助服务依赖中出现延迟和为故障提供强大的容错能力
+- 客户端弹性模式：远程服务发生错误时保护远程资源的客户端免于崩溃。目的使客户端“快速失败”，避免消耗资源（如：数据库连接、线程池），防止远程服务的问题向客户端的消费者传播。
+    - 客户端负载均衡模式
+    - 断路器模式
+    - 后备模式
+    - 舱壁模式
+- 依赖：
+    ```xml
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    <!--下依赖停更，不建议使用-->
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-hystrix</artifactId>
+        <version>1.4.7.RELEASE</version>
+    </dependency>
+    ```
+- 启动注解：`@EnableCircuitBreaker`（用于启动类Application.java）
+    
+### 客户端负载均衡模式
+- 让客户端从服务注册中心查找服务所有实例，然后缓存服务实例的物理位置。
+- 当消费者调用该服务实例时，客户端负载均衡器将从它维护的服务实例池中返回实例的一个位置。
+- 客户端负载均衡器位于服务客户端和服务消费者之间，可以检测服务实例的健康状态，当检测到服务实例不健康时，会将它从服务实例池中移除，并禁止服务调用访问该实例。
+- **[Ribbon](#Ribbon)** 提供客户端负载均衡功能。
+
+### 断路器模式
+- 远程服务被调用时间时间过长，断路器会中断此次调用。
+- 断路器会监视所有对远程资源的调用，如果对某一远程资源调用失败过多，断路器会快速断开调用，并阻止再次调用失败的远程资源。
+
+**断路器实现：**
+- 标记方法由Hystrix断路器管理的注解：`@HystrixCommand`
+    - 该注解会标示Spring生成一个动态代理包装该方法，并会通过专门用于处理远程调用的线程池来管理对该方法的所有调用。
+    - 当调用被`@HystrixCommand`标注的方法超过`1000ms`（默认1秒）时，断路器会中断对该方法的调用。
+- 自定义断路器超时时间：`@HystrixCommand(commandProperties = {@HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "3000")})`
+    - 设置最大超时时间`3s`。
+- 类级属性设置注解：`@DefaultProperties`
+    - 例如：类中所有资源超时时间均为10s
+        ```java
+        @DefaultProperties(
+            commandProperties = {
+                @HystrixProperty(name = "executin.isolation.thread.timeoutInMilliseconds", value = "10000")
+            }
+        )
+        public class MyService {   }
+        ```
+    
+**调用远程资源失败过多断路器设置：**
+```java
+@HystrixCommand(
+    fallbackMethod = "buildFallbackLicenseList",
+    threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
+    threadPoolProperties = {
+         @HystrixProperty(name = "coreSize", value="30"),    //线程池中最大线程数
+         @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
+    },
+    commandProperties = {
+         @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"), //断路器跳闸之前，10s之内连续调用数量
+         @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),  //断路器跳闸之前，调用失败百分比
+         @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),   //断路器跳闸之后，Hystrix尝试进行服务调用之前的等待时间
+         @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),   //Hystrix监视服务调用问题的窗口大小，默认10000ms(10s)
+         @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")    //Hystrix在一个监控窗口中维护的度量桶的数量，监视窗口内桶数越多，监控故障时间越低
+    }
+)
+// 如上最后两个配置，Hystrix使用15s的窗口，将统计数据收集到长度为3s的5个桶中。
+// 注意：检查的统计窗口越小 且窗口中保留的桶的数量越多，就越会加剧高请求服务的CPU利用率 和内存利用率。
+```
+
+### 后备模式
+- 远程调用失败时，消费者会使用替代方式来执行操作，而不是生成异常。
+- 通常涉及，从另一数据源查询数据，或将请求排队后续再来处理。
+
+**构建后备策略：**
+- 添加属性`fallbackMethod`：`@HystrixCommand(fallbackMethod = "buildFallbackLicenseList")`
+    - 当调用该方法失败时，就会调用后备方法。
+- 实现后备方法（必须与原始方法位于同一类中，并且与原始方法的参数一致：原始方法的参数都会传递给后备方法），例如：
+    ```java
+    private List<License> buildFallbackLicenseList(String organizationId){
+        List<License> fallbackList = new ArrayList<>();
+        License license = new License()
+                .withId("0000000-00-00000")
+                .withOrganizationId( organizationId )
+                .withProductName("Sorry no licensing information currently available");
+    
+        fallbackList.add(license);
+        return fallbackList;
+    }
+    ```
+
+### 舱壁模式
+- 应用于必须与多个远程资源交互的服务。
+- 使用舱壁模式：可以把远程资源的调用分别分配到各自线程池中，降低了一个缓慢的远程资源调用拖垮整个应用程序的风险。
+    - 默认，所有Hystrix命令会共享同一线程池来处理请求。
+    - 每个远程资源都是隔离的，并分配给线程池。
+    - 一个服务响应缓慢，那么这种服务调用的线程池会饱和并停止处理请求，但其他服务的调用会被分配给其他线程池而不受影响。
+
+**舱壁模式实现：**
+- 解决：在大量请求下，一个服务出现性能问题导致Java容器所有线程被刷爆，无法再继续处理请求，导致Java容器崩溃。
+- 实现隔离的线程池：
+    ```java
+    @HystrixCommand(
+        fallbackMethod = "buildFallbackLicenseList",  //后备方法
+        threadPoolKey = "licenseByOrgThreadPool",   //线程池名称
+        threadPoolProperties = {
+             @HystrixProperty(name = "coreSize", value="30"),    //线程池中最大线程数
+             @HystrixProperty(name = "maxQueueSize", value="10")    //定义一个位于线程池前的队列，可以对传入的请求排队
+        }
+    )
+    ```
 
 [目录](#目录)
 
-## SpringCloudCluster
-- 针对ZooKeeper、Redis、Hazelcast、Consul的选举算法和通用状态模式的实现
+## Consul
 
 [目录](#目录)
 
-## SpringCloudStream
-
-[目录](#目录)
