@@ -2,6 +2,7 @@
 - [ZooKeeper](#ZooKeeper)
 - [ZooKeeper选举机制](#ZooKeeper选举机制)
 - [ZooKeeper监听原理](#ZooKeeper监听原理)
+- [ZooKeeper分布式锁](#ZooKeeper分布式锁)
 - [ZooKeeper部署方式](#ZooKeeper部署方式)
 - [ZooKeeper常用命令](#ZooKeeper常用命令)
 
@@ -42,7 +43,13 @@
 6. listener线程内部调用了process()方法。
 
 
-# ZooKeeper安装
+# ZooKeeper分布式锁
+
+
+
+[目录](#目录)
+
+# ZooKeeper部署方式
 
 
 # ZooKeeper常用命令
