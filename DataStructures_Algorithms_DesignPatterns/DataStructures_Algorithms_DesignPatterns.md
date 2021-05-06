@@ -173,10 +173,11 @@ public static TreeNode invertTree(TreeNode root) {
 - **红黑树特性**：
     - 每个节点非黑即红。
     - 根节点是黑色的。
-    - 每个叶子结点(NIL)都是黑色的。
+    - 每个叶子结点(NIL)都是黑色的空节点。
     - 如果一个节点是红色的，那它的子节点必须为黑色的。
     - 从一个节点到它的子孙节点的所有路径上都包含相同数量的黑色节点。
-    - ![红黑树](../resources/static/images/redblackTree.PNG)
+
+![红黑树](../resources/static/images/redblackTree.PNG)
     
 ### B Tree
 
