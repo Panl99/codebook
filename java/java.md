@@ -87,7 +87,7 @@
     - [Socket](#Socket)
 
 - [JVM、GC](#JVMGC)
-    - [自己编译jdk](#自己编译jdk)
+    - [~~自己编译jdk~~](#自己编译jdk)
     - [java内存管理机制](#java内存管理机制)
         - [java内存区域划分](#java内存区域划分)
         - [对象的创建](#对象的创建)
@@ -1718,10 +1718,11 @@ public List<String> setInfo() {
 
 # JVM、GC
 
+## 自己编译jdk
+
 <details>
 <summary>点击查看详细内容</summary>
-
-## 自己编译jdk 
+ 
 - **获取OpenJDK 12源码：** [https://hg.openjdk.java.net/jdk/jdk12/](https://hg.openjdk.java.net/jdk/jdk12/)
 ```
 1、访问网址，点击左边菜单中的“Browse”显示源码根目录
