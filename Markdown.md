@@ -46,3 +46,15 @@
 - 2<sup>n</sup>表示：`2<sup>n</sup>`
 - [ ] test --> `- [ ] test`
 - [x] test --> `- [x] test`
+
+<details>
+<summary>点击查看详细内容</summary>
+展开的内容
+</details>
+
+```html
+<details>
+<summary>点击查看详细内容</summary>
+展开的内容
+</details>
+```
