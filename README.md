@@ -5,11 +5,11 @@
 |数据结构、算法、设计模式|[DataStructures_Algorithms_DesignPatterns.md](DataStructures_Algorithms_DesignPatterns/DataStructures_Algorithms_DesignPatterns.md) <br/> [*数据结构可视化工具*](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html) |
 |NIO|[netty.md TODO](java/netty.md)|
 |Spring|[SpringAll.md ✔](spring/SpringAll.md) <br/> [~~spring.md 1/n~~](spring/spring.md) 、 [~~springboot.md 1/n~~](spring/springboot.md) 、 [~~springcloud.md 1/n~~](spring/springcloud.md)|
-|NoSQL|[redis.md ✔](redis_mongodb/redis.md) <br/> [mongodb.md TODO](redis_mongodb/mongodb.md) 、[Cassandra TODO]()|
+|NoSQL|[redis.md ✔](nosql/redis.md) <br/> [mongodb.md TODO](nosql/mongodb.md) <br/> [Cassandra TODO](nosql/Cassandra.md)|
 |数据库|[mysql.md ✔](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
 |Linux|[shell.md ✔](shell/shell.md) <br/> [Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
-|消息中间件|[kafka.md 1/n](kafka_zookeeper_Pulsar/kafka.md) <br/> [Pulsar.md TODO](kafka_zookeeper_Pulsar/Pulsar.md)|
-|服务注册中心|[zookeeper.md 1/n](kafka_zookeeper_Pulsar/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Eureka--TODO]()、[Consul--TODO]()|
+|消息队列|[kafka.md 1/n](messagequeue/kafka.md) <br/> [Pulsar.md TODO](messagequeue/Pulsar.md)|
+|服务注册中心|[zookeeper.md 1/n](serviceregistry/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Eureka--TODO]()、[Consul--TODO]()|
 |配置中心|[Apollo.md ✔](apollo/Apollo.md)|
 |Nginx|[nginx.md 1/n](nginx/nginx.md) <br/> [openresty.md 1/n](nginx/openresty.md) <br/> [APISIX 1/n](nginx/apisix.md)|
 |ElasticSearch|[elasticsearch.md TODO](elasticsearch/elasticsearch.md)|
@@ -20,6 +20,8 @@
 |BigData|[hadoop.md](bigdata/hadoop.md) <br/> [spark.md](bigdata/spark.md) <br/> [flink.md](bigdata/flink.md) <br/> [hive.md](bigdata/hive.md) <br/> [hbase.md](bigdata/hbase.md)|
 |MinIo|对象存储服务|
 |system|[design.md](system/design.md) <br/> [distributed.md](system/distributed.md)|
+|正则|[regex.md](system/regex.md)|
+|网络协议|[Mqtt.md](network/Mqtt.md)、[CoAP.md](network/CoAP.md)|
 
 
 # 项目

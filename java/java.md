@@ -9,43 +9,26 @@
     - （[Java程序初始化顺序](#Java程序初始化顺序)，[Java修饰符作用域](#Java修饰符作用域)，[equals和==的区别](#equals和==的区别)，[&与&&的区别](#&与&&的区别)，[Java基本数据类型大小](#Java基本数据类型大小)，[wait和sleep区别](#wait和sleep区别)，[实现一个数字线程安全自增的方式](#实现一个数字线程安全自增的方式)）
  
 - [集合](#集合)
-    - [List](#List)
-        - [ArrayList](#ArrayList)
-        - [LinkedList](#LinkedList)
-        - [Vector](#Vector)
-    - [Set](#Set)
-        - [HashSet](#HashSet)（[LinkedHashSet](#LinkedHashSet)）
-        - [TreeSet](#TreeSet)
-    - [Map](#Map)
-        - [HashMap](#HashMap)
-        - [ConcurrentHashMap](#ConcurrentHashMap)
-        - [LinkedHashMap](#LinkedHashMap)
-        - [HashTable](#HashTable)
-        - [TreeMap](#TreeMap)
+    - [List](#List)（[ArrayList](#ArrayList)，[LinkedList](#LinkedList)，[Vector](#Vector)）
+    - [Set](#Set)（[HashSet](#HashSet)，[LinkedHashSet](#LinkedHashSet)，[TreeSet](#TreeSet)）
+    - [Map](#Map)（[HashMap](#HashMap)，[ConcurrentHashMap](#ConcurrentHashMap)，[LinkedHashMap](#LinkedHashMap)，[HashTable](#HashTable)，[TreeMap](#TreeMap)）
     - [Queue](#Queue)
 - [异常](#异常)
     - [异常分类](#异常分类)
     - [异常处理](#异常处理)
 - [反射](#反射)
-    - [Java中的对象有两种类型](#Java中的对象有两种类型)
-    - [反射API](#反射API)
-    - [反射的步骤](#反射的步骤)
-    - [创建对象的两种方式](#创建对象的两种方式)
+    - [反射的应用](#反射的应用)（[获取类的Class对象的3种方式](#获取类的Class对象的3种方式)，[获取查看类中的方法和属性](#获取查看类中的方法和属性)，[创建对象的2种方式](#创建对象的2种方式)）
     - [Method的invoke方法](#Method的invoke方法)
 - [注解](#注解)
     - [标准元注解](#标准元注解)
     - [注解处理器](#注解处理器)
-- [内部类 TODO](#内部类)
+- [~~内部类 TODO~~](#内部类)
 - [泛型](#泛型)
     - [泛型标记和泛型限定](#泛型标记和泛型限定)
-    - [泛型方法](#泛型方法)
-    - [泛型类](#泛型类)
-    - [泛型接口](#泛型接口)
-    - [类型擦除](#类型擦除)
+    - [泛型方法](#泛型方法)，[泛型类](#泛型类)，[泛型接口](#泛型接口)，[类型擦除](#类型擦除)
 - [序列化](#序列化)
     - [序列化注意事项](#序列化注意事项)
     - [反序列化](#反序列化)
-- [正则 TODO](#正则)
 - [日期和时间](#日期和时间)
     - [标准库API](#标准库API)
         - [java.util.Date](#date)
@@ -67,9 +50,7 @@
     - [异步编程--TODO](#异步编程)
         - [CompletableFuture](#CompletableFuture)
     - [锁](#锁)
-        - [乐观锁与悲观锁](#乐观锁与悲观锁)
-        - [自旋锁](#自旋锁)
-        - [公平锁与非公平锁](#公平锁与非公平锁)
+        - [乐观锁与悲观锁](#乐观锁与悲观锁)，[自旋锁](#自旋锁)，[公平锁与非公平锁](#公平锁与非公平锁)
         - [synchronized](#synchronized)
         - [ReentrantLock](#ReentrantLock)
         - [ReentrantReadWriteLock](#ReentrantReadWriteLock)
@@ -92,7 +73,6 @@
         - [java内存区域划分](#java内存区域划分)
         - [对象的创建](#对象的创建)
         - [内存分布](#内存分布)
-        - [访问定位](#访问定位)
         - [内存溢出](#内存溢出)
         - [JVM性能监控、故障处理工具](#JVM性能监控故障处理工具)
         - [一次内存溢出的排查](#一次内存溢出的排查)
@@ -376,115 +356,113 @@ Throwable：所有错误Error 和 异常Exception 的父类。
     - CheckedException：在编译阶段Java 编译器会检查CheckedException异常并强制程序捕获和处理此类异常，即要求程序在可能出现异常的地方通过try catch语句块捕获并处理异常。常见：IOException 、SQLException、ClassNotFoundException等。
 
 ## 异常处理
-- 抛出异常
+1. 抛出异常
     - 自己不处理，将异常抛出给调用者去处理。
     - 三种形式：throws(作用在方法上)、throw(作用在方法内)、系统自动抛出
-```java
-// throws
-public int test(int a, int b) throws Exception {
-    return a/b;
-}
-
-// throw
-public void test(String s) {
-    if (s.length() <= 10) {
-        throw new StringIndexOutOfBoundsException();
+    ```java
+    // throws
+    public int test(int a, int b) throws Exception {
+        return a/b;
     }
-}
-```
-
-- 捕获处理
-```java
-try {
-    //业务实现
-} catch (Exception e) {
-    //异常处理
-}
-
-public class ReadFile {
-    public static void main(String[] args) {
-       BufferedReader reader = null;
-        String buffer = null;
-        try {
-            reader = new BufferedReader(new FileReader("test.txt"));
-            do {
-                buffer = reader.readLine();
-                System.out.println(buffer);
-            } while (reader.read() != -1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
+    
+    // throw
+    public void test(String s) {
+        if (s.length() <= 10) {
+            throw new StringIndexOutOfBoundsException();
+        }
+    }
+    ```
+2. 捕获处理
+    ```java
+    try {
+        //业务实现
+    } catch (Exception e) {
+        //异常处理
+    }
+    
+    public class ReadFile {
+        public static void main(String[] args) {
+           BufferedReader reader = null;
+            String buffer = null;
             try {
-                reader.close();
+                reader = new BufferedReader(new FileReader("test.txt"));
+                do {
+                    buffer = reader.readLine();
+                    System.out.println(buffer);
+                } while (reader.read() != -1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    // try-with-resources
+    public class ReadFile {
+        public static void main(String[] args) {
+            String bufferSugar = null;
+            try (BufferedReader readerSugar = new BufferedReader(new FileReader("test.txt"))) {
+                bufferSugar = readerSugar.readLine();
+                System.out.println(bufferSugar);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
-}
-
-// try-with-resources
-public class ReadFile {
-    public static void main(String[] args) {
-        String bufferSugar = null;
-        try (BufferedReader readerSugar = new BufferedReader(new FileReader("test.txt"))) {
-            bufferSugar = readerSugar.readLine();
-            System.out.println(bufferSugar);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-```
+    ```
 
 [返回目录](#目录)
 
 # 反射
 反射机制：指在程序运行过程中，能够动态获取类和对象的属性和方法，以及能够动态调用对象的方法。
 
-- 反射应用
+**反射的作用：**
 - 获取一个对象所属的类。
 - 获取一个类的所有成员变量和方法。
 - 在运行时创建对象。
 - 在运行时调用对象的方法。
 
-## Java中的对象有两种类型
+**Java中对象的两种类型：（反射）**
 - 编译时类型：指在声明对象时所采用的的类型。如示例的Person
 - 运行时类型：指为对象赋值时所采用的的类型。如示例的Student
 ```java
 Person person = new Student();
-// 程序在编译时无法获知person对象和Person类的真实信息，只能通过运行时发现，而其真实信息（对象的属性和方法）通常通过反射机制来获取，这便是Java语言中反射机制的核心功能。
 ```
+**程序在编译时无法获知person对象和Person类的真实信息，只能通过运行时发现，而其真实信息（对象的属性和方法）通常通过反射机制来获取，这便是Java语言中反射机制的核心功能。**
 
-## 反射API
-- Java的反射API主要用于在运行过程中动态生成类、接口或对象等信息。
-- 常用API：
-    - Class类：用于获取类的属性、方法等信息。
-    - Field类：表示类的成员变量，用于获取和设置类中的属性值。
-    - Method类：表示类的方法，用于获取方法的描述信息或者执行某个方法。
-    - Constructor类：表示类的构造方法。
+## 反射的应用
+**反射使用步骤：**
+1. 获取想要操作的类的Class对象。
+2. 调用Class对象所对应的类中定义的方法。
+3. 使用反射API来获取并调用类的属性和方法等。
 
-## 反射的步骤
-1. 获取想要操作的类的Class对象，该Class对象是反射的核心，通过它可以调用类的任意方法。
-2. 调用Class对象所对应的类中定义的方法，这是反射的使用阶段。
-3. 使用反射API来获取并调用类的属性和方法等信息。
+**常用反射API：**
+- Class类：用于获取类的属性、方法等信息。
+- Field类：表示类的成员变量，用于获取和设置类中的属性值。
+- Method类：表示类的方法，用于获取方法的描述信息或者执行某个方法。
+- Constructor类：表示类的构造方法。
 
 ### 获取类的Class对象的3种方式
 1. 调用某个对象的getClass方法以获取该类对应的Class对象。
-```java
-Person p = new Person();
-Class clazz = p.getClass();
-```
+    ```java
+    Person p = new Person();
+    Class clazz = p.getClass();
+    ```
 2. 调用某个类的class属性以获取该类对应的Class对象。
-```java
-Class clazz = Person.class;
-```
+    ```java
+    Class clazz = Person.class;
+    ```
 3. 调用Class类中的forName静态方法以获取该类对应的Class对象，这是最安全、性能也最好的方法。
-```java
-Class clazz = Class.forName("fullClassPath"); //fullClassPath为类的包路径及名称
-```
+    ```java
+    Class clazz = Class.forName("fullClassPath"); //fullClassPath为类的包路径及名称
+    ```
 
-### 通过Class类中的方法获取并查看该类中的方法和属性
+### 获取查看类中的方法和属性
 ```java
 //1. 获取Person类的Class对象
 Class clazz = Class.forName("test.java.reflect.Person");
@@ -508,25 +486,26 @@ for (Constructor c : constructor) {
 }
 ```
 
-## 创建对象的两种方式
+## 创建对象的2种方式
 1. 使用Class对象的newInstance方法创建该Class对象对应类的实例，这种方法要求该Class对象对应的类有默认的空构造器。
-```java
-//1.1 获取Person类的Class对象
-Class clazz = Class.forName("test.java.reflect.Person");
-//1.2 使用newInstance方法创建对象
-Person p = (Person) clazz.newInstance();
-```
-
+    ```java
+    //1.1 获取Person类的Class对象
+    Class clazz = Class.forName("test.java.reflect.Person");
+   
+    //1.2 使用newInstance方法创建对象
+    Person p = (Person) clazz.newInstance();
+    ```
 2. 先使用Class 对象获取指定的Constructor 对象， 再调用Constructor对象的newInstance方法创建Class对象对应类的实例，通过这种方法可以选定构造方法创建实例。
-```java
-//2.1 获取构造方法并创建对象
-Constructor c = clazz.getDeclaredConstructor(String.class, String.class, int.class);
-//2.2 根据构造方法创建对象并设置属性
-Person p1 = (Person) c.newInstance("zhangsan", "男"， 20);
-```
+    ```java
+    //2.1 获取构造方法并创建对象
+    Constructor c = clazz.getDeclaredConstructor(String.class, String.class, int.class);
+   
+    //2.2 根据构造方法创建对象并设置属性
+    Person p1 = (Person) c.newInstance("zhangsan", "男"， 20);
+    ```
 
 ## Method的invoke方法
-- 通过调用Method的invoke方法 在运行的代码中动态去访问 Method提供的关于类或接口上某个方法。
+通过调用Method的invoke方法 在运行的代码中动态去访问 Method提供的关于类或接口上某个方法。
 - 比如 可以动态传入参数及将方法参数化。具体过程为： 获取对象的Method，并调用Method的invoke方法，如下：
     - 获取Method对象：通过调用Class对象的getMethod(String name, Class<?>... parameterTypes)返回一个Method对象，它描述了此Class对象所表示的类或接口指定的公共成员方法。name参数是String类型，用于指定所需方法的名称。parameterTypes参数是按声明顺序标识该方法的形参类型的Class 对象的一个数组， 如果parameterTypes为null，则按空数组处理。
     - 调用invoke方法：指通过调用Method对象的invoke方法来动态执行函数。invoke方法的具体使用代码如下：
@@ -658,7 +637,6 @@ public class FruitRun {
     - 强制类型转换要求首先必须明确知道实际参数的引用类型，不然可能引起前置类型转换错误，在编译期无法识别这种错误，只能在运行期检测这种错误。
 
 ## 泛型标记和泛型限定
-- E、T、K、V、N、?
 
 泛型标记|说明
 ---|---
@@ -669,12 +647,12 @@ V-Value|表示值
 N-Number|表示数值类型
 ?|表示不确定的Java类型
 
-- 在使用泛型的时候，若希望将类的继承关系加入泛型应用中，就需要对泛型做限定，具体的泛型限定有对泛型上线的限定和对泛型下线的限定。
-    - 对泛型上限的限定：`<? extends T>` 表示该通配符所代表的类型是 T类的子类或者接口T的子接口。
-    - 对泛型下限的限定：`<? super T>` 表示该通配符所代表的类型是 T类型的父类或者父接口。
+在使用泛型的时候，若希望将类的继承关系加入泛型应用中，就需要对泛型做限定，包含：对泛型上线的限定、对泛型下线的限定。
+- 对泛型上限的限定：`<? extends T>` 表示该通配符所代表的类型是 T类的子类或者接口T的子接口。
+- 对泛型下限的限定：`<? super T>` 表示该通配符所代表的类型是 T类型的父类或者父接口。
 
 ## 泛型方法
-- 泛型方法指将方法的参数类型定义为泛型，以便在调用时接收不同类型的参数。
+泛型方法：指将方法的参数类型定义为泛型，以便在调用时接收不同类型的参数。
 ```java
 public static void main(String[] args) {
     generalMethod("1", 2, new Worker());
@@ -697,8 +675,8 @@ public static <T> void generalMethod(T ... inputArray) {
 ```
 
 ## 泛型类
-- 泛型类指在定义类时在类上定义了泛型，以便类在使用时可以根据传入的不同参数类型实例化不同的对象。
-- 泛型类的具体使用方法是在类的名称后面添加一个或多个类型参数的声明部分，在多个泛型参数之间用逗号隔开。
+泛型类：指在定义类时在类上定义了泛型，以便类在使用时可以根据传入的不同参数类型实例化不同的对象。
+- 泛型类的具体使用方法：在类的名称后面添加一个或多个类型参数的声明部分，在多个泛型参数之间用逗号隔开。
 ```java
 public class GeneralClass<T> {
     public static void main(String[] args) {
@@ -719,7 +697,8 @@ public class GeneralClass<T> {
 ```
 
 ## 泛型接口
-- 泛型接口通过在接口名后面添加类型参数的声明部分来实现。泛型接口的具体类型一般在实现类中进行声明，不同类型的实现类处理不同的业务逻辑。
+泛型接口：通过在接口名后面添加类型参数的声明部分来实现。
+- 泛型接口的具体类型一般在实现类中进行声明，不同类型的实现类处理不同的业务逻辑。
 ```java
 public interface IGeneral<T> {
     public T getId();    
@@ -740,23 +719,27 @@ public class GeneralIntegerImpl implements IGeneral<Integer> {
 ```
 
 ## 类型擦除
-- 在编码阶段采用泛型时加上的类型参数，会被编译器在编译时去掉，这个过程就被称为类型擦除。因此，泛型主要用于编译阶段。在编译后生成的Java字节代码文件中不包含泛型中的类型信息。
-    - 例如，编码时定义的List<Integer> 和List<String> 在经过编译后统一为List。JVM所读取的只是List，由泛型附加的类型信息对JVM来说是不可见的。
-- Java类型的擦除过程为：
-    - 首先，查找用来替换类型参数的具体类（该具体类一般为Object），如果指定了类型参数的上界，则以该上界作为替换时的具体类；
-    - 然后，把代码中的类型参数都替换为具体的类。
+在编码阶段采用泛型时加上的类型参数，会被编译器在编译时去掉，这个过程就被称为类型擦除。因此，泛型主要用于编译阶段。在编译后生成的Java字节代码文件中不包含泛型中的类型信息。
+- 例如，编码时定义的List<Integer> 和List<String> 在经过编译后统一为List。JVM所读取的只是List，由泛型附加的类型信息对JVM来说是不可见的。
+
+Java类型的擦除过程为：
+1. 查找用来替换类型参数的具体类（该具体类一般为Object），如果指定了类型参数的上界，则以该上界作为替换时的具体类；
+2. 把代码中的类型参数都替换为具体的类。
   
 [返回目录](#目录)
 
 # 序列化
-- 背景：Java对象在JVM运行时被创建、更新和销毁，当JVM退出时，对象也会随之销毁，即这些对象的生命周期不会比JVM的生命周期更长。但在现实应用中，我们常常需要将对象及其状态在多个应用之间传递、共享，或者将对象及其状态持久化，在其他地方重新读取被保存的对象及其状态继续进行处理。这就需要通过将Java对象序列化来实现。
-- 在使用Java序列化技术保存对象及其状态信息时，对象及其状态信息会被保存在一组字节数组中，在需要时再将这些字节数组反序列化为对象。
-    - 注意，对象序列化保存的是对象的状态，即它的成员变量，因此类中的静态变量不会被序列化。
-- 缺点：影响系统性能，尽可能不使用
-- 使用场景：
-    - 在RPC（远程过程调用）或者网络传输中发送对象。
-    - 持久化对象的状态到数据库或者文件。
-    - 序列化实现深复制，即复制引用的对象。
+背景：Java对象在JVM运行时被创建、更新和销毁，当JVM退出时，对象也会随之销毁，即这些对象的生命周期不会比JVM的生命周期更长。但在现实应用中，我们常常需要将对象及其状态在多个应用之间传递、共享，或者将对象及其状态持久化，在其他地方重新读取被保存的对象及其状态继续进行处理。这就需要通过将Java对象序列化来实现。
+
+使用： 在使用Java序列化技术保存对象及其状态信息时，对象及其状态信息会被保存在一组字节数组中，在需要时再将这些字节数组反序列化为对象。
+- 注意，对象序列化保存的是对象的状态，即它的成员变量，因此类中的静态变量不会被序列化。
+
+缺点：影响系统性能，尽可能不使用
+
+使用场景：
+- 在RPC（远程过程调用）或者网络传输中发送对象。
+- 持久化对象的状态到数据库或者文件。
+- 序列化实现深复制，即复制引用的对象。
 
 ## 序列化注意事项  
 
@@ -787,8 +770,9 @@ public class Worker implements Serializable {
     }
 }
 ```
-- ![idea打开自动生成序列化id开关](../resources/static/images/idea打开自动生成序列化id开关.png)
-- ![idea自动生成序列化id](../resources/static/images/idea自动生成序列化id.png)
+![idea打开自动生成序列化id开关](../resources/static/images/idea打开自动生成序列化id开关.png)
+
+![idea自动生成序列化id](../resources/static/images/idea自动生成序列化id.png)
 
 ## 反序列化
 - Java反序列框架：arvo、protobuf、thrift、fastjson
@@ -815,16 +799,13 @@ public static void main(String[] args) throws Exception {
 
 [返回目录](#目录)
 
-# 正则
-
-[返回目录](#目录)
-
 # 日期和时间
 ## 标准库API
 - java.util包：Date、Calendar、TimeZone
 - java.time包(Java 8引入)：LocalDateTime、ZonedDateTime、ZoneId等
+
 ### Date
-- 实际上存储了一个long类型的以毫秒表示的时间戳。
+实际上存储了一个long类型的以毫秒表示的时间戳。
 ```java
     public static void main(String[] args) {
         // 获取当前时间:
@@ -1317,11 +1298,12 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 ## 锁
 
 ### 乐观锁与悲观锁
-#### 乐观锁
+**乐观锁**
 - 每次读取数据时都认为别人不会修改该数据，所以不会上锁，但在更新时会判断在此期间别人有没有更新该数据，通常采用在写时先读出当前版本号然后加锁的方法。
     - 具体过程为：比较当前版本号与上一次的版本号，如果版本号一致，则更新，如果版本号不一致，则重复进行读、比较、写操作。
 - Java中的乐观锁大部分是通过 **[CAS](#CAS)** 操作实现的。
-#### 悲观锁
+
+**悲观锁**
 - 每次读取数据时都认为别人会修改数据，所以每次在读写数据时都会上锁，这样别人想读写这个数据时就会阻塞、等待直到拿到锁。
 - Java 中的悲观锁大部分基于 **AQS** （Abstract Queued Synchronized，抽象的队列同步器）架构实现。
     - AQS定义了一套多线程访问共享资源的同步框架，许多同步类的实现都依赖于它，例如常用的Synchronized、ReentrantLock、Semaphore、CountDownLatch等。
@@ -1330,11 +1312,13 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 ### 自旋锁
 - 自旋锁认为：如果持有锁的线程能在很短的时间内释放锁资源，那么那些等待竞争锁的线程就不需要做内核态和用户态之间的切换进入阻塞、挂起状态，只需等一等（也叫作自旋），在等待持有锁的线程释放锁后即可立即获取锁，这样就避免了用户线程在内核状态的切换上导致的锁时间消耗。
 - 线程在自旋时会占用CPU，在线程长时间自旋获取不到锁时，将会造成CPU的浪费，甚至有时线程永远无法获取锁而导致CPU资源被永久占用，所以需要**设定一个自旋等待的最大时间**。在线程执行的时间超过自旋等待的最大时间后，线程会退出自旋模式并释放其持有的锁。
-#### 自旋锁优缺点
+
+**自旋锁优缺点:**
 - 优点：自旋锁可以减少CPU 上下文的切换，对于占用锁的时间非常短或锁竞争不激烈的代码块来说性能大幅度提升，因为自旋的CPU耗时明显少于线程阻塞、挂起、再唤醒时两次CPU上下文切换所用的时间。
 - 缺点：在持有锁的线程占用锁时间过长或锁的竞争过于激烈时，线程在自旋过程中会长时间获取不到锁资源，将引起CPU 的浪费。所以在系统中有复杂锁依赖的情况下不适合采用自旋锁。
-#### 自旋锁的时间阈值
-如果自旋的执行时间太长，则会有大量的线程处于自旋状态且占用CPU资源，造成系统资源浪费。  
+
+**自旋锁的时间阈值:**
+- 如果自旋的执行时间太长，则会有大量的线程处于自旋状态且占用CPU资源，造成系统资源浪费。  
 - JDK的不同版本所采用的自旋周期不同
     - JDK 1.5为固定DE时间
     - JDK 1.6引入了适应性自旋锁。适应性自旋锁的自旋时间不再是固定值，而是由上一次在同一个锁上的自旋时间及锁的拥有者的状态来决定的，可基本认为一个线程上下文切换的时间是就一个最佳时间。
@@ -1653,32 +1637,31 @@ public List<String> setInfo() {
 [返回目录](#目录)
 
 ## TCP三次握手
-- TCP数据在传输之前会建立连接需要进行 3次沟通，一般被称为“三次握手”。
-    - （1）客户端发送`SYN（seq=x）` 报文给服务器端，进入SYN_SEND状态。
-    - （2）服务器端收到SYN 报文，回应一个`SYN（seq=y） 和 ACK（ack=x+1）` 报文，进入SYN_RECV状态。
-    - （3）客户端收到服务器端的SYN报文，回应一个`ACK（ack=y+1）` 报文，进入Established状态。
+TCP数据在传输之前会建立连接需要进行三次握手。
+1. 客户端发送`SYN（seq=x）` 报文给服务器端，进入SYN_SEND状态。
+2. 服务器端收到SYN 报文，回应一个`SYN（seq=y） 和 ACK（ack=x+1）` 报文，进入SYN_RECV状态。
+3. 客户端收到服务器端的SYN报文，回应一个`ACK（ack=y+1）` 报文，进入Established状态。
 
 ![tcp三次握手](../resources/static/images/tcp三次握手.PNG)
 
 ## TCP四次挥手
-- TCP在数据传输完成断开连接的时候要进行4次沟通，一般被称为“四次挥手”。
-- TCP断开连接既可以是由客户端发起的（客户端主动断开连接），也可以是由服务器端发起的（服务端主动断开连接）。
-    - （1）客户端应用进程调用断开连接的请求，向服务器端发送一个终止标志位`FIN=1,seq=u` 的消息，表示在客户端关闭链路前要发送的数据已经安全发送完毕，可以开始关闭链路操作，并请求服务器端确认关闭客户端到服务器的链路操作。此时客户端处于FIN-WAIT-1状态。
-    - （2）服务器在收到这个FIN消息后返回一个`ACK=1,ack=u+1,seq=v` 的消息给客户端，表示接收到客户端断开链路的操作请求，这时TCP服务器端进程通知高层应用进程释放客户端到服务器端的链路，服务器处于CLOSE-WAIT状态，即半关闭状态。客户端在收到消息后处于FINWAIT-2状态。
-    - （3）服务器端将关闭链路前需要发送给客户端的消息发送给客户端，在等待该数据发送完成后， 发送一个终止标志位`FIN=1,ACK=1,seq=w,ack=u+1` 的消息给客户端，表示关闭链路前服务器需要向客户端发送的消息已经发送完毕，请求客户端确认关闭从服务器到客户端的链路操作，此时服务器端处于LAST-ACK状态，等待客户端最终断开链路。
-    - （4）客户端在接收到这个最终FIN 消息后，发送一个`ACK=1,seq=u+1,ack=w+1`的消息给服务器端，表示接收到服务器端的断开连接请求并准备断开服务器端到客户端的链路。此时客户端处于TIM-WAIT状态，TCP连接还没有释放，然后经过等待计时器（2MSL）设置的时间后，客户端将进入CLOSE状态。
+TCP在数据传输完成断开连接时要进行四次挥手。（可以客户端主动断连，也可以服务端主动断连）
+1. 客户端应用进程调用断开连接的请求，向服务器端发送一个终止标志位`FIN=1,seq=u` 的消息，表示在客户端关闭链路前要发送的数据已经安全发送完毕，可以开始关闭链路操作，并请求服务器端确认关闭客户端到服务器的链路操作。此时客户端处于FIN-WAIT-1状态。
+2. 服务器在收到这个FIN消息后返回一个`ACK=1,ack=u+1,seq=v` 的消息给客户端，表示接收到客户端断开链路的操作请求，这时TCP服务器端进程通知高层应用进程释放客户端到服务器端的链路，服务器处于CLOSE-WAIT状态，即半关闭状态。客户端在收到消息后处于FINWAIT-2状态。
+3. 服务器端将关闭链路前需要发送给客户端的消息发送给客户端，在等待该数据发送完成后， 发送一个终止标志位`FIN=1,ACK=1,seq=w,ack=u+1` 的消息给客户端，表示关闭链路前服务器需要向客户端发送的消息已经发送完毕，请求客户端确认关闭从服务器到客户端的链路操作，此时服务器端处于LAST-ACK状态，等待客户端最终断开链路。
+4. 客户端在接收到这个最终FIN 消息后，发送一个`ACK=1,seq=u+1,ack=w+1`的消息给服务器端，表示接收到服务器端的断开连接请求并准备断开服务器端到客户端的链路。此时客户端处于TIM-WAIT状态，TCP连接还没有释放，然后经过等待计时器（2MSL）设置的时间后，客户端将进入CLOSE状态。
 
 ![tcp四次挥手](../resources/static/images/tcp四次挥手.PNG)
 
-- 为什么要四次挥手
-    - 这是由于TCP的半关闭造成的。
-    - 因为TCP连接是全双工的（即数据可在两个方向上同时传递），所以在进行关闭时对每个方向都要单独进行关闭，这种单方向的关闭叫作半关闭。
-    - 在一方完成它的数据发送任务时，就发送一个FIN来向另一方通告将要终止这个方向的连接。
+**为什么要四次挥手**
+- 这是由于TCP的半关闭造成的。
+- 因为TCP连接是全双工的（即数据可在两个方向上同时传递），所以在进行关闭时对每个方向都要单独进行关闭，这种单方向的关闭叫作半关闭。
+- 在一方完成它的数据发送任务时，就发送一个FIN来向另一方通告将要终止这个方向的连接。
 
 [返回目录](#目录)
 
 ## HTTP原理
-- HTTP是一个无状态的协议，无状态指在客户端（Web浏览器）和服务器之间不需要建立持久的连接，在一个客户端向服务器端发出请求且服务器收到该请求并返回响应（response）后，本次通信结束，HTTP连接将被关闭，服务器不保留连接的相关信息。
+HTTP是一个无状态的协议，无状态指在客户端（Web浏览器）和服务器之间不需要建立持久的连接，在一个客户端向服务器端发出请求且服务器收到该请求并返回响应（response）后，本次通信结束，HTTP连接将被关闭，服务器不保留连接的相关信息。
 
 ### HTTP传输流程
 - （1）地址解析：地址解析通过域名系统DNS解析服务器域名从而获得主机的IP 地址。例如， 用客户端的浏览器请求http://localhost.com:8080/index.htm，则可从中分解出协议名、主机名、端口、对象路径等部分结果如下。
@@ -1827,16 +1810,6 @@ public List<String> setInfo() {
 - 实例数据：真正存储的有效信息，即代码中定义的各种类型字段内容，
     - 存储顺序受JVM分配策略参数`-XX: FieldsAllocationStyle`和字段在java源码中定义顺序影响
 - 对齐填充：非必然存在，无特别含义，仅起到占位符作用
-
-### 访问定位
-- java程序通过栈上的reference数据来操作堆上的具体对象，访问方式可分为：使用句柄、直接指针
-    - 使用句柄访问：java堆可能会划分一块内存作为句柄池，reference中存储的就是对象的句柄地址，句柄中包含对象实例数据和类型数据各自具体的地址信息
-    - 使用直接指针访问：java堆中对象的内存分布就需要考虑如何放置访问类型数据的相关信息，reference中存储的直接是对象地址
-- 好处：
-    - 句柄访问好处：就是reference中存储的是稳定句柄地址，在对象被移动时只会改变句柄中的实例数据指针，而reference本身不需要被修改
-    - 直接指针访问好处：就是速度更快，它节省了一次指针定位的时间开销
-
-[返回目录](#目录)
 
 ### 内存溢出
 **Java堆溢出**
