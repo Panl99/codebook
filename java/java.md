@@ -80,6 +80,7 @@
     - [类加载机制](#类加载机制)（[类加载时机](#类加载时机)，[类加载过程](#类加载过程)，[类加载器](#类加载器)）
     - [性能调优实例](#性能调优)
         - [双11亿级流量访问JVM内存分配优化](#双11亿级流量访问JVM内存分配优化)
+        - [JVM参数](#JVM参数)
     
 - [函数式编程](#函数式编程)
     - [Lambda](#Lambda)
@@ -2108,15 +2109,43 @@ jvm调优后，几乎不发生full GC
 1. 此时1s产生60M数据放到Eden区，占满Eden需要约25秒。
 2. 每20s产生60M垃圾放到Survivor0，下次25s后产生的60M垃圾会放到Survivor1，并且一次Minor GC会清掉Eden区和Survivor0区，下次再类推清掉Eden和Survivor1，这样60M垃圾在年轻代就被GC了不会再放到老年代等full GC。
 
-**jvm容量设置：**
-- -Xmn 2048M（设置年轻代大小2G）
-- -Xms 3072M （设置堆最小3G）
-- -Xmx 3072M （设置堆最大3G）
-- -Xss 1M （设置栈容量）
-- -XX: MetaspaceSize=256M （设置元空间初始化大小）
-- -XX: MaxMetaspaceSize=256M （设置元空间最大值）
 
 ### JVM参数
+
+| [JVM参数](https://segmentfault.com/a/1190000010603813) | 说明                                                         | 使用                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **-Xms**                                               | 堆最小值                                                     | -Xms 5G<br />或 -XX:InitialHeapSize=2048m                    |
+| **-Xmx**                                               | 堆最大值                                                     | -Xmx 5G<br />或 -XX:MaxHeapSize=2048m                        |
+| **-Xmn**                                               | 新生代大小                                                   | -Xmn512m<br />或 -XX:MaxNewSize=512m                         |
+| **MetaspaceSize**                                      | 元空间初始大小                                               | -XX:MetaspaceSize=128m                                       |
+| **MaxMetaspaceSize**                                   | 元空间最大值                                                 | -XX:MaxMetaspaceSize=512m                                    |
+| **-Xss**                                               | 线程栈大小                                                   | -Xss1M<br /> 或 -XX:ThreadStackSize=1M                       |
+| **MaxDirectMemorySize**                                | 最大直接内存（堆外）大小，（不指定默认跟堆最大值一致）       | -XX:MaxDirectMemorySize=1G                                   |
+| **UseG1GC**                                            | 使用G1垃圾收集器                                             | -XX:+UseG1GC                                                 |
+| **MaxGCPauseMillis**                                   | 自适应大小策略的最大GC暂停时间目标（以毫秒为单位），或（仅G1）每个MMU时间片的最大GC时间 | -XX:MaxGCPauseMillis=200                                     |
+| **G1ReservePercent**                                   | G1为分配担保预留的空间比例                                   | -XX:G1ReservePercent=15                                      |
+| **SurvivorRatio**                                      | eden区和survivor的比值                                       | -XX:SurvivorRatio=6<br />（表示每个survivor区跟eden区的比值为1:6,每个survivor区占新生代的八分之一） |
+| PretenureSizeThreshold                                 | 可以在新生代直接分配的对象最大值，0表示没有最大值            | -XX:PretenureSizeThreshold=1000000<br />设置该参数，可以使大于这个值的对象直接在老年代分配，避免在Eden区和Survivor区发生大量的内存复制，该参数只对Serial和ParNew收集器有效，Parallel Scavenge并不认识该参数 |
+| **MaxTenuringThreshold**                               | 年轻代最大年龄                                               | -XX:MaxTenuringThreshold=10<br />每个对象在坚持过一次Minor GC之后，年龄就增加1，当超过这个参数值时就进入老年代，最大支持15 |
+| **InitiatingHeapOccupancyPercent**                     | 内存占用达到整个堆百分之多少的时候开启一个GC周期，G1 GC会根据整个栈的占用，而不是某个代的占用情况去触发一个并发GC周期，0表示一直在GC，默认值是45 | -XX:InitiatingHeapOccupancyPercent=45                        |
+| ExplicitGCInvokesConcurrent                            | 在full gc时，并不全程停顿，依然只在ygc和两个remark阶段停顿   | -XX:+ExplicitGCInvokesConcurrent                             |
+| AlwaysPreTouch                                         | 启动时访问并置零内存页面：启动时就把参数里说好了的内存全部舔一遍，可能令得启动时慢上一点，但后面访问时会更流畅，比如页面会连续分配，比如不会在晋升新生代到老生代时才去访问页面使得GC停顿时间加长。不过这选项对大堆才会更有感觉一点。 | -XX:+AlwaysPreTouch                                          |
+| AutoBoxCacheMax                                        | `Integer i = 3;`这语句有着 int自动装箱成Integer的过程，JDK默认只缓存 -128 ~ +127的int 和 long，超出范围的数字就要即时构建新的Integer对象。设为20000后，应用的QPS从48,000提升到50,000，足足4%的影响 | -XX:AutoBoxCacheMax=20000                                    |
+| PrintFlagsFinal                                        | 打印最终值，如果某个默认值被新值覆盖，显示新值               | -XX:+PrintFlagsFinal -version                                |
+| **Xloggc**                                             | GC日志文件路径                                               | -Xloggc:/data/gclog/gc.log                                   |
+| **UseGCLogFileRotation**                               | 滚动GC日志文件，须配置Xloggc                                 | -XX:+UseGCLogFileRotation                                    |
+| **NumberOfGCLogFiles**                                 | 滚动GC日志文件数，默认0，不滚动                              | -XX:NumberOfGCLogFiles=10                                    |
+| **GCLogFileSize**                                      | GC文件滚动大小，需配置UseGCLogFileRotation，设置为0表示仅通过jcmd命令触发 | -XX:GCLogFileSize=100M                                       |
+| **PrintGCDetails**                                     | GC时打印更多详细信息，默认关闭                               | -XX:+PrintGCDetails                                          |
+| **PrintGCDateStamps**                                  | GC时打印时间戳信息，默认关闭                                 | -XX:+PrintGCDateStamps                                       |
+| **PrintGCApplicationStoppedTime**                      | 打印应用暂停时间，默认关闭                                   | -XX:+PrintGCApplicationStoppedTime                           |
+| **PrintTenuringDistribution**                          | 打印存活实例年龄信息，默认关闭                               | -XX:+PrintTenuringDistribution                               |
+| **PrintHeapAtGC**                                      | GC前后打印堆区使用信息，默认关闭                             | -XX:+PrintHeapAtGC                                           |
+| **ErrorFile**                                          | 错误日志路径                                                 | -XX:ErrorFile=targetDir/hs_err_pid_%p.log                    |
+| **HeapDumpOnOutOfMemoryError**                         | 抛出内存溢出错误时导出堆信息到指定文件，默认关闭             | -XX:+HeapDumpOnOutOfMemoryError                              |
+| **HeapDumpPath**                                       | 当HeapDumpOnOutOfMemoryError开启的时候，dump文件的保存路径，默认为工作目录下的java_pid<pid>.hprof文件 | -XX:HeapDumpPath=/data/dump/jvm.dump                         |
+
+> [关键业务系统的JVM启动参数推荐 ](https://blog.csdn.net/albertfly/article/details/51533315)
 
 
 <details>
