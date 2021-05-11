@@ -1,7 +1,8 @@
-> [Go官方文档](https://go-zh.org/doc/)  
-> [Go指南(在线练习)](https://tour.go-zh.org/welcome/1)  
-> [Go语言实战](../resources/static/doc/Go语言实战.pdf)  
-> [Go程序设计语言]()  
+> [Go软件下载地址](https://golang.google.cn/) <br/>
+> [Go官方文档](https://go-zh.org/doc/)  <br/>
+> [Go指南(在线练习)](https://tour.go-zh.org/welcome/1)  <br/>
+> [Go语言实战](../resources/static/doc/Go语言实战.pdf)  <br/>
+> [Go程序设计语言]()  <br/>
 
 # Go
 - Go是编译性语言，Go的工具链将程序的源文件转变成机器相关的原生二进制指令。
