@@ -67,6 +67,7 @@
 - Spring ORM：用于支持Hibernate等ORM工具。
 - Spring Web：为创建Web应用程序提供支持。
 - Spring Test：提供了对 JUnit 和 TestNG 测试的支持
+
 ![](../resources/static/images/SpringFrameworkRuntime.png)
 
 [返回目录](#目录)

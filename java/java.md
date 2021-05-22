@@ -1364,7 +1364,7 @@ public void setInfo() {
 - synchronized作用于静态方法时，锁住的是Class实例，因为静态方法属于Class而不属于对象。
 - synchronized作用于一个代码块时，锁住的是所有代码块中配置的对象。
 
-**synchronized的实现原理：**
+**synchronized的底层实现原理：**
 //TODO
     
 [返回目录](#目录)    
@@ -2585,6 +2585,11 @@ public int parallelArraySum() {
 - 性能好：ArrayList、数组、IntStream、range。这些数据结构支持随机读取，即能被任意分解。
 - 性能一般：HashSet、TreeSet，这些数据结构不易公平地被分解，但是大多数时候分解是可能的。
 - 性能差：LinkedList，对半分解太难了。还有Streams.iterate 和BufferedReader.lines，长度未知，因此很难预测该在哪里分解。
+
+建议：
+- 优先使用基本类型流：`IntStream`，`LongStream`，`DoubleStream`。
+- 依赖元素顺序操作，并行流的性能很差。
+- 数据量不大时，并行流不能提升性能。
 
 [返回目录](#目录)
 
