@@ -803,7 +803,7 @@ public static void main(String[] args) throws Exception {
 
 # 日期和时间
 
-[DateUtil](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/util/DateUtil.java)
+[DateUtil](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/util/DateUtil.java)
 
 ## 标准库API
 - java.util包：Date、Calendar、TimeZone
