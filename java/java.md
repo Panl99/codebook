@@ -279,7 +279,7 @@ synchronized(obj) {
 - 底层：哈希表
 - 唯一性保证：hashCode()和equals()
 - **线程安全HashSet**
-    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/util/ConcurrentHashSet.java)
+    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/util/ConcurrentHashSet.java)
     - `CopyOnWriteArraySet`
 
 #### LinkedHashSet

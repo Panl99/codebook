@@ -552,10 +552,10 @@ public static String factorial(int num) {
 [目录](#目录)
 
 ## 单例模式
-[单例模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/singletonpattern/Singleton.java)
+[单例模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/singletonpattern/Singleton.java)
    
 ## 工厂模式
-[工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern)
+[工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern)
 
 - FactoryPattern：提供了一种简单、快速、高效而安全地创建对象的方式。
 - 工厂模式在接口中定义了创建对象的方法，而将具体的创建对象的过程在子类中实现，用户只需通过接口创建需要的对象即可，不用关注对象的具体创建过程。同时，不同的子类可根据需求灵活实现创建对象的不同方法。
@@ -564,11 +564,11 @@ public static String factorial(int num) {
 #### 实现
 以创建手机为例，假设手机的品牌有华为、小米、苹果三种类型，我们要实现的是根据不同的传入参数实例化不同的手机。
 
-1. 定义接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Phone.java) ，在接口中定义品牌 brand()；
-2. 定义实现类 [IPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/IPhone.java) 、[HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/HuaWei.java) 、[XiaoMi](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/XiaoMi.java) ；
-3. 定义工厂类 [Factory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Factory.java) ；
-4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/Main.java) 。
-5. 优化3：使用枚举创建手机对象 [PhoneEnum]([HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/PhoneEnum.java))
+1. 定义接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/Phone.java) ，在接口中定义品牌 brand()；
+2. 定义实现类 [IPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/IPhone.java) 、[HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/HuaWei.java) 、[XiaoMi](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/XiaoMi.java) ；
+3. 定义工厂类 [Factory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/Factory.java) ；
+4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/Main.java) 。
+5. 优化3：使用枚举创建手机对象 [PhoneEnum]([HuaWei](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/PhoneEnum.java))
 
 #### 使用Lambda重构工厂模式
 无需暴露实例化的逻辑就能完成对象的创建。  
@@ -622,7 +622,7 @@ public static void main(String[] args) {
 ```
 
 ### 抽象工厂模式
-[抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern)
+[抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern)
 
 - 抽象工厂模式（Abstract Factory Pattern）在工厂模式上添加了一个创建不同工厂的抽象接口（抽象类或接口实现），该接口可叫作超级工厂。在使用过程中，我们首先通过抽象接口创建出不同的工厂对象，然后根据不同的工厂对象创建不同的对象。
 - 手机厂商还可能制造其他产品，减少实现多个工厂类
@@ -632,61 +632,61 @@ public static void main(String[] args) {
 - 创建手机产品
 - 创建电脑产品
 
-1. 定义抽象工厂类 [AbstractFactory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/AbstractFactory.java) ,抽象方法`createPhone(String brand);``createComputer(String brand);`  
-2. 定义手机接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/Phone.java) ，在接口中定义功能 call()
-3. 定义手机实现类 [HuaWeiPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/HuaWeiPhone.java) 、[XiaoMiPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/XiaoMiPhone.java)
-4. 定义手机工厂类 [PhoneFactory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/PhoneFactory.java)
+1. 定义抽象工厂类 [AbstractFactory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/AbstractFactory.java) ,抽象方法`createPhone(String brand);``createComputer(String brand);`  
+2. 定义手机接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/Phone.java) ，在接口中定义功能 call()
+3. 定义手机实现类 [HuaWeiPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/HuaWeiPhone.java) 、[XiaoMiPhone](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/XiaoMiPhone.java)
+4. 定义手机工厂类 [PhoneFactory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/PhoneFactory.java)
 
-5. 定义电脑接口 [Computer](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/Computer.java) ，在接口中定义功能 internet()
-6. 定义电脑实现类 [HuaWeiComputer](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/HuaWeiComputer.java) 、[XiaoMiComputer](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/XiaoMiComputer.java)
-7. 定义电脑工厂类 [ComputerFactory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/ComputerFactory.java)
+5. 定义电脑接口 [Computer](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/Computer.java) ，在接口中定义功能 internet()
+6. 定义电脑实现类 [HuaWeiComputer](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/HuaWeiComputer.java) 、[XiaoMiComputer](https://github.com/Panl99/demo/blob/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/XiaoMiComputer.java)
+7. 定义电脑工厂类 [ComputerFactory](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/ComputerFactory.java)
 
-8. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/factorypattern/abstractfactorypattern/Main.java) 。
+8. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/factorypattern/abstractfactorypattern/Main.java) 。
 
 
 [目录](#目录)
 
 ## 建造者模式
-[建造者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/builderpattern)
+[建造者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/builderpattern)
 
 ## 原型模式
-[原型模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/prototypepattern)
+[原型模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/prototypepattern)
 
 ## 适配器模式
-[适配器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/adapterpattern)
+[适配器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/adapterpattern)
 
 ## 装饰者模式
-[装饰者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/decoratorpattern)
+[装饰者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/decoratorpattern)
 
 ## 代理模式
-[代理模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern)
+[代理模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/proxypattern)
 
 - 代理模式指为对象提供一种通过代理的方式来访问并控制该对象行为的方法。在客户端不适合或者不能够直接引用一个对象时，可以通过该对象的代理对象来实现对该对象的访问，可以将该代理对象理解为客户端和目标对象之间的中介者。
 
 ### 代理模式实现
 以招聘工作为例
 
-1. 定义接口Company：[Company](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/Company.java)
-2. 定义其实现类HR：[HR](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/HR.java)
-3. 定义代理类Proxy：[Proxy](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/Proxy.java)
-4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/proxypattern/Main.java)
+1. 定义接口Company：[Company](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/proxypattern/Company.java)
+2. 定义其实现类HR：[HR](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/proxypattern/HR.java)
+3. 定义代理类Proxy：[Proxy](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/proxypattern/Proxy.java)
+4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/proxypattern/Main.java)
 
 [目录](#目录)
 
 ## 外观模式
-[外观模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/facadepattern)
+[外观模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/facadepattern)
 
 ## 桥接模式
-[桥接模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/bridgepattern)
+[桥接模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/bridgepattern)
 
 ## 组合模式
-[组合模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/compositepattern)
+[组合模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/compositepattern)
 
 ## 享元模式
-[享元模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/flyweightpattern)
+[享元模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/flyweightpattern)
 
 ## 观察者模式
-[观察者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/observerpattern)
+[观察者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/observerpattern)
 
 ### 使用Lambda重构观察者模式  
 某些事件发生时，需要自动地通知其他多个对象(观察者)  
@@ -756,7 +756,7 @@ f.registerObserver((String tweet) -> {
 [目录](#目录)
 
 ## 责任链模式
-[责任链模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/chain-of-responsibilitypattern)
+[责任链模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/chain-of-responsibilitypattern)
 
 ### 使用Lambda重构责任链模式
 一个处理对象可能需要在完成一些工作之后，将结果传递给另一个对象，这个对象接着做一些工作，再转交给下一个处理对象，以此类推。  
@@ -804,22 +804,22 @@ String result = pipeline.apply("Aren't labdas really sexy?!!");
 [目录](#目录)
 
 ## 迭代器模式
-[迭代器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/iteratorpattern)
+[迭代器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/iteratorpattern)
 
 ## 命令模式
-[命令模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/commandpattern)
+[命令模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/commandpattern)
 
 ## 备忘录模式
-[备忘录模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/mementopattern)  
+[备忘录模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/mementopattern)  
 
 ## 中介者模式
-[中介者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/mediatorpattern)
+[中介者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/mediatorpattern)
 
 ## 解释器模式
-[解释器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/interpreterpattern)
+[解释器模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/interpreterpattern)
 
 ## 策略模式
-[策略模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/strategypattern)
+[策略模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/strategypattern)
 
 当if/else比较多的时候，可以考虑使用策略模式重构，比如以支付为例：支付宝、微信、京东、云闪付等
 - 普通代码：
@@ -964,7 +964,7 @@ boolean b2 = lowerCaseValidator.validate("bbbb");
 [目录](#目录)
 
 ## 模板方法
-[模板方法](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/templatepattern)
+[模板方法](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/templatepattern)
 
 ### 使用Lambda重构模板方法  
 需要采用某个算法的框架，同时又希望有一定的灵活度，能对它的某些部分进行改进  
@@ -990,10 +990,10 @@ new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.print
 [目录](#目录)
 
 ## 状态模式
-[状态模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/statepattern)
+[状态模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/statepattern)
 
 ## 访问者模式
-[访问者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/outman/democommon/designpatterns/visitorpattern)
+[访问者模式](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/designpatterns/visitorpattern)
 
 [目录](#目录)
 
