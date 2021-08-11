@@ -287,3 +287,5 @@ deploy | deploy:deploy
 -v,--version | 显示版本信息
 --debug | 生成执行调试输出
 
+
+- 多线程编译: `mvn clean package -T 1C -Dmaven.test.skip=true  -Dmaven.compile.fork=true`
