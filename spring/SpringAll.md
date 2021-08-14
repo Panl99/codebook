@@ -50,6 +50,18 @@
             - [舱壁模式实现](#舱壁模式实现)
     - [Consul](#Consul)
 
+- [SpringCloudAlibaba](#SpringCloudAlibaba)
+    - [RPC框架 Dubbo](#Dubbo)
+    - [注册配置中心 Nacos](#Nacos)
+    - [流控组件 Sentinel](#Sentinel)
+    - [分布式事务组件 Seata](#Seata)
+    - [消息中间件 RocketMQ](#RocketMQ)
+    
+    **↓商业化组件↓**
+    - [对象存储服务 OSS](#OSS)
+    - [分布式任务调度组件 SchedulerX](#SchedulerX)
+    - [全球短信服务 SMS](#SMS)
+
 [返回目录](#目录)
 
 # Spring
@@ -927,3 +939,251 @@ HTTP方法 | 路径 | 描述
 
 [目录](#目录)
 
+
+# SpringCloudAlibaba
+- [https://github.com/alibaba/spring-cloud-alibaba/wiki](https://github.com/alibaba/spring-cloud-alibaba/wiki)
+
+## Dubbo
+Apache Dubbo™ 是一款高性能 Java RPC 框架。
+
+[目录](#目录)
+
+## Nacos
+阿里开源服务注册中心、配置中心组件。
+
+[目录](#目录)
+
+## Sentinel
+阿里开源流控组件，把流量作为切入点，从流量控制、熔断降级、系统负载保护等多个维度保护服务的稳定性。
+
+[目录](#目录)
+
+## Seata
+
+阿里开源分布式事务组件。
+
+[官方文档](https://seata.io/zh-cn/docs/ops/deploy-guide-beginner.html)
+
+[demo-seata](https://github.com/Panl99/demo/tree/master/demo-seata)
+
+### 安装部署
+
+**服务端**
+
+1. [下载安装包](https://github.com/seata/seata/releases)
+
+2. 创建数据库、表
+
+   - 数据库：`seata`
+
+   - 表：全局事务表`global_table`、分支事务表`branch_table`、全局锁表`lock_table`
+
+     ```mysql
+     -- -------------------------------- The script used when storeMode is 'db' --------------------------------
+     -- the table to store GlobalSession data
+     CREATE TABLE IF NOT EXISTS `global_table`
+     (
+         `xid`                       VARCHAR(128) NOT NULL,
+         `transaction_id`            BIGINT,
+         `status`                    TINYINT      NOT NULL,
+         `application_id`            VARCHAR(32),
+         `transaction_service_group` VARCHAR(32),
+         `transaction_name`          VARCHAR(128),
+         `timeout`                   INT,
+         `begin_time`                BIGINT,
+         `application_data`          VARCHAR(2000),
+         `gmt_create`                DATETIME,
+         `gmt_modified`              DATETIME,
+         PRIMARY KEY (`xid`),
+         KEY `idx_gmt_modified_status` (`gmt_modified`, `status`),
+         KEY `idx_transaction_id` (`transaction_id`)
+     ) ENGINE = InnoDB
+       DEFAULT CHARSET = utf8;
+     
+     -- the table to store BranchSession data
+     CREATE TABLE IF NOT EXISTS `branch_table`
+     (
+         `branch_id`         BIGINT       NOT NULL,
+         `xid`               VARCHAR(128) NOT NULL,
+         `transaction_id`    BIGINT,
+         `resource_group_id` VARCHAR(32),
+         `resource_id`       VARCHAR(256),
+         `branch_type`       VARCHAR(8),
+         `status`            TINYINT,
+         `client_id`         VARCHAR(64),
+         `application_data`  VARCHAR(2000),
+         `gmt_create`        DATETIME(6),
+         `gmt_modified`      DATETIME(6),
+         PRIMARY KEY (`branch_id`),
+         KEY `idx_xid` (`xid`)
+     ) ENGINE = InnoDB
+       DEFAULT CHARSET = utf8;
+     
+     -- the table to store lock data
+     CREATE TABLE IF NOT EXISTS `lock_table`
+     (
+         `row_key`        VARCHAR(128) NOT NULL,
+         `xid`            VARCHAR(128),
+         `transaction_id` BIGINT,
+         `branch_id`      BIGINT       NOT NULL,
+         `resource_id`    VARCHAR(256),
+         `table_name`     VARCHAR(32),
+         `pk`             VARCHAR(36),
+         `gmt_create`     DATETIME,
+         `gmt_modified`   DATETIME,
+         PRIMARY KEY (`row_key`),
+         KEY `idx_branch_id` (`branch_id`)
+     ) ENGINE = InnoDB
+       DEFAULT CHARSET = utf8;
+     ```
+
+3. 修改seata-->conf-->file.conf，store.mode="db"
+
+4. 修改store.db的相关属性
+
+5. 启动：`seata-server.sh -h 127.0.0.1 -p 8091 -m db -n 1 -e test`
+
+   `sh seata-server.sh -p $LISTEN_PORT -m $STORE_MODE -h $IP(此参数可选)`
+
+   `cmd seata-server.bat -p $LISTEN_PORT -m $STORE_MODE -h $IP(此参数可选)`
+
+   ```
+   -h: 注册到注册中心的ip
+   -p: Server rpc 监听端口
+   -m: 全局事务会话信息存储模式，file、db、redis，优先读取启动参数 (Seata-Server 1.3及以上版本支持redis)
+   -n: Server node，多个Server时，需区分各自节点，用于生成不同区间的transactionId，以免冲突
+   -e: 多环境配置参考 http://seata.io/en-us/docs/ops/multi-configuration-isolation.html
+   ```
+
+   - 源码启动：启动seata-server的main函数。
+
+6. **启动完后查看下seata-server是否启动成功**
+
+   - git bash查看进程是否存在：`$ jps -ml|findstr seata`，结果：10924 io.seata.server.Server
+   - nacos上查看服务是否注册成功：服务列表是否存在seata-server服务。
+
+**客户端**
+
+1. 创建`UNDO_LOG`表(AT模式)
+
+   ```
+   -- 注意此处0.3.0+ 增加唯一索引 ux_undo_log
+   DROP TABLE IF EXISTS `undo_log`;
+   CREATE TABLE `undo_log` (
+     `id` bigint(20) NOT NULL AUTO_INCREMENT,
+     `branch_id` bigint(20) NOT NULL,
+     `xid` varchar(100) NOT NULL,
+     `context` varchar(128) NOT NULL,
+     `rollback_info` longblob NOT NULL,
+     `log_status` int(11) NOT NULL,
+     `log_created` datetime NOT NULL,
+     `log_modified` datetime NOT NULL,
+     PRIMARY KEY (`id`),
+     UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+   ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+   ```
+
+2. 添加依赖：
+
+```xml
+<dependency>
+    <groupId>io.seata</groupId>
+    <artifactId>seata-spring-boot-starter</artifactId>
+    <version>${seata.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>io.seata</groupId>
+            <artifactId>seata-spring-boot-starter</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+3. 示例：
+
+   - 创建业务表：
+
+     ```mysql
+     DROP TABLE IF EXISTS `t_account`;
+     CREATE TABLE `t_account` (
+       `id` int(11) NOT NULL AUTO_INCREMENT,
+       `user_id` varchar(255) DEFAULT NULL,
+       `amount` double(14,2) DEFAULT '0.00',
+       PRIMARY KEY (`id`)
+     ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+     INSERT INTO `t_account` VALUES ('1', '1', '4000.00');
+     
+     DROP TABLE IF EXISTS `t_order`;
+     CREATE TABLE `t_order` (
+       `id` int(11) NOT NULL AUTO_INCREMENT,
+       `order_no` varchar(255) DEFAULT NULL,
+       `user_id` varchar(255) DEFAULT NULL,
+       `commodity_code` varchar(255) DEFAULT NULL,
+       `count` int(11) DEFAULT '0',
+       `amount` double(14,2) DEFAULT '0.00',
+       PRIMARY KEY (`id`)
+     ) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8;
+     
+     DROP TABLE IF EXISTS `t_storage`;
+     CREATE TABLE `t_storage` (
+       `id` int(11) NOT NULL AUTO_INCREMENT,
+       `commodity_code` varchar(255) DEFAULT NULL,
+       `name` varchar(255) DEFAULT NULL,
+       `count` int(11) DEFAULT '0',
+       PRIMARY KEY (`id`),
+       UNIQUE KEY `commodity_code` (`commodity_code`)
+     ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+     INSERT INTO `t_storage` VALUES ('1', 'C201901140001', '水杯', '1000');
+     ```
+
+   - 启动服务：
+   
+     - [DemoAccountServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-account-service/src/main/java/com/lp/demo/account/DemoAccountServiceApplication.java)
+     - [DemoStorageServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-storage-service/src/main/java/com/lp/demo/storage/DemoStorageServiceApplication.java)
+     - [DemoOrderServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-order-service/src/main/java/com/lp/demo/order/DemoOrderServiceApplication.java)
+     - [DemoBusinessServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-business-service/src/main/java/com/lp/demo/business/DemoBusinessServiceApplication.java)
+   
+   - 检查是否注册到nacos，配置是否导入nacos
+   
+     - 手动导入配置：[nacos-config.sh](https://github.com/Panl99/demo/tree/master/demo-seata/resources/config/nacos-config.sh)放到安装包conf目录下，[config.txt](https://github.com/Panl99/demo/tree/master/demo-seata/resources/config/config.txt)放到安装包根目录下，执行`sh nacos-config.sh -h localhost -p 8848 -g SEATA_GROUP -t 0af6e97b-a684-4647-b696-7c6d42aecce7 -u nacos -w nacos`
+       - -h -p 指定nacos的端口地址；
+       - -g 指定配置的分组，注意，是配置的分组；
+       - -t 指定命名空间id； 
+       - -u -w指定nacos的用户名和密码。
+   
+   - 测试：
+   
+     ```
+     用postman测试：POST http://localhost:8104/business/dubbo/buy2
+     
+     curl报错：curl -X POST http://127.0.0.1:8104/business/dubbo/buy -H "Content-Type:application/json" -d \"{\"userId\":\"1\",\"amount\":100,\"commodityCode\":\"C201901140001\",\"name\":\"水杯\",\"count\":1}\"
+     
+     buy正常扣减库存，buy2会回滚触发分布式事务。
+     ```
+   
+     
+
+[目录](#目录)
+
+## RocketMQ
+Apache RocketMQ™ 基于 Java 的高性能、高吞吐量的分布式消息和流计算平台。
+
+[目录](#目录)
+
+**↓商业化组件↓**
+
+## OSS
+阿里云对象存储服务（Object Storage Service，简称 OSS）。
+
+## SchedulerX
+阿里中间件团队开发的一款分布式任务调度产品，支持周期性的任务与固定时间点触发任务。
+
+## SMS
+阿里云覆盖全球的短信服务。
+
+
+[目录](#目录)
