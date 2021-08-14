@@ -28,6 +28,7 @@
 - [实战](#实战)
     - [常用操作](#常用操作)
     - [Bash脚本模板](#bash-script-template)
+    - [抓包](#抓包)
 - [linux](#linux)
     - [常用命令](#常用命令)
         - `ls`,`cd`,`pwd`,`mkdir`,`rmdir`,`touch`,`cp`,`rm`,`mv`,`cat`,`tac`,`nl`,`more`,`less`,`head`,`tail`,`grep`,`find`,`date`
@@ -695,7 +696,7 @@ sed -i '$a # This is a test' $TEST_LOG
     cmd2
     ...
     EOF
-  
+    
     例：在test.log中追加三行代码。
     cat >> /root/test.txt <<EOF 
     abc
@@ -784,6 +785,7 @@ ${LINENO}
 [目录](#目录)
 
 ## Bash script template
+
 - 一个基础、简单、安全的脚本模板
 - 使用这个模板：
     - 直接复制粘贴
@@ -911,7 +913,20 @@ msg "- arguments: ${args[*]-}"
 
 [目录](#目录)
 
+## 抓包
+
+1. 在虚拟机上直接抓
+
+   - 根据网口来抓
+
+   - `sudo tcpdump -i em1 -s 0 -w c.pcap`
+
+   - `sudo tcpdump -i docker0 -s 0 -w f.pcap`
+
+[目录](#目录)
+
 # linux
+
 ## 常用命令
 - `ls`: 列出目录及文件名
     - `-a` ：全部的文件，连同隐藏文件( 开头为 . 的文件) 一起列出来(常用)
@@ -1062,7 +1077,7 @@ msg "- arguments: ${args[*]-}"
     
     # 2周后的日期
     date -d '2 weeks'
-  
+    
     # date
     三 5月 12 14:08:12 CST 2010
     # date '+%c' 
@@ -1151,7 +1166,7 @@ msg "- arguments: ${args[*]-}"
 - `umount [-fn] 装置文件名或挂载点` 磁盘卸除
     - `-f` ：强制卸除！可用在类似网络文件系统 (NFS) 无法读取到的情况下；
     - `-n` ：不升级 /etc/mtab 情况下卸除。
-    
+
 [目录](#目录)
 
 ## vim

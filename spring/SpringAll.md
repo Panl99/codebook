@@ -940,17 +940,38 @@ HTTP方法 | 路径 | 描述
 - [https://github.com/alibaba/spring-cloud-alibaba/wiki](https://github.com/alibaba/spring-cloud-alibaba/wiki)
 
 ## Dubbo
+
 Apache Dubbo™ 是一款高性能 Java RPC 框架。
 
 [dubbo github](https://github.com/apache/dubbo)
 
 [Dubbo 2.7 官方文档](https://dubbo.apache.org/zh/docs/v2.7/user/quick-start/)
 
+### 配置
+
+```yml
+# 将注册中心地址、元数据中心地址等配置集中管理，可以做到统一环境、减少开发侧感知。
+dubbo:
+  application:
+    qos:
+      port: 33333
+  metadata-report:
+    address: zookeeper://127.0.0.1:2181
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    address: zookeeper://127.0.0.1:2181
+    simplified: true
+```
+
 [目录](#目录)
 
 ## Nacos
 
 阿里开源服务注册中心、配置中心组件。
+
+配置中心：更适合将一些公共配置如注册中心、元数据中心配置等抽取以便做集中管理。
 
 [Nacos官方文档](https://nacos.io/zh-cn/docs/quick-start-spring-cloud.html)
 
