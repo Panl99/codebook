@@ -141,7 +141,7 @@
                 public class UserService {
                     ...
                 }
-                ```     
+                ```
     - 权限控制
     - 日志管理
         - 不推荐使用：无差别全覆盖，即某个包下面的所有Bean的所有方法都会被这个check()方法拦截。
@@ -251,15 +251,12 @@
 - `ISOLATION_READ_COMMITTED`	（Oracle 默认级别）允许从已经提交的并发事务读取。可防止脏读，但幻读和不可重复读仍可能会发生。
 - `ISOLATION_REPEATABLE_READ`	（MYSQL默认级别）对相同字段的多次读取的结果是一致的，除非数据被当前事务本身改变。可防止脏读和不可重复读，但幻读仍可能发生。
 - `ISOLATION_SERIALIZABLE`	完全服从ACID的隔离级别，确保不发生脏读、不可重复读和幻影读。这在所有隔离级别中也是最慢的，因为它通常是通过完全锁定当前事务所涉及的数据表来完成的。
-  
 ### 只读
 - 如果一个事务只对数据库执行读操作，那么该数据库就可能利用那个事务的只读特性，采取某些优化措施。通过把一个事务声明为只读，可以给后端数据库一个机会来应用那些它认为合适的优化措施。由于只读的优化措施是在一个事务启动时由后端数据库实施的， 因此，只有对于那些具有可能启动一个新事务的传播行为（PROPAGATION_REQUIRES_NEW、PROPAGATION_REQUIRED、 ROPAGATION_NESTED）的方法来说，将事务声明为只读才有意义。
-   
 ### 事务超时
 - 为了使一个应用程序很好地执行，它的事务不能运行太长时间。因此，声明式事务的下一个特性就是它的超时。
 - 假设事务的运行时间变得格外的长，由于事务可能涉及对数据库的锁定，所以长时间运行的事务会不必要地占用数据库资源。这时就可以声明一个事务在特定秒数后自动回滚，不必等它自己结束。
 - 由于超时时钟在一个事务启动的时候开始的，因此，只有对于那些具有可能启动一个新事务的传播行为（PROPAGATION_REQUIRES_NEW、PROPAGATION_REQUIRED、ROPAGATION_NESTED）的方法来说，声明事务超时才有意义。
-   
 ### 回滚规则
 - 在默认设置下，事务只在出现运行时异常（runtime exception）时回滚，而在出现受检查异常（checked exception）时不回滚（这一行为和EJB中的回滚行为是一致的）。
 - 不过，可以声明在出现特定受检查异常时像运行时异常一样回滚。同样，也可以声明一个事务在出现特定的异常时不回滚，即使特定的异常是运行时异常。
@@ -614,7 +611,7 @@ Spring MVC核心入口类
                 </exclusion>
             </exclusions>
         </dependency>
-      
+        
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
@@ -664,7 +661,7 @@ Spring MVC核心入口类
 //TODO
 
 [返回目录](#目录)
-  
+
 #### 使用Profile进行配置
 - 向application.yml里添加spring.profiles.active属性：
 ```
@@ -734,8 +731,8 @@ HTTP方法 | 路径 | 描述
 /shutdown | 关闭应用程序，要求endpoints.shutdown.enabled设置为true | POST  
 
 - **查看配置明细**  
-向/beans（在本地运行时是`http://localhost:8080/beans`）发起GET请求后，返回一个描述每个Bean信息的JSON文档。  
-返回的JSON包含信息：
+  向/beans（在本地运行时是`http://localhost:8080/beans`）发起GET请求后，返回一个描述每个Bean信息的JSON文档。  
+  返回的JSON包含信息：
     - bean：Spring应用程序上下文中的Bean名称或ID。
     - resource：.class文件的具体路径。
     - dependencies：依赖的Bean名称。
@@ -842,7 +839,6 @@ HTTP方法 | 路径 | 描述
     </dependency>
     ```
 - 启动注解：`@EnableCircuitBreaker`（用于启动类Application.java）
-    
 ### 客户端负载均衡模式
 - 让客户端从服务注册中心查找服务所有实例，然后缓存服务实例的物理位置。
 - 当消费者调用该服务实例时，客户端负载均衡器将从它维护的服务实例池中返回实例的一个位置。
@@ -869,7 +865,7 @@ HTTP方法 | 路径 | 描述
         )
         public class MyService {   }
         ```
-    
+
 **调用远程资源失败过多断路器设置：**
 ```java
 @HystrixCommand(
@@ -946,10 +942,27 @@ HTTP方法 | 路径 | 描述
 ## Dubbo
 Apache Dubbo™ 是一款高性能 Java RPC 框架。
 
+[dubbo github](https://github.com/apache/dubbo)
+
+[Dubbo 2.7 官方文档](https://dubbo.apache.org/zh/docs/v2.7/user/quick-start/)
+
 [目录](#目录)
 
 ## Nacos
+
 阿里开源服务注册中心、配置中心组件。
+
+[Nacos官方文档](https://nacos.io/zh-cn/docs/quick-start-spring-cloud.html)
+
+### 配置
+
+![nacos配置](../resources/static/images/nacos配置.png)
+
+### 启动
+
+- 本地启动：`D:\Tools\Nacos\nacos\bin>startup.cmd -m standalone`
+
+- 地址：`http://localhost:8848/nacos/`，`nacos/nacos`
 
 [目录](#目录)
 
