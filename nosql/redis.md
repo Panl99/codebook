@@ -620,7 +620,7 @@ ziplistLen|返回压缩列表目前包含的节点数量|节点数小于65535时
 
 # 分布式锁
 - 使用`SETNX`命令获取锁(只会在键不存在的情况下为键设置值)，获取失败会一直重试，直到获取成功或者超时。
-- [RedissonLockDemo](https://github.com/Panl99/demo/tree/master/demo-redis/src/main/java/com/lp/demoredis/redisson/RedissonLockDemo.java)
+- [RedissonLockDemo](https://github.com/Panl99/demo/tree/master/demo-redis/src/main/java/com/lp/demo/redis/redisson/RedissonLockDemo.java)
     ```
     if (redis.call('exists', KEYS[1]) == 0) then 
     	redis.call('hincrby', KEYS[1], ARGV[2], 1); 
