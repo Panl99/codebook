@@ -1310,6 +1310,8 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
     - 多个线程访问同一变量时，可能出现线程安全问题。
     - ThreadLocal会为每个访问变量的线程创建一个变量的副本到本地内存，各线程访问变量实际访问的是本地内存中的变量，这样就可避免线程安全问题。
 
+> [ThreadLocalTest](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/test/ThreadLocalTest.java)
+
 ### ThreadLocal原理
 
 - ThreadLocal通过set进行赋值时，会先获取当前线程，对当前线程的ThreadLocalMap属性进行操作（ThreadLocalMap不为空就直接更新值，为空就创建一个ThreadLocalMap并初始化value）。
