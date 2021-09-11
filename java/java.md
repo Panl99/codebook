@@ -49,6 +49,10 @@
         - [5种常用的线程池](#5种常用的线程池)        
     - [异步编程--TODO](#异步编程)
         - [CompletableFuture](#CompletableFuture)
+    - [ThreadLocal](#ThreadLocal)
+        - [ThreadLocal原理](#ThreadLocal原理)
+        - [ThreadLocal问题-内存泄漏](#ThreadLocal问题-内存泄漏)
+        - [ThreadLocal使用场景](#ThreadLocal使用场景)
     - [锁](#锁)
         - [乐观锁与悲观锁](#乐观锁与悲观锁)，[自旋锁](#自旋锁)，[公平锁与非公平锁](#公平锁与非公平锁)
         - [synchronized](#synchronized)
@@ -1297,6 +1301,132 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 ## 异步编程
 ### CompletableFuture
 - [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
+
+[返回目录](#目录)
+
+## ThreadLocal
+
+- 线程局部变量，用于解决多线程并发访问时的线程安全问题。  
+    - 多个线程访问同一变量时，可能出现线程安全问题。
+    - ThreadLocal会为每个访问变量的线程创建一个变量的副本到本地内存，各线程访问变量实际访问的是本地内存中的变量，这样就可避免线程安全问题。
+
+### ThreadLocal原理
+
+- ThreadLocal通过set进行赋值时，会先获取当前线程，对当前线程的ThreadLocalMap属性进行操作（ThreadLocalMap不为空就直接更新值，为空就创建一个ThreadLocalMap并初始化value）。
+    ```java
+    public void set(T value) {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null)
+            map.set(this, value);
+        else
+            createMap(t, value);
+    }
+    ```
+    - **ThreadLocalMap**：是ThreadLocal的一个静态内部类，通过Entry来保存数据，并继承了弱引用，Entry使用ThreadLocal作为key。
+        ```java
+        static class ThreadLocalMap {
+        
+            static class Entry extends WeakReference<ThreadLocal<?>> {
+                /** The value associated with this ThreadLocal. */
+                Object value;
+        
+                Entry(ThreadLocal<?> k, Object v) {
+                    super(k);
+                    value = v;
+                }
+            }
+        }
+        ```   
+    - **为什么key要设计成弱引用？**
+        - key不设置成弱引用的话就会造成和entry中value一样内存泄漏的场景。
+
+- ThreadLocal通过get进行取值，当前线程作为key从ThreadLocalMap中取值。如果ThreadLocalMap不存在则会创建一个，key为当前线程，值为null，并返回null。
+    ```java
+    public T get() {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null) {
+            ThreadLocalMap.Entry e = map.getEntry(this);
+            if (e != null) {
+                @SuppressWarnings("unchecked")
+                T result = (T)e.value;
+                return result;
+            }
+        }
+        return setInitialValue();
+    }
+    ```
+
+- ThreadLocal通过remove将ThreadLocal对应的值从当前线程的ThreadLocalMap中删除。
+    ```java
+    public void remove() {
+        ThreadLocalMap m = getMap(Thread.currentThread());
+        if (m != null)
+            m.remove(this);
+    }
+    ```
+
+**如果想要共享线程的ThreadLocal数据**
+- 使用可继承的**`InheritableThreadLocal`**实现多个线程访问ThreadLocal的值，在主线程中创建一个InheritableThreadLocal的实例，然后在子线程中得到这个InheritableThreadLocal实例设置的值。
+    ```java
+    private void test() {    
+    final ThreadLocal threadLocal = new InheritableThreadLocal();       
+    threadLocal.set("帅得一匹");    
+    Thread t = new Thread() {        
+        @Override        
+        public void run() {            
+          super.run();            
+          log.info( "张三帅么 =" + threadLocal.get());        
+        }    
+      };          
+      t.start(); 
+    } 
+    ```
+
+### ThreadLocal问题-内存泄漏
+- ThreadLocalMap 中使用的 key 为 ThreadLocal 的弱引用，而弱引用的特点是：如果这个对象只存在弱引用，那么在下一次垃圾回收的时候必然会被清理掉。
+- 所以如果 ThreadLocal 没有被外部强引用的情况下，在垃圾回收的时候会被清理掉的，这样 ThreadLocalMap中使用这个 ThreadLocal 的 key 也会被清理掉。但是，value 是强引用，不会被清理，这样一来就会出现 key 为 null 的 value。
+
+**避免内存泄漏：**
+- 在使用完后调用ThreadLocal的remove方法清除掉。
+    ```java
+    ThreadLocal<String> localName = new ThreadLocal();
+    try {
+        localName.set("张三");
+        ……
+    } finally {
+        localName.remove();
+    }
+    ```
+
+### ThreadLocal使用场景
+- 每个线程需要有自己单独的实例
+- 实例需要在多个方法中共享，但不希望被多线程共享
+
+1. 数据库连接，处理数据库事务
+   - Spring采用ThreadLocal的方式，来保证单个线程中的数据库操作使用的是同一个数据库连接，同时，采用这种方式可以使业务层使用事务时不需要感知并管理connection对象，通过传播级别，巧妙地管理多个事务配置之间的切换，挂起和恢复。
+   - Spring框架里面就是用的ThreadLocal来实现这种隔离，主要是在TransactionSynchronizationManager这个类里面
+2. 数据跨层传递
+   - 通过层层传递需要给每个方法添加一个context参数，比较麻烦，如果涉及三方组件，参数就传不进去了，此时就可以使用ThreadLocal来处理。
+   - 只需在调用前在ThreadLocal中设置参数，其他地方去get就好了。（使用完记得remove掉，避免内存泄漏）
+3. 存储cookie、session
+    ```java
+    private static final ThreadLocal threadSession = new ThreadLocal();
+    
+    public static Session getSession() throws InfrastructureException {
+        Session s = (Session) threadSession.get();
+        try {
+            if (s == null) {
+                s = getSessionFactory().openSession();
+                threadSession.set(s);
+            }
+        } catch (HibernateException ex) {
+            throw new InfrastructureException(ex);
+        }
+        return s;
+    }
+    ```    
 
 [返回目录](#目录)
 
