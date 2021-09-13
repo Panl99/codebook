@@ -1936,14 +1936,14 @@ TODO
 
    - 启动服务：
    
-     - [DemoAccountServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-account-service/src/main/java/com/lp/demo/account/DemoAccountServiceApplication.java)
-     - [DemoStorageServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-storage-service/src/main/java/com/lp/demo/storage/DemoStorageServiceApplication.java)
-     - [DemoOrderServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-order-service/src/main/java/com/lp/demo/order/DemoOrderServiceApplication.java)
-     - [DemoBusinessServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-business-service/src/main/java/com/lp/demo/business/DemoBusinessServiceApplication.java)
+     - [DemoAccountServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-account-service/src/main/java/com/lp/demo/account/DemoAccountServiceApplication.java) ：账号服务：扣减费用
+     - [DemoStorageServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-storage-service/src/main/java/com/lp/demo/storage/DemoStorageServiceApplication.java) ：仓储服务：扣减库存
+     - [DemoOrderServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-order-service/src/main/java/com/lp/demo/order/DemoOrderServiceApplication.java) ：订单服务：创建订单 => 账号服务(从账户扣钱)
+     - [DemoBusinessServiceApplication](https://github.com/Panl99/demo/tree/master/demo-seata/demo-business-service/src/main/java/com/lp/demo/business/DemoBusinessServiceApplication.java) ：业务服务：处理业务 => 仓储服务(扣减库存)，订单服务(创建订单，扣钱)
    
    - 检查是否注册到nacos，配置是否导入nacos
    
-     - 手动导入配置：[nacos-config.sh](https://github.com/Panl99/demo/tree/master/demo-seata/resources/config/nacos-config.sh)放到安装包conf目录下，[config.txt](https://github.com/Panl99/demo/tree/master/demo-seata/resources/config/config.txt)放到安装包根目录下，执行`sh nacos-config.sh -h localhost -p 8848 -g SEATA_GROUP -t 0af6e97b-a684-4647-b696-7c6d42aecce7 -u nacos -w nacos`
+     - 手动导入配置：[nacos-config.sh](https://github.com/Panl99/demo/tree/master/demo-seata/resources/config/nacos-config.sh) 放到安装包conf目录下，[config.txt](https://github.com/Panl99/demo/tree/master/demo-seata/resources/config/config.txt) 放到安装包根目录下，执行`sh nacos-config.sh -h localhost -p 8848 -g SEATA_GROUP -t 0af6e97b-a684-4647-b696-7c6d42aecce7 -u nacos -w nacos`
        - -h -p 指定nacos的端口地址；
        - -g 指定配置的分组，注意，是配置的分组；
        - -t 指定命名空间id； 
