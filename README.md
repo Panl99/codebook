@@ -25,6 +25,7 @@
 |MATLAB|[MATLAB.md](matlab/MATLAB.md) <br/> [SLAM.md - 同步定位与建图](matlab/SLAM.md)|
 |IoT|[物模型](iot/物模型.md)|
 |分布式调度框架|[xxl-job](xxl-job/xxl-job.md)|
+|开发测试|[Test.md](test/Test.md)|
 
 
 # 项目
