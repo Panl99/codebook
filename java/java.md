@@ -98,6 +98,8 @@
         - [并行流](#并行流)
         - [流的性能](#流的性能)
         - [Optional类(java.util.Optional<T>)](#Optional类)
+    - [实践](#实践)
+        - [利用惰性写出高性能且抽象的代码](#利用惰性写出高性能且抽象的代码)
 
 - [Java源码](#Java源码)
     - [java.util.concurrent](#javautilconcurrent)
@@ -1465,6 +1467,13 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 
 [返回目录](#目录)  
 
+### 死锁
+避免死锁的常见方法：
+1. 避免一个线程同时获取多个锁。
+2. 避免一个线程在锁内同时占用多个资源，尽量保证每个锁只占用一个资源。
+3. 使用`lock.tryLock(timeout)`替代内部锁机制。
+4. 对于数据库锁，加锁和解锁必须在同一个数据库连接里，否则会出现解锁失败的情况。
+
 ### synchronized
 - 是Java中的关键字。
 - 是不公平锁：随机线程获得锁。
@@ -2824,6 +2833,242 @@ public static Optional<Integer> stringToInt(String s) {
 }
 //***可以将多个类似的方法封装到一个工具类OptionalUtility中。通过直接调用OptionalUtility.stringToInt方法，将String转换为一个Optional<Integer>对象，而不再需要用try/catch了。
 
+```
+
+[返回目录](#目录)
+
+## 实践
+
+### 利用惰性写出高性能且抽象的代码
+> [函数式编程的Java编码实践：利用惰性写出高性能且抽象的代码](https://mp.weixin.qq.com/s/e-9hrjWK513VJqqyeGLxrQ)
+
+1. 问题：需要构造一个惰性值实现懒加载。
+
+👇
+   
+定义一个懒加载工具：
+```java
+/**
+* 为了方便与标准的 Java 函数式接口交互，Lazy 也实现了 Supplier
+*/
+public class Lazy<T> implements Supplier<T> {
+
+    private final Supplier<? extends T> supplier;
+    
+    // 利用 value 属性缓存 supplier 计算后的值
+    private T value;
+
+    private Lazy(Supplier<? extends T> supplier) {
+        this.supplier = supplier;
+    }
+
+    public static <T> Lazy<T> of(Supplier<? extends T> supplier) {
+        return new Lazy<>(supplier);
+    }
+
+    public T get() {
+        if (value == null) {
+            T newValue = supplier.get();
+
+            if (newValue == null) {
+                throw new IllegalStateException("Lazy value can not be null!");
+            }
+
+            value = newValue;
+        }
+
+        return value;
+    }
+}
+```
+👇
+```java
+Lazy<Integer> a = Lazy.of(() -> 10 + 1);
+// a的计算在这里才完成
+int b = a.get() + 1;
+// get 不会再重新计算, 直接用缓存的值
+int c = a.get();
+```
+👇
+通过这个惰性加载工具类来优化的通用用户实体：
+```java
+public class User {
+    // 用户 id
+    private Long uid;
+    // 用户的部门，为了保持示例简单，这里就用普通的字符串
+    // 需要远程调用 通讯录系统 获得
+    private Lazy<String> department;
+    // 用户的主管，为了保持示例简单，这里就用一个 id 表示
+    // 需要远程调用 通讯录系统 获得
+    private Lazy<Long> supervisor;
+    // 用户所含有的权限
+    // 需要远程调用 权限系统 获得
+    private Lazy<Set<String>> permission;
+    
+    public Long getUid() {
+        return uid;
+    }
+    
+    public void setUid(Long uid) {
+        this.uid = uid;
+    }
+    
+    public String getDepartment() {
+        return department.get();
+    }
+    
+    /**
+    * 因为 department 是一个惰性加载的属性，所以 set 方法必须传入计算函数，而不是具体值
+    */
+    public void setDepartment(Lazy<String> department) {
+        this.department = department;
+    }
+    // ... 后面类似的省略
+}
+```
+👇
+
+构造 User 实体的例子如下：
+```java
+Long uid = 1L;
+User user = new User();
+user.setUid(uid);
+// departmentService 是一个rpc调用
+user.setDepartment(Lazy.of(() -> departmentService.getDepartment(uid)));
+// ....
+```
+
+2. 问题：用户的两个属性部门和主管是有相关性，需要通过 rpc 接口获得用户部门，然后通过另一个 rpc 接口根据部门获得主管。
+```java
+String department = departmentService.getDepartment(uid);
+Long supervisor = SupervisorService.getSupervisor(department);
+```
+👇
+
+实现一个Lazy 函子（Functor）
+```java
+public <S> Lazy<S> map(Function<? super T, ? extends S> function) {
+    return Lazy.of(() -> function.apply(get()));
+}
+```
+👇
+```java
+Lazy<String> departmentLazy = Lazy.of(() -> departmentService.getDepartment(uid));
+Lazy<Long> supervisorLazy = departmentLazy.map(
+    department -> SupervisorService.getSupervisor(department)
+);
+```
+当前不仅可以构造惰性的值，还可以用一个惰性值计算另一个惰性值。
+
+3. 问题：需要部门和主管两个参数来调用权限系统来获得权限，而部门和主管这两个值都是惰性的值。
+
+👇
+
+Lazy 实现单子 （Monad）  
+快速理解：和 Java stream api 以及 Optional 中的 flatmap 功能类似  
+```java
+public <S> Lazy<S> flatMap(Function<? super T, Lazy<? extends S>> function) {
+    return Lazy.of(() -> function.apply(get()).get());
+}
+```
+
+利用 flatmap 解决之前遇到的问题：
+```java
+Lazy<Set<String>> permissions = departmentLazy.flatMap(department ->
+         supervisorLazy.map(supervisor -> getPermissions(department, supervisor))
+);
+```
+三参数的情况：
+```java
+Lazy<Long> param1Lazy = Lazy.of(() -> 2L);
+Lazy<Long> param2Lazy = Lazy.of(() -> 2L);
+Lazy<Long> param3Lazy = Lazy.of(() -> 2L);
+Lazy<Long> result = param1Lazy.flatMap(param1 ->
+        param2Lazy.flatMap(param2 ->
+                param3Lazy.map(param3 -> param1 + param2 + param3)
+        )
+);
+// 其中的规律就是，最后一次取值用 map，其他都用 flatmap。
+```
+
+4. **最终：**
+```java
+public class Lazy<T> implements Supplier<T> {
+
+    private final Supplier<? extends T> supplier;
+
+    private T value;
+
+    private Lazy(Supplier<? extends T> supplier) {
+        this.supplier = supplier;
+    }
+
+    public static <T> Lazy<T> of(Supplier<? extends T> supplier) {
+        return new Lazy<>(supplier);
+    }
+
+    public T get() {
+        if (value == null) {
+            T newValue = supplier.get();
+
+            if (newValue == null) {
+                throw new IllegalStateException("Lazy value can not be null!");
+            }
+
+            value = newValue;
+        }
+
+        return value;
+    }
+
+    public <S> Lazy<S> map(Function<? super T, ? extends S> function) {
+        return Lazy.of(() -> function.apply(get()));
+    }
+
+    public <S> Lazy<S> flatMap(Function<? super T, Lazy<? extends S>> function) {
+        return Lazy.of(() -> function.apply(get()).get());
+    }
+}
+```
+构造一个能够自动优化性能的实体:
+```java
+@Component
+public class UserFactory {
+    
+    // 部门服务, rpc 接口
+    @Resource
+    private DepartmentService departmentService;
+    
+    // 主管服务, rpc 接口
+    @Resource
+    private SupervisorService supervisorService;
+    
+    // 权限服务, rpc 接口
+    @Resource
+    private PermissionService permissionService;
+    
+    public User buildUser(long uid) {
+        Lazy<String> departmentLazy = Lazy.of(() -> departmentService.getDepartment(uid));
+        // 通过部门获得主管
+        // department -> supervisor
+        Lazy<Long> supervisorLazy = departmentLazy.map(
+            department -> SupervisorService.getSupervisor(department)
+        );
+        // 通过部门和主管获得权限
+        // department, supervisor -> permission
+        Lazy<Set<String>> permissionsLazy = departmentLazy.flatMap(department ->
+            supervisorLazy.map(
+                supervisor -> permissionService.getPermissions(department, supervisor)
+            )
+        );
+        
+        User user = new User();
+        user.setUid(uid);
+        user.setDepartment(departmentLazy);
+        user.setSupervisor(supervisorLazy);
+        user.setPermissions(permissionsLazy);
+    }
+}
 ```
 
 [返回目录](#目录)
