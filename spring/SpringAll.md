@@ -413,6 +413,8 @@ public class TestController {
 
 ### Spring常用注解
 
+[https://mp.weixin.qq.com/s/ZECIj3UCyBITJEbtLdE2gA](https://mp.weixin.qq.com/s/ZECIj3UCyBITJEbtLdE2gA)
+
 类别 | 注解 | 位置 | 使用 | 作用  
 ---|---|---|---|---  
 | Bean声明| @Component | |  | 定义基础层的通用组件，没有明确角色
