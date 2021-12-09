@@ -1,6 +1,7 @@
-> [MySQL 8 Cookbook]()
-> [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)
-> [MySQL必知必会](../resources/static/doc/MySQL必知必会.pdf)
+> [MySQL 8 Cookbook]()  
+> [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)  
+> [MySQL必知必会](../resources/static/doc/MySQL必知必会.pdf)  
+> [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)  
 
 # 目录
 - [mysql常用函数](#mysql常用函数)
@@ -1080,6 +1081,8 @@ show profile for query #{id};
 ### 分库分表中间件
 - [mycat](https://github.com/MyCATApache/Mycat-Server?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
 - [sharding-jdbc](https://github.com/apache/incubator-shardingsphere?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
+
+> [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)
 
 [返回目录](#目录)
 
