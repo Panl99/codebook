@@ -109,6 +109,8 @@
     - [java.net](#javanet)
         - [InetAddress源码及使用](#InetAddress源码及使用)
 
+- [Record](#Record)
+
 [返回目录](#目录)
 
 # Java常见问题
@@ -3087,6 +3089,14 @@ public class UserFactory {
 
 ## java.net
 ### InetAddress源码及使用
+
+[返回目录](#目录)
+
+# Record
+1. HTTP接口URL路径参数传输需要进行转义。
+    - 前端编码：`URLEncoder.encode(encrypted, "UTF-8");`
+    - 后端解码：`URLDecoder.decode(encrypted, "UTF-8");`
+2. 
 
 [返回目录](#目录)
 
