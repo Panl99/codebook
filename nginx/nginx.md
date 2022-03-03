@@ -186,6 +186,14 @@
 
 ## Nginx基本配置
 
+|配置|默认值|描述|示例|
+|---|---|---|---|
+||||<br/>|
+|worker_processes|1||worker_processes auto; auto表示cpu核心数个worker进程|
+|proxy_set_header|||proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for <br/> $remote_addr <br/> $http_x_real_ip|
+|||||
+
+
 **按使用功能分为四类：**  
 - **用于调试、定位问题的配置**
 
