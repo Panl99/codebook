@@ -82,7 +82,7 @@
     - [Redis事务命令](#Redis事务命令)
     - [查看keys个数](#查看keys个数)
     - [清空数据库](#清空数据库)
-    
+
 [目录](#目录)
 
 # 常见问题
@@ -192,7 +192,7 @@
             （5）尝试删除缓存操作，发现删除失败
             （6）将这些信息发送至消息队列
             （7）重新从消息队列中获得该数据，重试操作。
-          
+            
             备注：上述的订阅binlog程序在mysql中有现成的中间件canal，可以完成订阅binlog日志的功能。另外，重试机制，可以采用消息队列的方式。如果对一致性要求不是很高，直接在程序中另起一个线程，每隔一段时间去重试即可。
             ```
             ![](../resources/static/images/redis双写一致性-删缓存失败解决方案.png)
@@ -425,9 +425,9 @@ Redis线程模型：基于Reactor反应式的网络事件处理器，叫做文�
         unsigned long length; //节点数量
         int level; //表中层数最大的节点层数
     } zskiplist;
-    ```        
-[目录](#目录)
-  
+    ```
+    [目录](#目录)
+
 ## 跳跃表API
 
 函数|作用|时间复杂度
@@ -620,7 +620,7 @@ ziplistLen|返回压缩列表目前包含的节点数量|节点数小于65535时
 
 # 分布式锁
 - 使用`SETNX`命令获取锁(只会在键不存在的情况下为键设置值)，获取失败会一直重试，直到获取成功或者超时。
-- [RedissonLockDemo](https://github.com/Panl99/demo/tree/master/demo-redis/src/main/java/com/lp/demoredis/redisson/RedissonLockDemo.java)
+- [RedissonLockDemo](https://github.com/Panl99/demo/tree/master/demo-redis/src/main/java/com/lp/demo/redis/redisson/RedissonLockDemo.java)
     ```
     if (redis.call('exists', KEYS[1]) == 0) then 
     	redis.call('hincrby', KEYS[1], ARGV[2], 1); 
@@ -844,7 +844,7 @@ public class RedissonLockDemo {
 **故障检测：**
 - 集群中每个节点都会定期向集群中的其他节点发送PING消息，如果接收节点没有在指定时间回复PONG消息，那么发送节点就会将接收节点标记为主观下线状态(PFAIL)。
 - 当一个集群中，半数以上负责处理槽的主节点都将某主节A点报告为主观下线状态，那么主节点A将被标记为客观下线状态(FAIL)，并向集群其他主节点进行通知，所有收到的节点都会将节点A标记为已下线。
-    
+
 **故障转移：**
 - 当一个从节点发现自己正在复制的主节点已下线时，从节点开始对下线主节点进行故障转移操作：
     - 复制下线主节点的从节点中会进行选举，选出一个新的主节点。
@@ -960,6 +960,9 @@ def clean_sessions(conn):
 
 Redis 支持 32 位和 64 位。这个需要根据你系统平台的实际情况选择，这里我们下载 Redis-x64-xxx.zip压缩包到 C 盘，解压后，将文件夹重新命名为 redis。
 ![](https://img-blog.csdnimg.cn/20190414150417449.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FfbGV4Xw==,size_16,color_FFFFFF,t_70)
+
+**windows启动Redis**：`[D:\Tools\Redis]$ redis-server.exe  --service-start`
+
 打开一个 cmd 窗口 使用cd命令切换目录到 C:\redis 运行 redis-server.exeredis.windows.conf 。
 
 如果想方便的话，可以把 redis 的路径加到系统的环境变量里，这样就省得再输路径了，后面的那个 redis.windows.conf 可以省略，如果省略，会启用默认的。输入之后，会显示如下界面：

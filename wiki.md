@@ -8,6 +8,7 @@
     - [centos8离线安装Nginx](#centos8离线安装Nginx)
 - [Chrome使用](#Chrome使用)
     - [网站登录才能复制](#网站登录才能复制)
+    - [CSDN登录才能复制](#CSDN登录才能复制)
 - [IDEA使用](#IDEA使用)
     - [快捷鍵](#快捷鍵)
     - [idea优化](#idea优化)
@@ -217,6 +218,8 @@ Commercial support is available at
       })
     })();
     ```
+## CSDN登录才能复制
+`javascript:document.body.contentEditable='true';document.designMode='on';`
 
 [目录](#目录)
 

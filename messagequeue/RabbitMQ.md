@@ -44,14 +44,40 @@ RabbitMQ是采用Erlang语言实现[AMQP](#AMQP)的消息中间件。
 
 ## RabbitMQ基本概念
 
-1. **生产者**
+1. server：又称broker，接收客户端连接，实现AMQP实体服务。
+2. connection：和具体broker网络连接。
+3. channel：网络通道，基本上所有操作都在channel中进行，channel是消息读写的通道，每个channel表示一个会话任务，客户端可以建立多个channel。
+4. message：消息，服务器和应用之间传递的数据。
+   - 由properties和body组成。
+   - properties可以对消息进行修饰，比如：消息的优先级，延迟等特性。
+   - body是消息的实体内容。
+5. Virtual host：虚拟主机，用于逻辑隔离，最上层消息的路由。一个Virtual host可以包含多个Exchange和Queue，同一个Virtual host下Exchange和Queue名字唯一。
+6. **Exchange**：交换机，生产者发送消息到交换机，交换机根据路由键转发消息到绑定的队列。
+   - fanout：把所有消息路由到绑定的队列中。
+   - direct：把消息路由到绑定键跟路由键相同的队列中。（完全匹配）
+   - topic：把消息路由到绑定键跟路由键匹配的队列中。（模糊匹配）
+     - 路由键和绑定键使用点号`.`分隔字符串。
+     - 绑定键中，`*`匹配一个单词；`#`匹配多个单词。
+   - headers：根据发送消息内容中的headers属性匹配路由。（性能差，不实用）
+7. **Banding**：绑定，将交换机和队列关联起来，绑定时指定一个绑定键BindingKey，绑定键跟路由键匹配时消息会被路由到队列。（通常情况下，绑定键就是路由键）
+8. **RoutingKey**：路由键，生产者将消息发送给交换机时指定，指定消息的路由规则，虚拟机根据它来确定如何路由一条消息。
+9. **Queue**：消息队列，用于存储消息。
 
-2. **消费者**
-3. **队列**
-4. **交换器（Exchange）**
-5. **路由键**
-6. **绑定**
-7. **连接**
+
+
+## 死信队列
+
+[https://www.jianshu.com/p/986ee5eb78bc](https://www.jianshu.com/p/986ee5eb78bc)
+
+- 死信队列：DLX（`dead-letter-exchange`）
+
+- 利用DLX，当消息在一个队列中变成死信 `(dead message)` 之后，它能被重新publish到另一个Exchange，这个Exchange就是DLX
+
+**消息变成死信的情况**：
+
+- 消息被拒绝(basic.reject / basic.nack)，并且requeue = false
+- 消息TTL过期
+- 队列达到最大长度
 
 
 

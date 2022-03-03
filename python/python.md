@@ -38,6 +38,8 @@
     - [1、TensorFlow：AlphaGo背后框架](#1、TensorFlow：AlphaGo背后框架)
     - [2、Scikit-learn：](#2、Scikit-learn：)
     - [3、MxNet：基于神经网络的深度学习](#3、MxNet：基于神经网络的深度学习)
+- [其他](#其他)
+    - [安装模块](#安装模块)
 
 [返回目录](#目录)
 
@@ -257,10 +259,21 @@ Python运算符优先级：
 [返回目录](#目录)
 
 # 六、机器学习
+
 ## 1、TensorFlow：AlphaGo背后框架
 
 ## 2、Scikit-learn：
 
 ## 3、MxNet：基于神经网络的深度学习
+
+[返回目录](#目录)
+
+# 其他
+
+## 安装模块
+
+`python -m pip install matplotlib`
+
+![image-20210629112622060](../resources/static/images/python安装模块.png)
 
 [返回目录](#目录)

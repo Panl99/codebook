@@ -8,9 +8,9 @@
 |NoSQL|[redis.md ✔](nosql/redis.md) <br/> [mongodb.md TODO](nosql/mongodb.md) <br/> [Cassandra TODO](nosql/Cassandra.md)|
 |数据库|[mysql.md ✔](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
 |Linux|[shell.md ✔](shell/shell.md) <br/> [Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
-|消息队列|[RabbitMQ.md TODO](messagequeue/RabbitMQ.md) <br/> [kafka.md 1/n](messagequeue/kafka.md) <br/> [Pulsar.md TODO](messagequeue/Pulsar.md)|
-|服务注册中心|[zookeeper.md 1/n](serviceregistry/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos--TODO]() 、[Eureka--TODO]()、[Consul--TODO]()|
-|配置中心|[Apollo.md ✔](configcenter/Apollo.md) <br/> [brcc.md](configcenter/brcc.md)|
+|消息队列|[RabbitMQ.md TODO](messagequeue/RabbitMQ.md) <br/> [kafka.md 1/n](messagequeue/kafka.md) <br/> [Pulsar.md TODO](messagequeue/Pulsar.md) <br/> [RocketMQ](spring/SpringAll.md#RocketMQ)|
+|服务注册中心|[zookeeper.md 1/n](serviceregistry/zookeeper.md) <br/> [etcd--TODO]() <br/> [Nacos](spring/SpringAll.md#Nacos) 、[Eureka--TODO]()、[Consul--TODO]()|
+|配置中心|[Apollo.md ✔](configcenter/Apollo.md) <br/> [brcc.md](configcenter/brcc.md) <br/> [Nacos](spring/SpringAll.md#Nacos)|
 |Nginx|[nginx.md 1/n](nginx/nginx.md) <br/> [openresty.md 1/n](nginx/openresty.md) <br/> [APISIX 1/n](nginx/apisix.md)|
 |ElasticSearch|[elasticsearch.md TODO](elasticsearch/elasticsearch.md)|
 |容器|[docker.md TODO](docker_kubernetes/docker.md) <br/> [kubernetes.md TODO](docker_kubernetes/kubernetes.md)|
@@ -20,9 +20,12 @@
 |BigData|[hadoop.md](bigdata/hadoop.md) <br/> [spark.md](bigdata/spark.md) <br/> [flink.md](bigdata/flink.md) <br/> [hive.md](bigdata/hive.md) <br/> [hbase.md](bigdata/hbase.md)|
 |MinIo|对象存储服务|
 |system|[design.md](system/design.md) <br/> [distributed.md](system/distributed.md)|
-|正则|[regex.md](system/regex.md)|
+|表达式|[正则：regex.md](system/regex.md) <br/> [定时：cron.md](system/cron.md)|
 |网络协议|[Mqtt.md](network/Mqtt.md)、[CoAP.md](network/CoAP.md)|
 |MATLAB|[MATLAB.md](matlab/MATLAB.md) <br/> [SLAM.md - 同步定位与建图](matlab/SLAM.md)|
+|IoT|[物模型](iot/物模型.md)|
+|分布式调度框架|[xxl-job](xxl-job/xxl-job.md)|
+|开发测试|[Test.md](test/Test.md)|
 
 
 # 项目
@@ -44,7 +47,7 @@
 - [mall-admin-web：电商后台管理系统的前端项目，基于Vue+Element实现。](https://github.com/Panl99/mall-admin-web)
 - [企业后台管理系统基础框架:hs-web](https://github.com/hs-web) 
 	1. [hsweb-framework：hsweb是一个用于快速搭建企业后台管理系统的基础项目,集成一揽子便捷功能如:通用增删改查，在线代码生成，权限管理，OAuth2.0 ,动态多数据源分布式事务，动态脚本，动态定时任务，在线数据库维护等等. 基于 spring-boot,mybaits http://hsweb.io](https://github.com/hs-web/hsweb-framework)
-	2. [hsweb-iot-cloud：基于java8,spring-cloud,vertx的开源物联网云平台，提供一个开源的物联网管理平台,支持各种设备接入,并完成数据上报,分析,处理等自定义功能.](https://github.com/hs-web/hsweb-iot-cloud)
+	2. [hsweb-iot-cloud：基于java8,spring-cloud,vertx的开源物联网云平台，提供一个开源的物联网管理平台,支持各种设备接入,并完成数据上报,分析,处理等自定义功能.](https://github.com/hs-web/hsweb-iot-cloud) => [https://github.com/jetlinks/jetlinks-community](https://github.com/jetlinks/jetlinks-community)
 	3. [hsweb-easy-orm：简单的orm工具,为动态表单而生](https://github.com/hs-web/hsweb-easy-orm)
 	4. [hsweb-task：提供任务配置,调度,监控. 支持单节点,集群,分布式部署.支持多种任务配置方式: 注解, jar包, 脚本(js,groovy)](https://github.com/hs-web/hsweb-task)
 	5. [hsweb-expands：文件压缩解压、office文档读写、http,ftp请求模拟、shell执行、模板引擎](https://github.com/hs-web/hsweb-expands)

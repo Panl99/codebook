@@ -30,7 +30,7 @@
     git mv <oldFlie> <newFile>
 
 ## 4、删除
-#### 删除缓存区文件
+#### 删除缓存区文件(取消add状态)
     git rm --cached <file>
 #### 删除git版本库文件
     git rm <file>

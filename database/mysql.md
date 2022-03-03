@@ -1,6 +1,7 @@
-> [MySQL 8 Cookbook]()
-> [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)
-> [MySQL必知必会](../resources/static/doc/MySQL必知必会.pdf)
+> [MySQL 8 Cookbook]()  
+> [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)  
+> [MySQL必知必会](../resources/static/doc/MySQL必知必会.pdf)  
+> [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)  
 
 # 目录
 - [mysql常用函数](#mysql常用函数)
@@ -39,7 +40,7 @@
         - [分表](#分表)
         - [分库](#分库)
         - [分库分表中间件](#分库分表中间件)
-        
+    
 - [阿里MySQL规约](#阿里MySQL规约)
     - [阿里建表规约](#阿里建表规约)
     - [阿里索引规约](#阿里索引规约)
@@ -442,7 +443,7 @@ delete from customers where id=4 and first_name='Rajiv';
         declare t_id int default '';
         declare t_name varchar(64) default ''; 
         declare status int default 0;
-  
+    
         declare cur cursor for select id,name from t_result_info where hire_date between start_time and end_time;
         declare continue handler for sqlstate '02000' set status = 1;
           
@@ -483,10 +484,10 @@ delete from customers where id=4 and first_name='Rajiv';
         prepare stmt from @sqlstmt;
         execute stmt;
         deallocate prepare stmt;
-  
+    
         select min(`tmp_id`) into i from t_result_tmp;
         select max(`tmp_id`) into count from t_result_tmp;
-  
+    
         while i <= count do
           select tmp_id,tmp_name into t_id,t_name from t_result_tmp where tmp_id = i;
           set i = i + 1;
@@ -651,7 +652,7 @@ MySQL中的默认存储引擎是InnoDB，支持事务处理，而MyISAM不支持
     - 也可以用MASTER，效果一样：`PURGE MASTER LOGS TO 'server1.000004'`
 3. 要删除所有二进制日志并再次从头开始，请执行`RESET MASTER`:
     - `mysql> RESET MASTER;`
-    
+
 使用replication清除二进制日志是非安全的方法。安全的方法是使用 **`mysqlbinlogpurge`** 脚本（检查每一个从库读取的二进制日志的情况，然后删除它们）。
 
 **`mysqlbinlogpurge`** 的使用：  
@@ -840,7 +841,6 @@ MASTER_LOG_POS=463;
     - 支持灾难恢复（通过bin-log日志等）。
     - 支持外键约束，只有InnoDB支持外键。
     - 支持自动增加列属性auto_increment。
-    
 #### 底层为什么使用B+Tree，不使用其他数据结构
 - 链表：数据查找时，可能是范围查找，使用链表存储 需要挨个遍历当前节点中的数据，效率低下，时间复杂度O(n)比较高。
 - hash表：上层是数组，下层是链表
@@ -866,7 +866,7 @@ MASTER_LOG_POS=463;
     - 由于磁盘块的大小是确定的，怎样保证磁盘块能存储更多的数据？
         - 磁盘存储多少跟索引值的大小相关，跟指针大小无关。（是使用int还是varchar做索引？如果指定的varchar小于4字节，使用varchar类型；大于4字节使用int类型。）
         - 索引值越大表示的存储范围越小，范围越小导致子节点范围越小，导致乘积也就是存储数据变小。为了保证树足够低，索引key要尽可能少的占用空间。
-    
+
 ![B+Tree](../resources/static/images/B+Tree.png)
 
 #### InnoDB中一棵B+树可以存放多少行数据？
@@ -1067,6 +1067,7 @@ show profile for query #{id};
     - 比如：按照用户id分表，一个用户的数据放到一个表中，对一个用户的操作只要操作那张表。这样可以控制每张表的数据量在可控范围（比如单表200万以内）。
 
 ### 分库
+
 - 用户过多，数据量、请求量过大，就需要分库。
 - 一般，单库最多支撑并发量 2000 QPS（最好在1000左右）。
 
@@ -1075,16 +1076,26 @@ show profile for query #{id};
     - 数据存放均匀，多个库可以抗住更高的并发，多个库的存储容量扩容。
 - 垂直拆分：把一个有多个字段的表拆成多个表 或者库
     - 每个库表结构不一样，包含部分字段，可以将高频字段 和低频字段分开存放。
-    
+
+| 策略                                                         | 描述                                                         | 优点                                                         | 缺点                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Range                                                        | 指定一个数据范围来进行分表，例如从1~1000W，1000W~2000W，使用1000万一张表的方式。 | 扩容简单，提前建好库、表就好                                 | 大部分读和写都访会问新的数据，有IO瓶颈，这样造成新库压力过大，不建议采用。 |
+| Hash取模                                                     | 可以根据对分片取模的方式进行分库分表，这样数据会分散在不同的库、表中，避免IO瓶颈问题。 | 能保证数据较均匀的分散落在不同的库、表中，减轻了数据库压力   | 扩容麻烦、迁移数据时需要rehash重新分配到不同的库和表         |
+| [一致性Hash](https://blog.csdn.net/suifeng629/article/details/81567777) | 按照常用的hash算法来将对应的key哈希到一个具有2^32次方个节点的空间中，即0~ (2^32)-1的数字空间中。 | 解决了普通余数 Hash  算法伸缩性差的问题,解决了分布式环境下机器增加或者减少时，简单的取模运算无法获取较高命中率的问题。 | 需要增加多个虚拟节点来平衡负载。  需要多一次查询 hash  后离值最近的节点 |
+| 哈希槽                                                       | 哈希槽是在 Redis Cluster 集群方案中使用的，可以将所有数据分为1024个槽，不管以后系统将来如何发展，1024个槽将保持不变，就算考虑将来最极端的情况，1024个槽分别都对应了1024个库后无法再新增槽，我们还可对每个槽的数据进行再次分库迁移拆分。采用分槽的形式后，将数据和数据库实例分离开来，数据与槽绑定，数据在哪个槽是永恒不变的，而数据库实例可以通过配置动态得与槽绑定，将来要扩容只需重新设定每个数据库实例对应了哪些槽，经过人工计算平均划分即可实现分片均匀。 | 相比于一致性哈希需要新增多个虚拟节点来平衡负载，并且需要多一次查询 hash 后离值最近的节点，哈希槽显得更加简单高效。 |                                                              |
+
 
 ### 分库分表中间件
+
 - [mycat](https://github.com/MyCATApache/Mycat-Server?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
 - [sharding-jdbc](https://github.com/apache/incubator-shardingsphere?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
 
+> [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)
+
 [返回目录](#目录)
 
-
 # 阿里MySQL规约
+
 ## 阿里ORM规约
 1. 【强制】在表查询中，一律不要使用 * 作为查询的字段列表，需要哪些字段必须明确写明。 
     - 说明：
