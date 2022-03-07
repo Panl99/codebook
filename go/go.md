@@ -3,6 +3,9 @@
 > [Go指南(在线练习)](https://tour.go-zh.org/welcome/1)  <br/>
 > [Go语言实战](../resources/static/doc/Go语言实战.pdf)  <br/>
 > [Go程序设计语言]()  <br/>
+> [Go社区文档](https://learnku.com/go/docs)  <br/>
+> [书栈网Go文档](https://www.bookstack.cn/explore?cid=10&tab=popular)  <br/>
+> [Go实践文档](https://mehdihadeli.github.io/awesome-go-education/)  <br/>
 
 # Go
 - Go是编译性语言，Go的工具链将程序的源文件转变成机器相关的原生二进制指令。
@@ -76,3 +79,23 @@ func main() {
 
 ## 并发
 
+# Go框架
+
+## [GoFrame](https://goframe.org/pages/viewpage.action?pageId=1114119)
+**GoFrame是一款模块化、高性能、企业级的Go基础开发框架。**  
+**GoFrame不是一款WEB/RPC框架**，而是一款通用性的基础开发框架，是Golang标准库的一个增强扩展级，包含通用核心的基础开发组件。  
+优点是实战化、模块化、文档全面、模块丰富、易用性高、通用性强、面向团队。
+
+
+## [Gin](https://gin-gonic.com/docs/)
+**Gin是一款HTTP Web框架。** ~~它具有类似 Martini 的 API，但性能比 Martini 快 40 倍。~~
+
+
+## [go-zero](https://go-zero.dev/cn/)
+**go-zero 是一个集成了各种工程实践的 web 和 rpc 框架。**  
+通过弹性设计保障了大并发服务端的稳定性，经受了充分的实战检验。  
+go-zero 包含极简的 API 定义和生成工具 **goctl**，可以根据定义的 api 文件一键生成 Go, iOS, Android, Kotlin, Dart, TypeScript, JavaScript 代码，并可直接运行。
+
+# [Go导航](https://hao.studygolang.com/)
+
+## [Go代理](https://goproxy.cn/)
