@@ -16,8 +16,9 @@
     - [访问数据库](#访问数据库)
     - [Web应用开发](#Web应用开发)
         - [使用REST](#使用REST)
-        - [Spring Security](#SpringSecurity)
-        - [Spring Data JPA](#SpringDataJPA)
+        - [数据格式化 FormatterRegistry](#数据格式化)
+    - [Spring Security](#SpringSecurity)
+    - [Spring Data JPA](#SpringDataJPA)
     - [Spring注解](#Spring注解)
     - [Spring中使用的设计模式](#Spring中使用的设计模式)
 
@@ -316,6 +317,25 @@
 
 ## Web应用开发
 ### 使用REST
+
+[返回目录](#目录)
+
+
+### 数据格式化
+
+- 使用`FormatterRegistry`添加接口数据格式转换
+```java
+/**
+ * 接口参数格式化
+ * 作用：支持接口枚举参数小写格式
+ *
+ * @param registry
+ */
+@Autowired
+public void addFormatters(FormatterRegistry registry) {
+    registry.addConverter(String.class, WeatherTypeEnum.class, source -> WeatherTypeEnum.valueOf(source.toUpperCase()));
+}
+```
 
 [返回目录](#目录)
 
