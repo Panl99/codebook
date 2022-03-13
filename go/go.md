@@ -68,7 +68,32 @@ func main() {
         }
         ```
 ## 控制结构
-// TODO 
+- Go支持的控制结构：[if](#if)、[for](#for)、[switch](#switch)、[select](#select)
+  - select：用于类型选择、多路通信复用器。语法：没有圆括号，但其主体必须始终使用大括号括住。
+- Go不支持：do、while
+
+### if
+```go
+// 1、简单的if语句
+if x > 0 {
+    return y
+}
+
+// 2、if接受初始化语句，可用来设置局部变量
+if err := file.Chmod(0664); err != nil {
+    log.Print(err)
+    return err
+}
+```
+
+### for
+
+
+### switch
+
+
+### select
+
     
     
 ## 数组
