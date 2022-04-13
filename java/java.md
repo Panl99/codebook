@@ -35,6 +35,7 @@
 - [IO TODO](#IO)
 - [NIO TODO](#NIO)
     - [Netty](netty.md)
+    - [Reactor](../reactor/Reactor.md)
 
 - [Java并发编程](#Java并发编程)
     - [Java线程](#Java线程)
@@ -45,7 +46,7 @@
     - [线程池](#线程池)
         - [线程池工作原理](#线程池工作原理)
             - [ThreadPoolExecutor](#ThreadPoolExecutor)
-            - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+            - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/ScheduledThreadPoolExecutorDemo.java)
         - [5种常用的线程池](#5种常用的线程池)        
     - [异步编程--TODO](#异步编程)
         - [CompletableFuture](#CompletableFuture)
@@ -287,7 +288,7 @@ synchronized(obj) {
 - 底层：哈希表
 - 唯一性保证：hashCode()和equals()
 - **线程安全HashSet**
-    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/demo/tree/master/demo-common/src/main/java/com/lp/demo/common/util/ConcurrentHashSet.java)
+    - 使用ConcurrentHashMap实现的[ConcurrentHashSet](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/ConcurrentHashSet.java)
     - `CopyOnWriteArraySet`
 
 #### LinkedHashSet
@@ -844,7 +845,7 @@ public static void main(String[] args) throws Exception {
 
 # NIO
 - 非阻塞IO，使用Selector、Channel、Buffer来实现非阻塞IO操作。
-- 非阻塞的实现是采用反应器(Reactor)设计模式，可处理多个事件源。（此设计模式类似观察者模式，只是观察者模式只能处理一个事件源）
+- 非阻塞的实现是采用反应器([Reactor](../reactor/Reactor.md))设计模式，可处理多个事件源。（此设计模式类似观察者模式，只是观察者模式只能处理一个事件源）
 - 常用于网络编程，效率比Socket高。
 
 [返回目录](#目录)
@@ -920,7 +921,7 @@ public class Main {
     }
 }
 ```
-- [ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+- [ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/ScheduledThreadPoolExecutorDemo.java)
 
 ## 线程的生命周期
 - 新建（New）、就绪（Runnable）、运行（Running）、阻塞（Blocked）、死亡（Dead）
@@ -1288,7 +1289,7 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
     }
 }, 1, 3, TimeUnit.SECONDS);
 ```
-- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/leetcode/tree/master/java/src/util/ScheduledThreadPoolExecutorDemo.java)
+- [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/ScheduledThreadPoolExecutorDemo.java)
 
 #### newSingleThreadExecutor
 - 创建一个有且只有一个可用的线程的线程池。
@@ -1304,7 +1305,7 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 
 ## 异步编程
 ### CompletableFuture
-- [异步非阻塞：CompletableFuture](https://github.com/Panl99/leetcode/tree/master/java/src/util/CompletableFutureDemo.java)
+- [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/CompletableFutureDemo.java)
 
 [返回目录](#目录)
 
