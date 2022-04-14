@@ -26,6 +26,11 @@
 - [泛型](#泛型)
     - [泛型标记和泛型限定](#泛型标记和泛型限定)
     - [泛型方法](#泛型方法)，[泛型类](#泛型类)，[泛型接口](#泛型接口)，[类型擦除](#类型擦除)
+    - [不变invariant](#不变)，[协变covariant](#协变)，[逆变contravariant](#逆变)
+    - [Producer Extends, Consumer Super](#PCES)
+    - [自限定](#自限定)
+        - [协变返回类型](#协变返回类型)，[协变参数类型](#协变参数类型)
+    - [捕获转换](#捕获转换)
 - [序列化](#序列化)
     - [序列化注意事项](#序列化注意事项)
     - [反序列化](#反序列化)
@@ -659,8 +664,8 @@ N-Number|表示数值类型
 ?|表示不确定的Java类型
 
 在使用泛型的时候，若希望将类的继承关系加入泛型应用中，就需要对泛型做限定，包含：对泛型上线的限定、对泛型下线的限定。
-- 对泛型上限的限定：`<? extends T>` 表示该通配符所代表的类型是 T类的子类或者接口T的子接口。
-- 对泛型下限的限定：`<? super T>` 表示该通配符所代表的类型是 T类型的父类或者父接口。
+- 对泛型上限的限定：[`<? extends T>`](#协变) 表示该通配符所代表的类型是 T类的子类或者接口T的子接口。
+- 对泛型下限的限定：[`<? super T>`](#逆变) 表示该通配符所代表的类型是 T类型的父类或者父接口。
 
 ## 泛型方法
 泛型方法：指将方法的参数类型定义为泛型，以便在调用时接收不同类型的参数。
@@ -736,6 +741,266 @@ public class GeneralIntegerImpl implements IGeneral<Integer> {
 Java类型的擦除过程为：
 1. 查找用来替换类型参数的具体类（该具体类一般为Object），如果指定了类型参数的上界，则以该上界作为替换时的具体类；
 2. 把代码中的类型参数都替换为具体的类。
+
+## 不变
+Java泛型是不变的
+
+比如有①运动类`Sport` > ②球类运动`Ball` > ③足球`Football`、篮球`Basketball`、羽毛球`Badminton`
+
+`List<Ball> list = new ArrayList<Football>(); // 报错！`
+因为**泛型没有内建的协变类型**，无法将`List<Ball>`和`ArrayList<Football>`关联起来，所以在编译阶段就会报错。
+
+## 协变
+`<? extends T>`，主要用在函数的返回值上
+
+使用泛型的协变：**`List<? extends Ball> list = new ArrayList<Football>();`**
+
+**使用协变后，只能从List中get数据而不能add数据**：首先能确定list的类型为Ball或者Ball的子类，但是不能确定是Ball子类中的哪一个，所以**使用了`<? extends T>`协变向上转换后，就不能再向list中添加任何类型的对象了，只能从list中get数据，并且get出来的数据类型也不是Football，而是Ball或者Ball的父类Sport。**
+```java
+List<Football> footballs = new ArrayList<Football>();
+footballs.add(new Football());
+footballs.add(new Football());
+
+List<? extends Ball> balls = footballs;
+Football footabll = balls.get(0); // 报错！
+Ball ball = balls.get(0);
+Sport sport = balls.get(0);
+
+```
+
+## 逆变
+`<? super T>`，主要用在函数参数上
+
+使用泛型的逆变：**`List<? super Football> list = new ArrayList<Ball>();`**
+
+**使用逆变后，只能向List中add数据而不能get数据**：首先Ball是Football的超类，能确定list的类型的超类为Football或者Football的父类，换言之该类型为Football或者Football的子类，所以**使用了`<? super T>`逆变向下转换后，就只能向list中添加Football或者Football的子类对象了。**
+```java
+List<? super Football> list = new ArrayList<Ball>();
+list.add(new Football());
+list.add(new RedFootball());
+list.add(new BlackFootball());
+
+```
+总结：  
+**协变：extends/向上转换/不能add/只能get（T及父类）**  
+**逆变：super/向下转换/不能get/只能add（T及子类）**
+
+## PCES
+- `Producer Extends，Consumer Super`，如果参数化类型表示一个生产者，就使用`<? extends T>`；如果它表示一个消费者，就使用`<? super T>`。
+    - 如果是想**遍历集合**，并对每一项元素操作时，此时这个集合是生产者（生产元素），应该使用**`Collection<? extends T>`**
+    - 如果是想**添加元素到集合**中去，那么此时集合是消费者（消费元素）应该使用**`Collection<? super T>`**
+
+常见框架中的PCES：
+- java.util.Collections的copy方法
+```java
+// 该方法限制了拷贝源src必须是T或者是它的子类，而拷贝目的地dest必须是T或者是它的父类，这样就保证了类型的合法性。
+// src相当于生产者，dest相当于消费者
+public static <T> void copy(List<? super T> dest, List<? extends T> src) {
+    int srcSize = src.size();
+    if (srcSize > dest.size())
+        throw new IndexOutOfBoundsException("Source does not fit in dest");
+
+    if (srcSize < COPY_THRESHOLD ||
+        (src instanceof RandomAccess && dest instanceof RandomAccess)) {
+        for (int i=0; i<srcSize; i++)
+            dest.set(i, src.get(i));
+    } else {
+        ListIterator<? super T> di=dest.listIterator();
+        ListIterator<? extends T> si=src.listIterator();
+        for (int i=0; i<srcSize; i++) {
+            di.next();
+            di.set(si.next());
+        }
+    }
+}
+```
+
+## 自限定
+自限定的类型  
+`class SelfBounded<T extends SelfBounded<T>> { /* ...*/}`
+
+古怪的循环泛型(CRG，CuriouslyRecurringGeneric)：类相当古怪地出现在它自己的基类中  
+```java
+class GenericType<T>{}
+
+public class CuriouslyRecurringGeneric extends GenericType<CuriouslyRecurringGeneric> {}
+```
+CRG的本质：基类用导出类代替其参数。
+
+这意味着泛型基类变成了一种其所有导出类的公共功能的模版，但是这些功能对于其所有参数和返回值，将使用导出类型。也就是说，在所产生的类中使用确切类型而不是基类型。
+```java
+// BasicHolder.java
+public class BasicHolder<T> {
+    T element;
+    void set(T arg) { element = arg; }
+    T get() { return element; }
+    void f() {
+        System.out.println(element.getClass().getSimpleName());
+    }
+}
+
+// CRGWithBasicHolder.java
+class Subtype extends BasicHolder<Subtype> {}
+
+public class CRGWithBasicHolder {
+    public static void main(String[] args) {
+        Subtype st1 = new Subtype(), st2 = new Subtype();
+        st1.set(st2);
+        Subtype st3 = st1.get();
+        st1.f();
+    }
+}  
+/* 程序输出
+Subtype
+*/
+```
+
+- 自限定的步骤: 强制泛型当作其自身的边界参数来使用。例如：`class A extends SelfBounded<A>{}`
+- 自限定的参数的意义： 它可以保证类型参数必须与正在被定义的类相同。
+- 自限定的使用范围： 这能强制作用于继承关系（类继承与泛型方法继承）。
+- 自限定的意义：
+    1. 提高了可读性，更加明确使用的对象.更方便调用.
+    2. 提高了安全性，防止对象的转换出错。
+    3. 提高效率，不然如果定一下成Object的话.还需要进行一步强转在继续使用（Object可能会进行装包、拆包或强转操作）
+    4. **产生协变参数类型**：方法参数类型会随子类而变化
+    5. 自限定还可以产生协变返回类型，但是这并不重要，因为JDK1.5引入了协变返回类型。
+
+### 协变返回类型
+- 下面代码**不使用泛型**子类接口把基类接口的方法重写了，返回更确切的类型。
+```java
+class Base{}
+class Derived extends Base{}
+interface OrdinaryGetter{
+    Base get();
+}
+interface DerivedGetter extends OrdinaryGetter{
+    // 覆盖的方法允许返回类型不同!
+    @Override
+    Derived get();
+}
+public class CovariantReturnTypes {
+    void test(DerivedGetter d){
+        Derived d2 = d.get();
+    }
+}
+```
+- **使用自限定类型**，继承自定义类型基类的子类将产生确切的子类型作为其返回值，就像上面的get()一样。
+```java
+interface GenericsGetter<T extends GenericsGetter<T>> {
+    T get();
+}
+
+interface Getter extends GenericsGetter<Getter> {}
+
+public class GenericsAndReturnTypes {
+    void test(Getter g) {
+        Getter result = g.get();
+        GenericsGetter genericsGetter = g.get();
+    }
+}
+```
+
+### 协变参数类型
+- 在**非泛型**代码中，参数类型不能随子类型发生变化，方法只能重载不能重写。
+```java
+class OrdinarySetter{
+    void set(Base base){
+        System.out.println("OrdinarySetter.set(base)");
+    }
+}
+class DerivedSetter extends OrdinarySetter{
+    // 重载，而非覆盖
+    void set(Derived derived){
+        System.out.println("DerivedSetter.set(derived)");
+    }
+}
+public class OrdinaryArguments {
+    public static void main(String[] args) {
+        Base base = new Base();
+        Derived derived = new Derived();
+        DerivedSetter ds = new DerivedSetter();
+        ds.set(derived); // 合法
+        ds.set(base); // 合法
+    }
+}
+/*
+DerivedSetter.set(derived)
+OrdinarySetter.set(base)
+*/
+```
+
+- 在**使用自限定类型时**，在子类中只有一个方法，并且这个方法接受子类型而不是基类型作为参数。
+```java
+interface SelfBoundingSetter<T extends SelfBoundingSetter<T>>{
+    void set(T arg);
+}
+
+interface Setter extends SelfBoundingSetter<Setter>{}
+
+public class SelfBoundingAndCovariantArguments {
+    void testA(Setter s1, Setter s2, SelfBoundingSetter sbs){
+        s1.set(s2);
+//        s1.set(sbs); // 编译报错
+    }
+}
+
+```
+
+- **不使用自限定类型**，普通的继承机制就会介入，就像在非泛型的情况下一样：
+```java
+class GenericSetter<T> {
+    void set(T arg){
+        System.out.println("GenericSetter.set(base)");
+    }
+}
+class DerivedGS extends GenericSetter<Base>{
+    // 重载，而非覆盖
+    void set(Derived derived){
+        System.out.println("DerivedGS.set()");
+    }
+}
+public class PlainGenericInheritance{
+    public static void main(String[] args) {
+        Base base = new Base();
+        Derived derived = new Derived();
+        DerivedGS derivedGS = new DerivedGS();
+        derivedGS.set(derived); // 合法
+        derivedGS.set(base); // 合法
+    }
+}
+```
+
+## 捕获转换
+`\<?>`被称为无界通配符，无界通配符还有一个特殊的作用，如果向一个使用`\<?>`的方法传递原生类型，那么对编译期来说，可能会推断出实际的参数类型，使得这个方法可以回转并调用另一个使用这个确切类型的方法。这种技术被称为捕获转换。下面代码演示了这种技术。
+```java
+public class CaptureConversion {
+    static <T> void f1(Holder<T> holder) {
+        T t = holder.get();
+        System.out.println(t.getClass().getSimpleName());
+    }
+    
+    static void f2(Holder<?> holder) {
+        f1(holder);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static void main(String[] args) {
+        Holder raw = new Holder<Integer>(1);
+        f2(raw); // 
+        Holder rawBasic = new Holder();
+        rawBasic.set(new Object());
+        f2(rawBasic); // 
+        Holder<?> wildcarded = new Holder<Double>(1.0);
+        f2(wildcarded); // 
+    }
+}
+/* 程序输出
+Integer
+Object
+Double
+*/
+```
+捕获转换只有在这样的情况下可以工作：即在方法内部，你需要使用确切的类型。注意，不能从f2()中返回T，因为T对于f2()来说是未知的。捕获转换十分有趣，但是非常受限。
   
 [返回目录](#目录)
 
