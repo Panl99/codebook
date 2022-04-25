@@ -62,6 +62,9 @@
     - [对象存储服务 OSS](#OSS)
     - [分布式任务调度组件 SchedulerX](#SchedulerX)
     - [全球短信服务 SMS](#SMS)
+    
+- [问题](#问题)
+    - [注入对象为null](#注入对象为null)
 
 [返回目录](#目录)
 
@@ -2001,5 +2004,43 @@ Apache RocketMQ™ 基于 Java 的高性能、高吞吐量的分布式消息和�
 ## SMS
 阿里云覆盖全球的短信服务。
 
+
+[目录](#目录)
+
+# 问题
+
+## 注入对象为null
+```java
+package test;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.Reference;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+
+@RestController
+@Slf4j
+public class Test {
+
+    @Reference
+    TestService testService;
+
+    @RequestMapping(value = "/test", produces = {"application/json;charset=UTF-8"}, method = RequestMethod.GET)
+    // 👇
+    private JsonResult queryList(Integer pageNum, Integer pageSize, HttpServletRequest request) {
+        //      👇 null
+        return testService.queryList(pageNum, pageSize);
+    }
+}
+
+```
+
+根本原因是：代理类中private 方法无法获取被代理目标对象，也就无法获取注入的bean属性。👇
+
+> [为什么你写的Controller里，private方法中的bean=null？](https://zhangxiaofan.blog.csdn.net/article/details/118118553?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_aa&utm_relevant_index=2)
 
 [目录](#目录)
