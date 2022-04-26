@@ -65,6 +65,7 @@
     
 - [问题](#问题)
     - [注入对象为null](#注入对象为null)
+    - [mybatis: nested exception is org.apache.ibatis.reflection.ReflectionException: There is no getter for property named 'pid' in 'class java.lang.Long'](#There-is-no-getter-for-property)
 
 [返回目录](#目录)
 
@@ -2042,5 +2043,15 @@ public class Test {
 根本原因是：代理类中private 方法无法获取被代理目标对象，也就无法获取注入的bean属性。👇
 
 > [为什么你写的Controller里，private方法中的bean=null？](https://zhangxiaofan.blog.csdn.net/article/details/118118553?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_aa&utm_relevant_index=2)
+
+
+## There-is-no-getter-for-property
+
+MyBatis用`<if></if>`进行参数判断的时候，不是map或者实体的入参方式，而是java.lang.Integer、Long等单个参数，对于这类单个入参然后用`<if>`判断的，mybatis有自己的内置对象，那么本来Mybatis有着自己的`getter setter`方法，这里又指定了传入类型，所以在指定类型里面获取不到getter方法。
+
+解决方法：
+1. 在mapper接口上面添加`@Param("pid")`用来给传入参数命名，那么参数就被转化为Mybatis内置对象
+
+> [nested exception is org.apache.ibatis.reflection.ReflectionException: There is no getter for property named 'pid' in 'class java.lang.Long'](https://blog.csdn.net/weixin_46128463/article/details/122972922)
 
 [目录](#目录)
