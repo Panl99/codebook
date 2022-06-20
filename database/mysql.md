@@ -125,6 +125,37 @@
 `SELECT ifnull('a','b') from dual; => a不为null返回a,a为null返回b`
 - **连接:**  
 `SELECT concat('a','b','c') from dual; => abc `
+- **时间:**  
+```mysql
+select NOW(); # 当前时间 2022-06-20 10:05:41
+select CURDATE(); # 当前日期 2022-06-20
+select CURRENT_DATE; # 当前日期 2022-06-20
+select CURRENT_TIME; # 当前时间 10:05:41
+select CURTIME(); # 当前时间 10:05:41
+
+# 加上一个时间：date_add()
+select date_add(now(), interval 1 year);        -- 加1年 2023-06-20 10:05:41
+select date_add(now(), interval 1 quarter);     -- 加1季 2022-09-20 10:05:41
+select date_add(now(), interval 1 month);       -- 加1月 2022-07-20 10:05:41
+select date_add(now(), interval 1 week);        -- 加1周 2022-06-27 10:05:41
+select date_add(now(), interval 1 day);         -- 加1天 2022-06-21 10:05:41
+select date_add(now(), interval 1 hour);        -- 加1小时 2022-06-20 11:05:41
+select date_add(now(), interval 1 minute);      -- 加1分钟 2022-06-20 10:06:41
+select date_add(now(), interval 1 second);      -- 加1秒 2022-06-20 10:05:42
+select date_add(now(), interval 1 microsecond); -- 加1毫秒 2022-06-20 10:05:41.000001
+
+# 减去一个时间：date_sub()
+select date_add(now(), interval -1 day);         -- 减1天 2022-06-19 10:05:41
+select date_sub(now(), interval 1 day);          -- 减1天 2022-06-19 10:05:41
+
+# 日期相差：datediff()
+select datediff('20220620','20220611');    -- 相差几天 9
+
+# 时间相差：timediff()
+select timediff('2022-06-20 12:30:00', '2022-06-20 12:00:30');    -- 00:29:30
+select timediff('12:30:00', '12:00:30');                          -- 00:29:30
+
+```
 
 [返回目录](#目录)
 
