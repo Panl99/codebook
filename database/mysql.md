@@ -125,6 +125,18 @@
 `SELECT ifnull('a','b') from dual; => a不为null返回a,a为null返回b`
 - **连接:**  
 `SELECT concat('a','b','c') from dual; => abc `
+- **分组合并:group_concat**
+```mysql
+# group_concat( [distinct] 要连接的字段 [order by 排序字段 asc/desc ] [separator '分隔符'] )
+
+SELECT parent_id, GROUP_CONCAT(distinct a.region_id order by a.region_id asc separator ';') GROUP BY parent_id
+# 按parent_id分组，查出同一parent_id下的region_id，region_id正序排序，用;隔开
+
+# 最大值限制GROUP_CONCAT() 是有最大长度限制的，默认值是 1024。当总长度达到 1024 后，后面的记录就被截断掉。
+# 可以通过 group_concat_max_len 参数进行动态设置。参数范围可以是 Global 或 Session
+# 如果类型 group_concat_max_len 的值被设置为小等于 512，那么 GROUP_CONCAT 的返回值类型是 VARCHAR 或 VARBINARY；否则是 TEXT 或 BLOB。
+# 实际上，group_concat_max_len 的值可以设置非常大，但会受到参数max_allowed_packet 的限制。
+```
 - **时间:**  
 ```mysql
 select NOW(); # 当前时间 2022-06-20 10:05:41
