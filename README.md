@@ -5,6 +5,7 @@
 |数据结构、算法、设计模式|[DataStructures_Algorithms_DesignPatterns.md](DataStructures_Algorithms_DesignPatterns/DataStructures_Algorithms_DesignPatterns.md) <br/> [*数据结构可视化工具*](https://www.cs.usfca.edu/~galles/visualization/Algorithms.html) |
 |NIO|[netty.md TODO](java/netty.md)|
 |Spring|[SpringAll.md ✔](spring/SpringAll.md) <br/> [~~spring.md 1/n~~](spring/spring.md) 、 [~~springboot.md 1/n~~](spring/springboot.md) 、 [~~springcloud.md 1/n~~](spring/springcloud.md)|
+|ORM|[MyBatis](orm/MyBatis.md)|
 |NoSQL|[redis.md ✔](nosql/redis.md) <br/> [mongodb.md TODO](nosql/mongodb.md) <br/> [Cassandra TODO](nosql/Cassandra.md)|
 |数据库|[mysql.md ✔](database/mysql.md) <br/> [oracle.md 1/n](database/oracle.md)|
 |Linux|[shell.md ✔](shell/shell.md) <br/> [Linux命令行与shell脚本编程大全.第3版](resources/static/doc/Linux命令行与shell脚本编程大全.第3版.pdf)|
