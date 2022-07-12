@@ -1,0 +1,4 @@
+<settings>
+    <!-- 二级缓存全局开关，默认为true，可以不配置，配置为false时后面的二级缓存配置也不会生效。-->
+    <setting name="cacheEnabled" value="true"/>
+</settings>
