@@ -13,9 +13,9 @@
 
 - [设计模式](#设计模式)
     - [设计模式的7个原则](#设计模式的7个原则)
-    - 创建型模式：[单例模式 √](#单例模式)，[工厂模式 √](#工厂模式)，[抽象工厂模式 √](#抽象工厂模式)，[建造者模式](#建造者模式)，[原型模式](#原型模式)
-    - 结构型模式：[适配器模式](#适配器模式)，[装饰者模式](#装饰者模式)，[代理模式 √](#代理模式)，[外观模式](#外观模式)，[桥接模式](#桥接模式)，[组合模式](#组合模式)，[享元模式](#享元模式)，[~~过滤器模式~~](#过滤器模式)
-    - 行为型模式：[观察者模式 ](#观察者模式)，[责任链模式](#责任链模式)，[迭代器模式](#迭代器模式)，[命令模式](#命令模式)，[备忘录模式](#备忘录模式)，[中介者模式](#中介者模式)，[解释器模式](#解释器模式)，[策略模式](#策略模式)，[模板方法 √](#模板方法)，[状态模式](#状态模式)，[访问者模式](#访问者模式)
+    - 创建型模式：[单例模式 √](#单例模式)，[工厂模式 √](#工厂模式)，[抽象工厂模式 √](#抽象工厂模式)，[建造者模式 √](#建造者模式)，[原型模式 √](#原型模式)
+    - 结构型模式：[适配器模式 √](#适配器模式)，[装饰者模式 √](#装饰者模式)，[代理模式 √](#代理模式)，[外观模式 √](#外观模式)，[桥接模式](#桥接模式)，[组合模式](#组合模式)，[享元模式](#享元模式)，[~~过滤器模式~~](#过滤器模式)
+    - 行为型模式：[观察者模式 √](#观察者模式)，[责任链模式](#责任链模式)，[迭代器模式](#迭代器模式)，[命令模式](#命令模式)，[备忘录模式](#备忘录模式)，[中介者模式](#中介者模式)，[解释器模式](#解释器模式)，[策略模式 √](#策略模式)，[模板方法 √](#模板方法)，[状态模式](#状态模式)，[访问者模式](#访问者模式)
 
 - [算法题](https://github.com/Panl99/demo/tree/master/demo-action#leetcode)
   - [leetcode_in_action](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/leetcode_in_action)
@@ -556,125 +556,123 @@ public static String factorial(int num) {
 [单例模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/singletonpattern/Singleton.java)
    
 ## 工厂模式
-[工厂模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern)
 
 - FactoryPattern：提供了一种简单、快速、高效而安全地创建对象的方式。
 - 工厂模式在接口中定义了创建对象的方法，而将具体的创建对象的过程在子类中实现，用户只需通过接口创建需要的对象即可，不用关注对象的具体创建过程。同时，不同的子类可根据需求灵活实现创建对象的不同方法。
 - 工厂模式的本质就是用工厂方法代替new操作创建一种实例化对象的方式
 
-#### 实现
-以创建手机为例，假设手机的品牌有华为、小米、苹果三种类型，我们要实现的是根据不同的传入参数实例化不同的手机。
-
-1. 定义接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/Phone.java) ，在接口中定义品牌 brand()；
-2. 定义实现类 [IPhone](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/IPhone.java) 、[HuaWei](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/HuaWei.java) 、[XiaoMi](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/XiaoMi.java) ；
-3. 定义工厂类 [Factory](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/Factory.java) ；
-4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/Main.java) 。
-5. 优化3：使用枚举创建手机对象 [PhoneEnum]([HuaWei](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/PhoneEnum.java))
-
-#### 使用Lambda重构工厂模式
-无需暴露实例化的逻辑就能完成对象的创建。  
-```java
-//1、创建接口和实现类
-public interface Phone {
-    String brand(); //品牌
-}
-public class IPhone implements Phone {
-    @Override
-    public String brand() {
-        return "this is a iphone";
-    }
-}
-
-//2、创建一个工厂类
-public static Phone createPhone(PhoneEnum name) {
-    Supplier<Phone> p = name.getPhone();
-    if (p != null) {
-        return p.get();
-    } else {
-        throw new IllegalArgumentException("no such phone " + name);
-    }
-}
-
-//3、枚举产品
-public enum PhoneEnum {
-    HUAWEI(HuaWei::new),
-    IPHONE(IPhone::new),
-    XIAOMI(XiaoMi::new);
-
-    private final Supplier<Phone> phone;
-
-    PhoneEnum(Supplier<Phone> phone) {
-        this.phone = phone;
-    }
-
-    public Supplier<Phone> getPhone() {
-        return phone;
-    }
-}
-
-//4、测试
-public static void main(String[] args) {
-    Phone iphone = Factory.createPhone(PhoneEnum.IPHONE);
-    Phone xm = Factory.createPhone(PhoneEnum.XIAOMI);
-    System.out.println(iphone.brand());
-    System.out.println(xm.brand());
-
-}
-```
+[工厂模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern)
 
 ### 抽象工厂模式
-[抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern)
 
 - 抽象工厂模式（Abstract Factory Pattern）在工厂模式上添加了一个创建不同工厂的抽象接口（抽象类或接口实现），该接口可叫作超级工厂。在使用过程中，我们首先通过抽象接口创建出不同的工厂对象，然后根据不同的工厂对象创建不同的对象。
 - 手机厂商还可能制造其他产品，减少实现多个工厂类
 
-#### 实现
-- 假设品牌有华为、小米两种，
-- 创建手机产品
-- 创建电脑产品
-
-1. 定义抽象工厂类 [AbstractFactory](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/AbstractFactory.java) ,抽象方法`createPhone(String brand);``createComputer(String brand);`  
-2. 定义手机接口 [Phone](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/Phone.java) ，在接口中定义功能 call()
-3. 定义手机实现类 [HuaWeiPhone](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/HuaWeiPhone.java) 、[XiaoMiPhone](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/XiaoMiPhone.java)
-4. 定义手机工厂类 [PhoneFactory](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/PhoneFactory.java)
-
-5. 定义电脑接口 [Computer](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/Computer.java) ，在接口中定义功能 internet()
-6. 定义电脑实现类 [HuaWeiComputer](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/HuaWeiComputer.java) 、[XiaoMiComputer](https://github.com/Panl99/demo/blob/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/XiaoMiComputer.java)
-7. 定义电脑工厂类 [ComputerFactory](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/ComputerFactory.java)
-
-8. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern/Main.java) 。
-
+[抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern)
 
 [目录](#目录)
 
 ## 建造者模式
+
+作用：
+- 用于解决软件系统中复杂对象的创建问题
+
+使用场景：
+- 常被用于一些基本部件不会变而其组合经常变化的应用场景下。
+- 建造者模式与工厂模式的最大区别是，建造者模式更关注产品的组合方式和装配顺序，而工厂模式关注产品的生产本身。
+
+步骤：
+- Builder：创建一个复杂产品对象的抽象接口。
+- ConcreteBuilder：Builder接口的实现类，用于定义复杂产品各个部件的装配流程。
+- Director：构造一个使用Builder接口的对象。
+- Product：表示被构造的复杂对象。ConcreteBuilder定义了该复杂对象的装配流程，而Product定义了该复杂对象的结构和内部表示。
+
 [建造者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/builderpattern)
 
 ## 原型模式
+
+作用：
+- 调用原型实例的clone()方法创建新的对象。
+
+使用场景：
+- 以当前对象为原型来创建一个新的对象，无需知道创建的细节。
+
+步骤：
+- 原型类实现Cloneable接口并覆写clone()方法。
+- clone()改为public类型。
+
+- 浅复制：Java中的浅复制：是通过实现Cloneable接口并覆写其Clone方法实现的。
+在浅复制的过程中，对象的基本数据类型的变量值会重新被复制和创建，而引用数据类型仍指向原对象的引用。
+也就是说，浅复制不复制对象的引用类型数据。
+- 深复制：在深复制的过程中，不论是基本数据类型还是引用数据类型，都会被重新复制和创建。
+简而言之，深复制彻底复制了对象的数据（包括基本数据类型和引用数据类型），浅复制的复制却并不彻底（忽略了引用数据类型）。
+
 [原型模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/prototypepattern)
 
 ## 适配器模式
+
+作用：
+- 实现各个接口之间的兼容：将一个类的接口转换为希望的另一个接口，让原本接口不兼容的类可以适配一起工作。
+
+使用场景：
+- 希望复用一些现存的类，但是接口(方法)又不符合时。
+
+步骤：
+- Source是待适配的类，Targetable是目标接口，Adapter是适配器。
+- 在具体应用中通过Adapter 将Source 的功能扩展到Targetable，以实现接口的兼容。
+- 适配器的实现主要分为三类：类适配器模式、对象适配器模式、接口适配器模式。
+
 [适配器模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/adapterpattern)
 
 ## 装饰者模式
+
+作用：
+- 动态地给一个对象添加一些额外的职责。（对于增加功能来说，装饰者模式比生成子类更加灵活）
+- 把类中的装饰功能从类中移除，区分开类的核心职责 和装饰功能，简化原有的类。
+- 每个装饰对象只需要关心自己的功能，不需要关心如何被添加到对象链中。
+
+使用场景：
+- 为已有的功能 动态地添加 更多功能。
+
+步骤：
+- 定义核心类的，实现核心功能。
+- 定义装饰者类，继承核心类，重写核心类功能（先执行核心类功能，再添加装饰类特有功能）。
+- 使用装饰者类包装核心类，执行装饰者类的功能方法。
+
 [装饰者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/decoratorpattern)
 
 ## 代理模式
+
+作用：
+- 为其他对象提供一种代理 来控制对该对象的访问。
+
+使用场景：
+- 在客户端不适合或者不能够直接引用一个对象时，可以通过该对象的代理对象来实现对该对象的访问，可以将该代理对象理解为客户端和目标对象之间的中介者。
+- 远程代理：为一个对象在不同的地址空间提供局部代表，来隐藏一个对象存在于不同地址空间的事实。
+- 虚拟代理：需要创建开销很大的对象，通过它来存放实例化需要很长时间的真实对象。
+- 安全代理：用来控制真实对象访问时的权限。（对象有不同的访问权限）
+- 智能指引：调用真实对象时，代理处理另外一些事情。
+
 [代理模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/proxypattern)
-
-- 代理模式指为对象提供一种通过代理的方式来访问并控制该对象行为的方法。在客户端不适合或者不能够直接引用一个对象时，可以通过该对象的代理对象来实现对该对象的访问，可以将该代理对象理解为客户端和目标对象之间的中介者。
-
-### 代理模式实现
-以招聘工作为例
-
-1. 定义接口Company：[Company](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/proxypattern/Company.java)
-2. 定义其实现类HR：[HR](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/proxypattern/HR.java)
-3. 定义代理类Proxy：[Proxy](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/proxypattern/Proxy.java)
-4. 测试 [Main](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/proxypattern/Main.java)
 
 [目录](#目录)
 
 ## 外观模式
+
+作用：
+- 将子系统中的功能抽象成一个统一的接口或类中以对外提供服务，客户端通过这个接口访问系统，使得系统使用起来更加容易。
+- 降低访问拥有多个子系统的复杂系统的难度，简化客户端与其之间的接口。
+
+使用场景：
+- 在系统设计初期，有意识的将不同的两个层分离。比如访问层、业务逻辑层、表示层 层层之间建立外观Facade，大大降低耦合度。
+- 在开发阶段，子系统不断地演化变得复杂，会产生很多很小的类，使外部调用变得困难，可以增加外观Facade减少它们之间的依赖。
+- 在维护遗留的大型系统时，该系统难以维护和扩展，如果有新的需求需要依赖它，可以为新系统开发一个外观Facade类，为老系统提供简单的接口来让新系统与Facade对象交互，让Facade与老系统完成复杂的工作。
+
+步骤：
+- 子系统角色：实现了子系统的功能。
+- 门面角色：外观模式的核心，熟悉各子系统的功能和调用关系并根据客户端的需求封装统一的方法来对外提供服务。
+- 客户角色：通过调用Facade来完成业务功能。
+
 [外观模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/facadepattern)
 
 ## 桥接模式
@@ -687,280 +685,74 @@ public static void main(String[] args) {
 [享元模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/flyweightpattern)
 
 ## 观察者模式
+
+作用：
+- 解耦：让耦合双方都依赖于抽象，而不是依赖于具体，让各自的变化不会依赖于另一方的变化。
+- 发布-订阅模式
+- 在被观察者的状态发生变化时，系统基于事件驱动理论将其状态通知到订阅其状态的观察者对象中，以完成状态的修改和事件传播。
+
+使用场景：
+- 定义一种1对多的依赖关系，让多个观察者对象监听某一主题对象，当主题对象状态发生变化时，通知所有观察者对象来更新自己。
+
+步骤：
+- 抽象主题（Subject）：持有订阅了该主题的观察者对象的集合，同时提供了增加、删除观察者对象的方法和主题状态发生变化后的通知方法。
+- 具体主题（Concrete Subject）：实现了抽象主题的通知方法，在主题的内部状态发生变化时，调用该方法通知订阅了主题状态的观察者对象。
+- 抽象观察者（Observer）：观察者的抽象类或接口，定义了主题状态发生变化时需要调用的方法。
+- 具体观察者（Concrete Observer）：抽象观察者的实现类，在收到主题状态变化的信息后执行具体的触发机制。
+
 [观察者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/observerpattern)
-
-### 使用Lambda重构观察者模式  
-某些事件发生时，需要自动地通知其他多个对象(观察者)  
-```java
-//通知系统，报纸机构订阅了新闻，当接收的新闻中包含的关键字时，能得到特别通知。
-//1、创建一个观察者接口，且仅有一个名为notify的方法，一旦接收到一条新的新闻，该方法就会被调用：
-interface Observer {
-    void notify(String tweet);
-}
-//2、声明不同的观察者，依据新闻中不同的关键字分别定义不同的行为：
-class NYTimes implements Observer{
-    public void notify(String tweet) {
-        if(tweet != null && tweet.contains("money")){
-            System.out.println("Breaking news in NY! " + tweet);
-        }
-    }
-}
-class Guardian implements Observer{
-    public void notify(String tweet) {
-        if(tweet != null && tweet.contains("queen")){
-            System.out.println("Yet another news in London... " + tweet);
-        }
-    }
-}
-class LeMonde implements Observer{
-    public void notify(String tweet) {
-        if(tweet != null && tweet.contains("wine")){
-            System.out.println("Today cheese, wine and news! " + tweet);
-        }
-    }
-}
-//3、定义一个接口Subject，registerObserver方法可以注册一个新的观察者，notifyObservers方法通知它的观察者一个新闻的到来。
-interface Subject{
-    void registerObserver(Observer o);
-    void notifyObservers(String tweet);
-}
-//4、实现Feed类
-class Feed implements Subject{
-    private final List<Observer> observers = new ArrayList<>();
-    public void registerObserver(Observer o) {
-        this.observers.add(o);
-    }
-    public void notifyObservers(String tweet) {
-        observers.forEach(o -> o.notify(tweet));
-    }
-}
-//5、Feed类在内部维护了一个观察者列表，一条新闻到达时，它就进行通知。
-Feed f = new Feed();
-f.registerObserver(new NYTimes());
-f.registerObserver(new Guardian());
-f.registerObserver(new LeMonde());
-f.notifyObservers("The queen said her favourite book is Java 8 in Action!");
-
-//使用Lambda
-f.registerObserver((String tweet) -> {
-    if(tweet != null && tweet.contains("money")){
-        System.out.println("Breaking news in NY! " + tweet);
-    }
-});
-f.registerObserver((String tweet) -> {
-    if(tweet != null && tweet.contains("queen")){
-        System.out.println("Yet another news in London... " + tweet);
-    }
-});
-```
 
 [目录](#目录)
 
 ## 责任链模式
+
+
 [责任链模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/chain-of-responsibilitypattern)
-
-### 使用Lambda重构责任链模式
-一个处理对象可能需要在完成一些工作之后，将结果传递给另一个对象，这个对象接着做一些工作，再转交给下一个处理对象，以此类推。  
-```java
-//这种模式通常是通过定义一个代表处理对象的抽象类来实现的，在抽象类中会定义一个字段来记录后续对象。一旦对象完成它的工作，处理对象就会将它的工作转交给它的后继。
-public abstract class ProcessingObject<T> {
-    protected ProcessingObject<T> successor;
-    public void setSuccessor(ProcessingObject<T> successor){
-        this.successor = successor;
-    }
-    public T handle(T input){
-        T r = handleWork(input);
-        if(successor != null){
-            return successor.handle(r);
-        }
-        return r;
-    }
-    abstract protected T handleWork(T input);
-}
-//创建两个处理对象，进行一些文本处理工作。
-public class HeaderTextProcessing extends ProcessingObject<String> {
-    public String handleWork(String text){
-        return "From Raoul, Mario and Alan: " + text;
-    }
-}
-public class SpellCheckerProcessing extends ProcessingObject<String> {
-    public String handleWork(String text){
-        return text.replaceAll("labda", "lambda");
-    }
-}
-//将这两个处理对象结合起来，构造一个操作序列！
-ProcessingObject<String> p1 = new HeaderTextProcessing();
-ProcessingObject<String> p2 = new SpellCheckerProcessing();
-p1.setSuccessor(p2);
-String result = p1.handle("Aren't labdas really sexy?!!");
-System.out.println(result);
-
-//使用Lambda
-UnaryOperator<String> headerProcessing = (String text) -> "From Raoul, Mario and Alan: " + text;
-UnaryOperator<String> spellCheckerProcessing = (String text) -> text.replaceAll("labda", "lambda");
-Function<String, String> pipeline = headerProcessing.andThen(spellCheckerProcessing);
-String result = pipeline.apply("Aren't labdas really sexy?!!");
-```
 
 [目录](#目录)
 
 ## 迭代器模式
+
+
 [迭代器模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/iteratorpattern)
 
 ## 命令模式
+
+
 [命令模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/commandpattern)
 
 ## 备忘录模式
+
+
 [备忘录模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mementopattern)  
 
 ## 中介者模式
+
+
 [中介者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mediatorpattern)
 
 ## 解释器模式
+
+
 [解释器模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/interpreterpattern)
 
 ## 策略模式
+
+作用：
+- 以相同的方式调用算法，减少不同算法跟使用算法类之间的耦合。
+- 定义一系列可重用的算法或行为，有助于析取这些算法中的公共功能。
+- 简化单元测试
+
+使用场景：
+- 要实现相同的算法，只是算法的具体实现不同，可以使用策略模式封装算法。
+- 当if/else比较多的时候，可以考虑使用策略模式。
+
+步骤：
+- 定义抽象策略类，策略方法
+- 定义具体实现类，根据不同具体类实现不同的策略方法。
+
 [策略模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/strategypattern)
-
-当if/else比较多的时候，可以考虑使用策略模式重构，比如以支付为例：支付宝、微信、京东、云闪付等
-- 普通代码：
-```java
-@PostMapping("/makeOrder")
-public ResultData makeOrder(@RequestBody  Order order){
-    // 生成自己的订单，并且设置订单的失效时间，并且定时回滚
-    //  ... 此处代码省略
-
-    // 处理支付方式
-    if(order.getType=="alipay"){ // 支付宝
-        this.payService.alipay(order);
-    }else if (order.getType=="weixin"){ // 微信
-        this.payService.weixinpay(order);
-    }else if (order.getType=="jd"){ // 京东支付
-        this.payService.jtpay(order);
-    }else if (order.getType=="yunshanfu"){ // 云闪付
-        this.payService.yunshanfupay(order);
-    }
-    // 发送到mq，进行广播。
-    return this.ok(order);
-}
-```
-
-- 引入策略模式
-1. 入口：
-```java
-private OrderService orderService;
-
-@PostMapping("/makeOrder")
-// 商品id
-// 支付类型
-public ResultData makeOrder(Long goodsId,String type){
-    // 生成本地的订单
-    Order order = this.orderService.makeOrder(goodsId);
-    //选择支付方式
-    PayType payType = PayType.getByCode(type);
-    //进行支付
-    payType.get().pay(order.getId(),order.getAmount());
-    return this.ok();
-}
-```
-2. 支付接口：
-```java
-public interface Payment {
-    public void pay(Long order, double amount);
-}
-```
-3. 支付实现：
-```java
-// 支付宝支付实现
-public class AliPay implements Payment {
-    @Override
-    public void pay(Long order, double amount) {
-        System.out.println("----支付宝支付----");
-        System.out.println("支付宝支付111元");
-    }
-}
-
-// 微信支付实现
-public class WechatPay implements Payment {
-    @Override
-    public void pay(Long orderId, double amount) {
-        System.out.println("---微信支付---");
-        System.out.println("支付222元");
-    }
-}
-```
-4. 支付方式：
-```java
-public enum PayType {
-    //支付宝        AliPay 是实现类
-    ALI_PAY("1",new AliPay()),
-    //微信
-    WECHAT_PAY("2",new WechatPay());
-
-    private String payType;
-    // 这是一个接口
-    private Payment payment;
-    PayType(String payType,Payment payment){
-        this.payment = payment;
-        this.payType = payType;
-    }
-    //通过get方法获取支付方式
-    public Payment get(){ return  this.payment;}
-
-    public static PayType getByCode(String payType) {
-        for (PayType e : PayType.values()) {
-            if (e.payType.equals(payType)) {
-                return e;
-            }
-        }
-        return null;
-    }
-}
-```
-
-### 使用Lambda重构策略模式  
-解决某类算法的通用方案，包含三部分内容：  
-一个代表某个算法的接口（它是策略模式的接口）。  
-一个或多个该接口的具体实现，它们代表了算法的多种实现（比如，实体类Concrete-StrategyA或者ConcreteStrategyB）。  
-一个或多个使用策略对象的客户。  
-```java
-//假设希望验证输入的内容是否根据标准进行了恰当的格式化（比如只包含小写字母或数字）。
-//1、可以从定义一个验证文本（以String的形式表示）的接口入手：
-public interface ValidationStrategy {
-    boolean execute(String s);
-}
-//2、定义了该接口的一个或多个具体实现：
-public class IsAllLowerCase implements ValidationStrategy {
-    public boolean execute(String s){
-        return s.matches("[a-z]+");
-    }
-}
-public class IsNumeric implements ValidationStrategy {
-    public boolean execute(String s){
-        return s.matches("\\d+");
-    }
-}
-//3、在程序中使用这些略有差异的验证策略：
-public class Validator{
-    private final ValidationStrategy strategy;
-    public Validator(ValidationStrategy v){
-        this.strategy = v;
-    }
-    public boolean validate(String s){
-        return strategy.execute(s);
-    }
-}
-Validator numericValidator = new Validator(new IsNumeric());
-boolean b1 = numericValidator.validate("aaaa");//返回false
-Validator lowerCaseValidator = new Validator(new IsAllLowerCase ());
-boolean b2 = lowerCaseValidator.validate("bbbb");//返回true
-
-//使用Lambda（ValidationStrategy是一个函数接口）
-Validator numericValidator = new Validator((String s) -> s.matches("[a-z]+"));
-boolean b1 = numericValidator.validate("aaaa");
-Validator lowerCaseValidator = new Validator((String s) -> s.matches("\\d+"));
-boolean b2 = lowerCaseValidator.validate("bbbb");
-```
+该示例结合策略模式、模板方法、简单工厂模式。
 
 [目录](#目录)
 
@@ -978,33 +770,16 @@ boolean b2 = lowerCaseValidator.validate("bbbb");
 
 [模板方法](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/templatepattern)
 
-### 使用Lambda重构模板方法  
-需要采用某个算法的框架，同时又希望有一定的灵活度，能对它的某些部分进行改进  
-```java
-//processCustomer方法搭建了在线银行算法的框架：获取客户提供的ID，然后提供服务给用户。不同的支行可以通过继承OnlineBanking类，对该方法提供差异化的实现。
-abstract class OnlineBanking {
-    public void processCustomer(int id){
-        Customer c = Database.getCustomerWithId(id);
-        makeCustomerHappy(c);
-    }
-    abstract void makeCustomerHappy(Customer c);
-}
-
-//使用Lambda
-public void processCustomer(int id, Consumer<Customer> makeCustomerHappy){
-    Customer c = Database.getCustomerWithId(id);
-    makeCustomerHappy.accept(c);
-}
-//可以直接插入不同的行为，不再需要继承OnlineBanking类
-new OnlineBankingLambda().processCustomer(1337, (Customer c) -> System.out.println("Hello " + c.getName());
-```
-
 [目录](#目录)
 
 ## 状态模式
+
+
 [状态模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/statepattern)
 
 ## 访问者模式
+
+
 [访问者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/visitorpattern)
 
 [目录](#目录)
