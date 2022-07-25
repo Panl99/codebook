@@ -15,7 +15,7 @@
     - [设计模式的7个原则](#设计模式的7个原则)
     - 创建型模式：[单例模式 √](#单例模式)，[工厂模式 √](#工厂模式)，[抽象工厂模式 √](#抽象工厂模式)，[建造者模式 √](#建造者模式)，[原型模式 √](#原型模式)
     - 结构型模式：[适配器模式 √](#适配器模式)，[装饰者模式 √](#装饰者模式)，[代理模式 √](#代理模式)，[外观模式 √](#外观模式)，[桥接模式](#桥接模式)，[组合模式](#组合模式)，[享元模式](#享元模式)，[~~过滤器模式~~](#过滤器模式)
-    - 行为型模式：[观察者模式 √](#观察者模式)，[责任链模式](#责任链模式)，[迭代器模式](#迭代器模式)，[命令模式](#命令模式)，[备忘录模式](#备忘录模式)，[中介者模式](#中介者模式)，[解释器模式](#解释器模式)，[策略模式 √](#策略模式)，[模板方法 √](#模板方法)，[状态模式](#状态模式)，[访问者模式](#访问者模式)
+    - 行为型模式：[观察者模式 √](#观察者模式)，[责任链模式](#责任链模式)，[迭代器模式](#迭代器模式)，[命令模式](#命令模式)，[备忘录模式 √](#备忘录模式)，[中介者模式](#中介者模式)，[解释器模式](#解释器模式)，[策略模式 √](#策略模式)，[模板方法 √](#模板方法)，[状态模式 √](#状态模式)，[访问者模式](#访问者模式)
 
 - [算法题](https://github.com/Panl99/demo/tree/master/demo-action#leetcode)
   - [leetcode_in_action](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/leetcode_in_action)
@@ -722,7 +722,20 @@ public static String factorial(int num) {
 [命令模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/commandpattern)
 
 ## 备忘录模式
+又叫 快照模式
 
+作用：
+- 将当前对象的内部状态保存到对象之外的备忘录中，在需要时能将该对象的状态恢复到原先保存的状态。
+
+使用场景：
+- 用于功能复杂的，但需要维护、记录属性历史的类。
+- 用于快照的记录、状态的存储。在系统发生故障 或数据发生不一致时 能够方便地将数据恢复到某个历史状态。
+
+步骤：
+- 发起人（Originator）：负责创建一个备忘录Memento，记录当前时刻对象的内部状态，和恢复备忘录数据的方法。
+- 备忘录（Memento）：负责存储对象的内部状态。并防止Originator之外的其他对象访问备忘录Memento。
+- 状态管理者（Caretaker）：对备忘录的历史状态进行存储，定义了保存和获取备忘录状态的功能。
+注意，备忘录只能被保存或恢复，不能进行修改。
 
 [备忘录模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mementopattern)  
 
@@ -774,6 +787,17 @@ public static String factorial(int num) {
 
 ## 状态模式
 
+作用：
+- 给对象定义不同的状态，将对象的不同行为封装到不同的状态中，在对象的状态发生变换时自动切换状态的行为。
+- 状态模式基于对象的状态将对象行为进行了明确的界定，减少了对象行为之间的相互依赖，方便系统的扩展和维护。
+
+使用场景：
+- 当一个对象的行为取决于它的状态，并且它必须在运行时刻根据状态变化来改变它的行为。
+
+步骤：
+- 环境（Context）：也叫作上下文，用于维护对象当前的状态，并在对象状态发生变化时触发对象行为的变化。
+- 抽象状态（AbstractState）：定义了一个接口，用于定义对象中不同状态所对应的行为。
+- 具体状态（Concrete State）：实现抽象状态所定义的行为。
 
 [状态模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/statepattern)
 
