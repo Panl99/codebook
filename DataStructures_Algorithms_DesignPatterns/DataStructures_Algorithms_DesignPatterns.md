@@ -15,7 +15,7 @@
     - [设计模式的7个原则](#设计模式的7个原则)
     - 创建型模式：[单例模式 √](#单例模式)，[工厂模式 √](#工厂模式)，[抽象工厂模式 √](#抽象工厂模式)，[建造者模式 √](#建造者模式)，[原型模式 √](#原型模式)
     - 结构型模式：[适配器模式 √](#适配器模式)，[装饰者模式 √](#装饰者模式)，[代理模式 √](#代理模式)，[外观模式 √](#外观模式)，[桥接模式 √](#桥接模式)，[组合模式 √](#组合模式)，[享元模式 √](#享元模式)，[~~过滤器模式~~](#过滤器模式)
-    - 行为型模式：[观察者模式 √](#观察者模式)，[责任链模式 √](#责任链模式)，[迭代器模式 √](#迭代器模式)，[命令模式](#命令模式)，[备忘录模式 √](#备忘录模式)，[中介者模式](#中介者模式)，[解释器模式](#解释器模式)，[策略模式 √](#策略模式)，[模板方法 √](#模板方法)，[状态模式 √](#状态模式)，[访问者模式](#访问者模式)
+    - 行为型模式：[观察者模式 √](#观察者模式)，[责任链模式 √](#责任链模式)，[迭代器模式 √](#迭代器模式)，[命令模式 √](#命令模式)，[备忘录模式 √](#备忘录模式)，[中介者模式 √](#中介者模式)，[解释器模式](#解释器模式)，[策略模式 √](#策略模式)，[模板方法 √](#模板方法)，[状态模式 √](#状态模式)，[访问者模式](#访问者模式)
 
 - [算法题](https://github.com/Panl99/demo/tree/master/demo-action#leetcode)
   - [leetcode_in_action](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/leetcode_in_action)
@@ -774,6 +774,17 @@ public static String factorial(int num) {
 
 ## 命令模式
 
+作用：
+- 将请求封装为命令基于事件驱动异步地执行，以实现命令的发送者和命令的执行者之间的解耦，提高命令发送、执行的效率和灵活度。
+
+使用场景：
+
+
+步骤：
+- 抽象命令类（Command）：执行命令的接口，定义执行命令的抽象方法execute()。
+- 具体命令类（Concrete Command）：抽象命令类的实现类，持有接收者对象，并在接收到命令后调用命令执行者的方法action()实现命令的调用和执行。
+- 命令执行者（Receiver）：命令的具体执行者，定义了命令执行的具体方法action()。
+- 命令调用者（Invoker）：接收客户端的命令并异步执行。
 
 [命令模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/commandpattern)
 
@@ -796,7 +807,20 @@ public static String factorial(int num) {
 [备忘录模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mementopattern)  
 
 ## 中介者模式
+又叫作调停模式，是迪米特法则的典型应用。
 
+作用：
+- 指对象和对象之间不直接交互，而是通过一个名为中介者的角色来实现对象之间的交互，使原有对象之间的关系变得松散，且可以通过定义不同的中介者来改变它们之间的交互。
+- 将对象与对象之间的关系变为对象和中介者之间的关系，降低了对象之间的耦合性，提高了对象功能的复用性和系统的灵活性，使得系统易于维护和扩展。
+  
+使用场景：
+- 买房租房
+
+步骤：
+- 抽象中介者（Mediator）：中介者接口，定义了注册同事对象方法和转发同事对象信息的方法。
+- 具体中介者（Concrete Mediator）：中介者接口的实现类，定义了一个List来保存同事对象，协调各个同事角色之间的交互关系。
+- 抽象同事类（Colleague）：定义同事类的接口，持有中介者对象，并定义同事对象交互的抽象方法，同时实现同事类的公共方法和功能。
+- 具体同事类（Concrete Colleague）：抽象同事类的实现者，在需要与其他同事对象交互时，通过中介者对象来完成。
 
 [中介者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mediatorpattern)
 
