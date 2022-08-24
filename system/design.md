@@ -54,6 +54,7 @@
 [领域驱动设计（DDD）：分层架构](https://mp.weixin.qq.com/s/RA79OwJJjRk6qPD_Ko8b4g)
 [领域驱动设计（DDD）：领域和子域](https://mp.weixin.qq.com/s/8J8sY39COJJIUintLoygzw)
 
+[ddd](ddd.md)
 
 [目录](#目录)
 
