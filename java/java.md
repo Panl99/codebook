@@ -117,6 +117,9 @@
 
 - [Record](#Record)
 
+- [最佳实践Demo](#最佳实践Demo)
+    - [泛型和函数式回调的使用](#泛型和函数式回调的使用)
+
 [返回目录](#目录)
 
 # Java常见问题
@@ -3367,5 +3370,9 @@ public class UserFactory {
 [返回目录](#目录)
 
 
+# 最佳实践Demo
+
+## [泛型和函数式回调的使用](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/泛型和函数式回调)
 
 
+[返回目录](#目录)
