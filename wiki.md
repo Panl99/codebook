@@ -23,6 +23,8 @@
 - [hugo搭建个人博客](#hugo搭建个人博客)
     - [Windows安装hugo](#Windows安装hugo)
     - [hugo博客托管到github](#hugo博客托管到github)
+- [安装Neechigo](#安装Neechigo)
+- [注册Gmail](#注册Gmail)
 
 
 # win10相关
@@ -358,5 +360,25 @@ Commercial support is available at
     git commit -m "init hugo"
     git push -u origin master
     ```
+
+[目录](#目录)
+
+
+# 安装Neechigo
+
+免费桌面工具，安装后可以使用一些国外服务，如谷歌的一些服务：谷歌翻译
+
+[Neechigo地址](https://www.neechigo.com/)
+
+右键Neechigo可以查看可访问的一些服务。
+
+[目录](#目录)
+
+# 注册Gmail
+
+1. 确定可以访问，（[安装Neechigo](#安装Neechigo)）
+2. Chrome浏览器设置里将语言改为`英语(美国)`，重启浏览器。
+**这里关系后续国内手机号发送验证码进行验证**，否则会报：手机号不能进行验证。
+3. 进入[gmail](https://www.google.com/gmail/about/) ，填信息，手机号验证，等操作完即可。
 
 [目录](#目录)
