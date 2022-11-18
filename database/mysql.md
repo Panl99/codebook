@@ -169,6 +169,32 @@ select timediff('12:30:00', '12:00:30');                          -- 00:29:30
 
 ```
 
+## 删除重复数据只留一条
+```mysql
+DELETE 
+FROM
+	t_table_name 
+WHERE
+	id NOT IN (
+	SELECT
+		t.id 
+	FROM
+		(
+		SELECT
+			max( id ) AS id 
+		FROM
+            t_table_name 
+		WHERE
+            条件1 = 123456 
+			AND 条件2 = 123465 
+		GROUP BY
+			重复字段
+		HAVING
+			count( 重复字段 ) >= 1 
+		) t 
+	)
+```
+
 [返回目录](#目录)
 
 # mysql使用
