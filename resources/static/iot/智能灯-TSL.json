@@ -1,3 +1,5 @@
+[
+
 {
   "version": "1.0",
   "properties": [
@@ -151,3 +153,119 @@
     "CategoryId": "141"
   }
 }
+
+,
+
+  //  结构体
+{
+  "version": "1.0",
+  "properties": [
+    {
+      "id": "discovery",
+      "name": "发现设备",
+      "desc": "",
+      "mode": "rw",
+      "define": {
+        "type": "struct",
+        "specs": [
+          {
+            "id": "enable",
+            "name": "是否开启",
+            "dataType": {
+              "type": "bool",
+              "mapping": {
+                "0": "关",
+                "1": "开"
+              }
+            }
+          }
+        ]
+      },
+      "required": false
+    },
+    {
+      "id": "addDevice",
+      "name": "添加设备",
+      "desc": "",
+      "mode": "rw",
+      "define": {
+        "type": "struct",
+        "specs": [
+          {
+            "id": "productID",
+            "name": "设备pid",
+            "dataType": {
+              "type": "string",
+              "min": "0",
+              "max": "10"
+            }
+          },
+          {
+            "id": "sn",
+            "name": "设备sn",
+            "dataType": {
+              "type": "string",
+              "min": "0",
+              "max": "20"
+            }
+          }
+        ]
+      },
+      "required": false
+    },
+    {
+      "id": "sceneManage",
+      "name": "场景",
+      "desc": "",
+      "mode": "rw",
+      "define": {
+        "type": "struct",
+        "specs": [
+          {
+            "id": "action",
+            "name": "行为",
+            "dataType": {
+              "type": "enum",
+              "mapping": {
+                "1": "删除",
+                "2": "新增或编辑"
+              }
+            }
+          },
+          {
+            "id": "sceneInfoList",
+            "name": "设备列表",
+            "dataType": {
+              "type": "string",
+              "min": "0",
+              "max": "2048"
+            }
+          },
+          {
+            "id": "sceneID",
+            "name": "场景ID",
+            "dataType": {
+              "type": "int",
+              "min": "1",
+              "max": "25",
+              "start": "1",
+              "step": "1",
+              "unit": ""
+            }
+          }
+        ]
+      },
+      "required": false
+    }
+  ],
+  "events": [],
+  "actions": [],
+  "profile": {
+    "ProductId": "D475HFK3P1",
+    "CategoryId": "161"
+  }
+}
+
+
+
+]
