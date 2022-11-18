@@ -47,7 +47,7 @@
         - [线程的创建方式](#线程的创建方式)（[继承Thread类](#继承Thread类)、 [实现Runnable接口](#实现Runnable接口)、[基于线程池](#基于线程池)）
         - [线程的生命周期](#线程的生命周期)（[线程状态](#线程状态)、[线程调度](#线程调度)、[线程安全](#线程安全)）
         - [线程的基本方法](#线程的基本方法)
-        - [Java内存模型(JMM)](#Java内存模型JMM)
+        - [Java内存模型(JMM)](#Java内存模型(JMM))
     - [线程池](#线程池)
         - [线程池工作原理](#线程池工作原理)
             - [ThreadPoolExecutor](#ThreadPoolExecutor)
@@ -68,6 +68,11 @@
         - [CAS特性--乐观锁](#CAS特性--乐观锁)
         - [ABA问题](#ABA问题)
         - [CAS应用--AtomicInteger源码分析](#CAS应用--AtomicInteger源码分析)
+    - [并发工具类](#并发工具类)
+        - [等待多线程完成的CountDownLatch](#等待多线程完成的CountDownLatch)
+        - [同步屏障CyclicBarrier](#同步屏障CyclicBarrier)
+        - [控制并发线程数的Semaphore](#控制并发线程数的Semaphore)
+        - [线程间交换数据的Exchanger](#线程间交换数据的Exchanger)
    
 - [网络](#网络)
     - [OSI七层网络模型](#OSI七层网络模型)
@@ -1124,7 +1129,9 @@ public static void main(String[] args) throws Exception {
 - **TPS**：每秒事务处理数，代表1秒内服务端平均能响应的请求总数
 - **QPS**：每秒请求数，1 * TPS = n * QPS
 
-## 线程的创建方式
+## Java线程
+
+### 线程的创建方式
 Java线程常见的4种创建方式分别为：继承Thread类、实现Runnable接口、通过ExecutorService和Callable<Class>实现有返回值的线程、基于线程池。
 
 ### 继承Thread类
@@ -2026,6 +2033,76 @@ public List<String> setInfo() {
     
     }
     ```
+
+[返回目录](#目录)
+
+## 并发工具类
+
+### 等待多线程完成的CountDownLatch
+**作用**：同步工具类，协调多个线程间的同步，让一个线程等待其他线程工作完后再继续执行。
+
+CountDownLatch的构造函数接收一个int类型的参数作为计数器，如果想等待N个点完成，这里就传入N。
+
+当我们调用CountDownLatch的`countDown()`方法时，N 就会减 1，CountDownLatch的`await()`方法会阻塞当前线程，直到 N 变成 0。
+(计数器必须大于等于0，只是等于0时候，计数器就是零，调用await方法时不会阻塞当前线程。
+CountDownLatch不可能重新 初始化或者修改CountDownLatch对象的内部计数器的值。
+一个线程调用countDown方法happen-before，另外一个线程调用await方法。)
+
+由于`countDown()`方法可以用在任何地方，所以这里说的N个点，可以是N个线程，也可以是1个线程里的N个执行步骤。
+用在多个线程时，只需要把这个CountDownLatch的引用传递到线程里即可。
+
+如果有某个线程处理得比较慢，我们不可能让主线程一直等待，所以可以使用另外一个带指定时间的await方法：`await(long time, TimeUnit unit)`，这个方法等待特定时间后，就会不再阻塞当前线程。
+
+[CountDownLatchDemo.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/CountDownLatchDemo.java)
+
+### 同步屏障CyclicBarrier
+可循环使用（Cyclic）的屏障（Barrier）
+
+**作用**：让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续运行。
+
+**应用场景**：CyclicBarrier可以用于多线程计算数据，最后合并计算结果的场景。
+
+CyclicBarrier默认的构造方法是CyclicBarrier(int parties)，其参数表示屏障拦截的线程数量，每个线程调用await方法告诉CyclicBarrier我已经到达了屏障，然后当前线程被阻塞。
+
+CyclicBarrier还提供一个更高级的构造函数CyclicBarrier(int parties, Runnable barrierAction)，用于在线程到达屏障时，优先执行`barrierAction`，方便处理更复杂的业务场景
+
+**CyclicBarrier和CountDownLatch的区别**
+- CountDownLatch的计数器只能使用一次，而CyclicBarrier的计数器可以使用reset()方法重置。所以CyclicBarrier能处理更为复杂的业务场景。
+- CyclicBarrier还提供其他有用的方法，比如：`getNumberWaiting()`方法可以获得Cyclic-Barrier阻塞的线程数量。`isBroken()`方法用来了解阻塞的线程是否被中断。
+
+[CyclicBarrierDemo.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/CyclicBarrierDemo.java)
+
+### 控制并发线程数的Semaphore
+Semaphore（信号量）是用来控制同时访问特定资源的线程数量，它通过协调各个线程，以保证合理的使用公共资源。
+
+**应用场景**：Semaphore可以用于做流量控制，特别是公用资源有限的应用场景，比如：数据库连接。
+
+Semaphore的用法：
+- `void acquire()`：获取一个许可证。
+- `void release()`：归还许可证。
+- `boolean tryAcquire()`：尝试获取许可证。
+- `int availablePermits()`：返回此信号量中当前可用的许可证数。
+- `int getQueueLength()`：返回正在等待获取许可证的线程数。
+- `boolean hasQueuedThreads()`：是否有线程正在等待获取许可证。
+- `void reducePermits(int reduction)`：减少reduction个许可证，是个protected方法。
+- `Collection getQueuedThreads()`：返回所有等待获取许可证的线程集合，是个protected方法。
+
+[SemaphoreDemo.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/SemaphoreDemo.java)
+
+### 线程间交换数据的Exchanger
+Exchanger（交换者）是一个用于线程间协作的工具类。用于进行线程间的数据交换。
+
+它提供一个同步点，在这个同步点，两个线程可以交换彼此的数据。
+这两个线程通过exchange()方法交换数据，如果第一个线程先执行exchange()方法，它会一直等待第二个线程也执行exchange()方法，当两个线程都到达同步点时，这两个线程就可以交换数据，将本线程生产出来的数据传递给对方。
+
+**应用场景**：
+- Exchanger可以用于遗传算法，遗传算法里需要选出两个人作为交配对象，这时候会交换两人的数据，并使用交叉规则得出2个交配结果。
+- Exchanger也可以用于校对工作，比如我们需要将纸制银行流水通过人工的方式录入成电子银行流水，为了避免错误，采用AB岗两人进行录入，
+  录入到Excel之后，系统需要加载这两个Excel，并对两个Excel数据进行校对，看看是否录入一致。
+
+如果两个线程有一个没有执行exchange()方法，则会一直等待，如果担心有特殊情况发生，避免一直等待，可以使用`exchange(V x, long timeout, TimeUnit unit)`设置最大等待时长。
+
+[Exchanger.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/Exchanger.java)
 
 [返回目录](#目录)
 
