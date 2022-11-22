@@ -20,6 +20,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,9 +31,55 @@ public class Java {
     }
 
     /**
+     * Java17
+     */
+    public static void java17() {
+        // nothing
+    }
+
+    /**
      * Java16
      */
     public static void java16() {
+
+        /**
+         * Collectors.teeing()
+         * teeing 收集器已公开为静态方法Collectors::teeing。该收集器将其输入转发给其他两个收集器，然后将它们的结果使用函数合并。
+         */
+        List<Student> list = Arrays.asList(
+                new Student("唐一", 55),
+                new Student("唐二", 60),
+                new Student("唐三", 90));
+
+        //平均分 总分
+        String result = list.stream().collect(Collectors.teeing(
+                Collectors.averagingInt(Student::getScore),
+                Collectors.summingInt(Student::getScore),
+                (s1, s2) -> s1 + ":" + s2));
+
+        //最低分  最高分
+        String result2 = list.stream().collect(Collectors.teeing(
+                Collectors.minBy(Comparator.comparing(Student::getScore)),
+                Collectors.maxBy(Comparator.comparing(Student::getScore)),
+                (s1, s2) -> s1.orElseThrow() + ":" + s2.orElseThrow()
+        ));
+
+        System.out.println(result);
+        System.out.println(result2);
+
+
+        /**
+         * 添加Stream.toList方法
+         */
+        List<String> list = Arrays.asList("1", "2", "3");
+        //之前这样写
+        List<Integer> oneList = list.stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+        //现在可以这样写
+        List<Integer> twoList = list.stream()
+                .map(Integer::parseInt)
+                .toList();
 
     }
 
