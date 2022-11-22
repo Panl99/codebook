@@ -569,6 +569,8 @@ public static String factorial(int num) {
 - 抽象工厂模式（Abstract Factory Pattern）在工厂模式上添加了一个创建不同工厂的抽象接口（抽象类或接口实现），该接口可叫作超级工厂。在使用过程中，我们首先通过抽象接口创建出不同的工厂对象，然后根据不同的工厂对象创建不同的对象。
 - 手机厂商还可能制造其他产品，减少实现多个工厂类
 
+![抽象工厂模式](../resources/static/images/设计模式-抽象工厂模式.png)
+
 [抽象工厂模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/factorypattern/abstractfactorypattern)
 
 [目录](#目录)
@@ -587,6 +589,8 @@ public static String factorial(int num) {
 - ConcreteBuilder：Builder接口的实现类，用于定义复杂产品各个部件的装配流程。
 - Director：构造一个使用Builder接口的对象。
 - Product：表示被构造的复杂对象。ConcreteBuilder定义了该复杂对象的装配流程，而Product定义了该复杂对象的结构和内部表示。
+
+![建造者模式](../resources/static/images/设计模式-建造者模式.png)
 
 [建造者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/builderpattern)
 
@@ -608,6 +612,8 @@ public static String factorial(int num) {
 - 深复制：在深复制的过程中，不论是基本数据类型还是引用数据类型，都会被重新复制和创建。
 简而言之，深复制彻底复制了对象的数据（包括基本数据类型和引用数据类型），浅复制的复制却并不彻底（忽略了引用数据类型）。
 
+![原型模式](../resources/static/images/设计模式-原型模式.png)
+
 [原型模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/prototypepattern)
 
 ## 适配器模式
@@ -622,6 +628,8 @@ public static String factorial(int num) {
 - Source是待适配的类，Targetable是目标接口，Adapter是适配器。
 - 在具体应用中通过Adapter 将Source 的功能扩展到Targetable，以实现接口的兼容。
 - 适配器的实现主要分为三类：类适配器模式、对象适配器模式、接口适配器模式。
+
+![适配器模式](../resources/static/images/设计模式-适配器模式.png)
 
 [适配器模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/adapterpattern)
 
@@ -640,6 +648,8 @@ public static String factorial(int num) {
 - 定义装饰者类，继承核心类，重写核心类功能（先执行核心类功能，再添加装饰类特有功能）。
 - 使用装饰者类包装核心类，执行装饰者类的功能方法。
 
+![装饰者模式](../resources/static/images/设计模式-装饰者模式.png)
+
 [装饰者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/decoratorpattern)
 
 ## 代理模式
@@ -653,6 +663,8 @@ public static String factorial(int num) {
 - 虚拟代理：需要创建开销很大的对象，通过它来存放实例化需要很长时间的真实对象。
 - 安全代理：用来控制真实对象访问时的权限。（对象有不同的访问权限）
 - 智能指引：调用真实对象时，代理处理另外一些事情。
+
+![代理模式](../resources/static/images/设计模式-代理模式.png)
 
 [代理模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/proxypattern)
 
@@ -674,6 +686,8 @@ public static String factorial(int num) {
 - 门面角色：外观模式的核心，熟悉各子系统的功能和调用关系并根据客户端的需求封装统一的方法来对外提供服务。
 - 客户角色：通过调用Facade来完成业务功能。
 
+![外观模式](../resources/static/images/设计模式-外观模式.png)
+
 [外观模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/facadepattern)
 
 ## 桥接模式
@@ -688,6 +702,8 @@ public static String factorial(int num) {
 
 步骤：
 - 通过定义一个桥接接口，使得实体类的功能独立于接口实现类，降低它们之间的耦合度。
+
+![桥接模式](../resources/static/images/设计模式-桥接模式.png)
 
 [桥接模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/bridgepattern)
 
@@ -704,6 +720,8 @@ public static String factorial(int num) {
 步骤：
 - 树结构
 
+![组合模式](../resources/static/images/设计模式-组合模式.png)
+
 [组合模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/compositepattern)
 
 ## 享元模式
@@ -717,6 +735,8 @@ public static String factorial(int num) {
 
 步骤：
 - 在系统需要一个对象时享元模式首先在系统中查找并尝试重用现有的对象，如果未找到匹配的对象，则创建新对象并将其缓存在系统中以便下次使用。
+
+![享元模式](../resources/static/images/设计模式-享元模式.png)
 
 [享元模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/flyweightpattern)
 
@@ -736,6 +756,8 @@ public static String factorial(int num) {
 - 抽象观察者（Observer）：观察者的抽象类或接口，定义了主题状态发生变化时需要调用的方法。
 - 具体观察者（Concrete Observer）：抽象观察者的实现类，在收到主题状态变化的信息后执行具体的触发机制。
 
+![观察者模式](../resources/static/images/设计模式-观察者模式.png)
+
 [观察者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/observerpattern)
 
 [目录](#目录)
@@ -754,6 +776,8 @@ public static String factorial(int num) {
 - AbstractHandler 抽象类： 持有Handler 实例并通过setHandler()和getHandler()将各个具体的业务Handler串联成一个责任链，客户端上的请求在责任链上执行。
 - 业务Handler：用户根据具体的业务需求实现的业务逻辑。
 
+![责任链模式](../resources/static/images/设计模式-责任链模式.png)
+
 [责任链模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/chain-of-responsibilitypattern)
 
 [目录](#目录)
@@ -771,6 +795,8 @@ public static String factorial(int num) {
 - 包括一个迭代器，用于执行具体的遍历操作；
 - 一个Collection，用于存储具体的数据。
 
+![迭代器模式](../resources/static/images/设计模式-迭代器模式.png)
+
 [迭代器模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/iteratorpattern)
 
 ## 命令模式
@@ -786,6 +812,8 @@ public static String factorial(int num) {
 - 具体命令类（Concrete Command）：抽象命令类的实现类，持有接收者对象，并在接收到命令后调用命令执行者的方法action()实现命令的调用和执行。
 - 命令执行者（Receiver）：命令的具体执行者，定义了命令执行的具体方法action()。
 - 命令调用者（Invoker）：接收客户端的命令并异步执行。
+
+![命令模式](../resources/static/images/设计模式-命令模式.png)
 
 [命令模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/commandpattern)
 
@@ -805,6 +833,8 @@ public static String factorial(int num) {
 - 状态管理者（Caretaker）：对备忘录的历史状态进行存储，定义了保存和获取备忘录状态的功能。
 注意，备忘录只能被保存或恢复，不能进行修改。
 
+![备忘录模式](../resources/static/images/设计模式-备忘录模式.png)
+
 [备忘录模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mementopattern)  
 
 ## 中介者模式
@@ -822,6 +852,8 @@ public static String factorial(int num) {
 - 具体中介者（Concrete Mediator）：中介者接口的实现类，定义了一个List来保存同事对象，协调各个同事角色之间的交互关系。
 - 抽象同事类（Colleague）：定义同事类的接口，持有中介者对象，并定义同事对象交互的抽象方法，同时实现同事类的公共方法和功能。
 - 具体同事类（Concrete Colleague）：抽象同事类的实现者，在需要与其他同事对象交互时，通过中介者对象来完成。
+
+![中介者模式](../resources/static/images/设计模式-中介者模式.png)
 
 [中介者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/mediatorpattern)
 
@@ -845,6 +877,7 @@ public static String factorial(int num) {
 - 会引起类膨胀。
 - 可应用的场景比较少。
 
+![解释器模式](../resources/static/images/设计模式-解释器模式.png)
 
 [解释器模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/interpreterpattern)
 
@@ -863,6 +896,8 @@ public static String factorial(int num) {
 - 定义抽象策略类，策略方法
 - 定义具体实现类，根据不同具体类实现不同的策略方法。
 
+![策略模式](../resources/static/images/设计模式-策略模式.png)
+
 [策略模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/strategypattern)
 该示例结合策略模式、模板方法、简单工厂模式。
 
@@ -879,6 +914,8 @@ public static String factorial(int num) {
 
 步骤：
 - 定义一系列操作的算法框架，将具体步骤放到子类中实现。
+
+![模板方法](../resources/static/images/设计模式-模板方法.png)
 
 [模板方法](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/templatepattern)
 
@@ -897,6 +934,8 @@ public static String factorial(int num) {
 - 环境（Context）：也叫作上下文，用于维护对象当前的状态，并在对象状态发生变化时触发对象行为的变化。
 - 抽象状态（AbstractState）：定义了一个接口，用于定义对象中不同状态所对应的行为。
 - 具体状态（Concrete State）：实现抽象状态所定义的行为。
+
+![状态模式](../resources/static/images/设计模式-状态模式.png)
 
 [状态模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/statepattern)
 
@@ -917,6 +956,8 @@ public static String factorial(int num) {
 
 缺点：
 - 复杂、增加新的数据结构变得困难
+
+![访问者模式](../resources/static/images/设计模式-访问者模式.png)
 
 [访问者模式](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/designpatterns_in_action/visitorpattern)
 
