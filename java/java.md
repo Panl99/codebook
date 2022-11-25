@@ -108,7 +108,12 @@
         - [流的基本操作](#流的基本操作)
         - [并行流](#并行流)
         - [流的性能](#流的性能)
-        - [Optional类(java.util.Optional<T>)](#Optional类)
+        - [Optional类(java.util.Optional\<T>)](#Optional类)
+    - [函数式接口](#函数式接口)
+        - [Supplier\<T>](#Supplier)
+        - [Consumer\<T>](#Consumer)
+        - [Predicate\<T>](#Predicate)
+        - [Function<T, R>](#Function)
     - [实践](#实践)
         - [利用惰性写出高性能且抽象的代码](#利用惰性写出高性能且抽象的代码)
 
@@ -2722,6 +2727,8 @@ jvm调优后，几乎不发生full GC
 [返回目录](#目录)
 
 # 函数式编程
+[JavaFunctionalProgrammingDemo.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/函数式编程/JavaFunctionalProgrammingDemo.java)
+
 ## Lambda
 ### Lambda语法  
 
@@ -2800,65 +2807,8 @@ public static String processFile(BufferedReaderProcessor p) throws IOException {
 String oneLine = processFile((BufferedReader br) -> br.readLine());
 String twoLines = processFile((BufferedReader br) -> br.readLine() + br.readLine());
 ```
-```java
-Java中函数式接口：
-Comparable、Runnable、Callable   Predicate、Consumer、Function
 
-//1、java.util.function.Predicate<T>接口定义了一个名叫test的抽象方法，它接受泛型T对象，并返回一个boolean。
-// 在需要表示一个涉及类型T的布尔表达式时，就可以使用这个接口。比如，可以定义一个接受String对象的Lambda表达式
-//    @FunctionalInterface
-//    public interface Predicate<T>{
-//        boolean test(T t);
-//    }
-public static <T> List<T> filter(List<T> list, Predicate<T> p) {
-    List<T> results = new ArrayList<>();
-    for(T s: list){
-        if(p.test(s)){
-            results.add(s);
-        }
-    }
-    return results;
-}
-Predicate<String> nonEmptyStringPredicate = (String s) -> !s.isEmpty();
-List<String> nonEmpty = filter(listOfStrings, nonEmptyStringPredicate);
-
-//2、java.util.function.Consumer<T>定义了一个名叫accept的抽象方法，它接受泛型T的对象，没有返回（void）。
-// 如果需要访问类型T的对象，并对其执行某些操作，就可以使用这个接口。比如，可以用它来创建一个forEach方法，接受一个Integers的列表，并对其中每个元素执行操作。
-// 如下可以使用这个forEach方法，并配合Lambda来打印列表中的所有元素。
-//@FunctionalInterface
-//public interface Consumer<T>{
-//    void accept(T t);
-//}
-public static <T> void forEach(List<T> list, Consumer<T> c){
-    for(T i: list){
-        c.accept(i);
-    }
-}
-forEach(
-        Arrays.asList(1,2,3,4,5), 
-        (Integer i) -> System.out.println(i)
-        );
-
-//3、java.util.function.Function<T, R>接口定义了一个叫作apply的方法，它接受一个泛型T的对象，并返回一个泛型R的对象。
-// 如果需要定义一个Lambda，将输入对象的信息映射到输出，就可以使用这个接口（比如提取苹果的重量，或把字符串映射为它的长度）。
-// 如下利用它来创建一个map方法，以将一个String列表映射到包含每个String长度的Integer列表。
-//@FunctionalInterface
-//public interface Function<T, R>{
-//    R apply(T t);
-//}
-public static <T, R> List<R> map(List<T> list, Function<T, R> f) {
-    List<R> result = new ArrayList<>();
-    for(T s: list){
-        result.add(f.apply(s));
-    }
-    return result;
-}
-// [7, 2, 6]
-List<Integer> l = map(
-        Arrays.asList("lambdas","in","action"),
-        (String s) -> s.length()
-);
-```
+[Java中函数式接口](#函数式接口)
 
 [返回目录](#目录)
 
@@ -3181,6 +3131,102 @@ public static Optional<Integer> stringToInt(String s) {
 }
 //***可以将多个类似的方法封装到一个工具类OptionalUtility中。通过直接调用OptionalUtility.stringToInt方法，将String转换为一个Optional<Integer>对象，而不再需要用try/catch了。
 
+```
+
+[返回目录](#目录)
+
+## 函数式接口
+Comparable、Runnable、Callable   Predicate、Consumer、Function
+
+[JavaFunctionalInterfaceDemo.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/函数式编程/JavaFunctionalInterfaceDemo.java)
+
+### Supplier
+Supplier<T>接口定义了一个`T get()`的方法，不传参数，返回一个泛型 T 的对象。
+```java
+@FunctionalInterface
+public interface Supplier<T> {
+    T get();
+}
+```
+
+如果需要定义一个Lambda，将输入对象的信息映射到输出，就可以使用这个接口（比如提取苹果的重量，或把字符串映射为它的长度）。
+如下利用它来创建一个map方法，以将一个String列表映射到包含每个String长度的Integer列表。
+```java
+public <T> T doSupplier(Supplier<T> supplier) {
+    return supplier.get();
+}
+
+supplierTest.doSupplier(() -> "B");
+```
+
+### Consumer
+Consumer<T>定义了一个`void accept(T t)`的抽象方法，接收泛型 T 的对象，无返回值。
+```java
+@FunctionalInterface
+public interface Consumer<T>{
+    void accept(T t);
+}
+```
+
+如果需要访问类型 T 的对象，并对其执行某些操作，就可以使用这个接口。
+```java
+public static <T> void forEach(List<T> list, Consumer<T> c){
+    for(T i: list){
+        c.accept(i);
+    }
+}
+
+// 打印列表中的所有元素。
+forEach(Arrays.asList(1,2,3,4,5), (Integer i) -> System.out.println(i));
+```
+
+### Predicate
+Predicate<T>接口定义了一个`boolean test(T t)`抽象方法，接收泛型 T 对象，并返回一个boolean。
+```java
+@FunctionalInterface
+public interface Predicate<T>{
+    boolean test(T t);
+}
+```
+
+在需要表示一个涉及类型 T 的布尔表达式时，就可以使用这个接口。比如，可以定义一个接受String对象的Lambda表达式
+```java
+public static <T> List<T> filter(List<T> list, Predicate<T> p) {
+    List<T> results = new ArrayList<>();
+    for(T s: list){
+        if(p.test(s)){
+            results.add(s);
+        }
+    }
+    return results;
+}
+
+Predicate<String> nonEmptyStringPredicate = (String s) -> !s.isEmpty();
+List<String> nonEmpty = filter(listOfStrings, nonEmptyStringPredicate);
+```
+
+### Function
+Function<T, R>接口定义了一个`R apply(T t)`的方法，接收泛型 T 对象，并返回一个泛型 R 的对象。
+```java
+@FunctionalInterface
+public interface Function<T, R>{
+    R apply(T t);
+}
+```
+
+如果需要定义一个Lambda，将输入对象的信息映射到输出，就可以使用这个接口（比如提取苹果的重量，或把字符串映射为它的长度）。
+如下利用它来创建一个map方法，以将一个String列表映射到包含每个String长度的Integer列表。
+```java
+public static <T, R> List<R> map(List<T> list, Function<T, R> f) {
+    List<R> result = new ArrayList<>();
+    for(T s: list){
+        result.add(f.apply(s));
+    }
+    return result;
+}
+
+List<Integer> l = map(Arrays.asList("lambdas","in","action"), (String s) -> s.length());
+// [7, 2, 6]
 ```
 
 [返回目录](#目录)
