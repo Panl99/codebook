@@ -2955,6 +2955,7 @@ limit(n)|int|返回截至前n个元素的流，如果源是一个Set，limit的�
 sorted|Comparator<T>|(T, T) -> int
 distinct|无|去重
 skip(n)|int|返回一个丢掉前n个元素的流。如果流中元素不足n个，则返回一个空流。 
+peek(Consumer<? super T> action)|Consumer<? super T>|对流经管道中的每个元素进行提供的操作。可以用于对列表元素操作后返回新的列表 [StreamPeekTest](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/函数式编程/JavaFunctionalProgrammingDemo.java#StreamPeekTest) <br/>（跟void forEach(Consumer<? super T> action)区别仅在于forEach是最终操作）
 数值流：mapToInt、mapToDouble和mapToLong|IntStream、DoubleStream和LongStream|将流转化为数值流，转回一般流可以使用 数值流.boxed()方法
 构建流：| |①由值创建流：Stream<String> stream = ***Stream.of***("Java 8 ", "Lambdas ", "In ", "Action"); 创建空流：***Stream.empty();***
 | | |②由数组创建流：int[] numbers = {2, 3, 5, 7, 11, 13}; int sum = ***Arrays.stream***(numbers).sum();
