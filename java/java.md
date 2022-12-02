@@ -1532,10 +1532,65 @@ JDK内置的拒绝策略有四种：AbortPolicy 、CallerRunsPolicy 、DiscardOl
     }
     ```
 
+#### JDK线程池如何保证核心线程不被销毁
+
+[JDK线程池如何保证核心线程不被销毁](https://www.jianshu.com/p/6b095bab4fc7)
+
 [返回目录](#目录)
 
 ### 5种常用的线程池
 Java定义了Executor接口并在该接口中定义了execute()用于执行一个线程任务，然后通过ExecutorService实现Executor接口并执行具体的线程操作。ExecutorService接口有多个实现类可用于创建不同的线程池
+
+#### newFixedThreadPool
+- 创建一个固定线程数量的线程池，并将线程资源存放在队列中循环使用。
+- 在newFixedThreadPool线程池中，若处于活动状态的线程数量大于等于核心线程池的数量，则新提交的任务将在阻塞队列中排队，直到有可用的线程资源。
+- ~~ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);~~
+
+```java
+public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, // 核心线程数
+                                  nThreads, // 最大线程数
+                                  0L, // keepAliveTime = 0L，意味着多余的空闲线程会被立即终止。
+                                  TimeUnit.MILLISECONDS,
+                                  new LinkedBlockingQueue<Runnable>());
+}
+```
+FixedThreadPool的execute()的运行流程
+1. 如果当前运行的线程数少于corePoolSize，则创建新线程来执行任务。
+2. 在线程池完成预热之后（当前运行的线程数等于corePoolSize），将任务加入LinkedBlockingQueue。
+3. 线程执行完1中的任务后，会在循环中反复从LinkedBlockingQueue获取任务来执行。
+
+FixedThreadPool使用无界队列LinkedBlockingQueue作为线程池的工作队列（队列的容量为Integer.MAX_VALUE）。使用无界队列作为工作队列会对线程池带来如下影响。
+1. 当线程池中的线程数达到corePoolSize后，新任务将在无界队列中等待，因此线程池中的线程数不会超过corePoolSize。
+2. 由于1，使用无界队列时maximumPoolSize将是一个无效参数。
+3. 由于1和2，使用无界队列时keepAliveTime将是一个无效参数。
+4. 由于使用无界队列，运行中的FixedThreadPool（未执行方法shutdown()或shutdownNow()）不会拒绝任务（不会调用 RejectedExecutionHandler.rejectedExecution方法）。
+
+**适用于为了满足资源管理的需求，而需要限制当前线程数量的应用场景，它适用于负载比较重的服务器。**
+
+#### newSingleThreadExecutor
+- 创建一个有且只有一个可用的线程的线程池。
+- 在该线程停止或发生异常时，newSingleThreadExecutor线程池会启动一个新的线程来代替该线程继续执行任务。
+- ~~ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();~~
+
+```java
+public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService
+        (new ThreadPoolExecutor(1, // 核心线程数
+                                1, // 最大线程数
+                                0L, 
+                                TimeUnit.MILLISECONDS,
+                                new LinkedBlockingQueue<Runnable>()));
+}
+```
+SingleThreadExecutor的execute()的运行流程
+1. 如果当前运行的线程数少于corePoolSize（即线程池中无运行的线程），则创建一个新线程来执行任务。
+2. 在线程池完成预热之后（当前线程池中有一个运行的线程），将任务加入LinkedBlockingQueue。
+3. 线程执行完1中的任务后，会在一个无限循环中反复从 LinkedBlockingQueue获取任务来执行。
+
+SingleThreadExecutor使用无界队列LinkedBlockingQueue作为线程池的工作队列（队列的容量为Integer.MAX_VALUE）。SingleThreadExecutor使用无界队列作为工作队列对线程池带来的影响与FixedThreadPool相同。
+
+**适用于需要保证顺序地执行各个任务；并且在任意时间点，不会有多个线程是活动的应用场景。**
 
 #### newCachedThreadPool
 - 创建一个可缓存线程池。
@@ -1544,12 +1599,38 @@ Java定义了Executor接口并在该接口中定义了execute()用于执行一�
 - 在线程池的keepAliveTime时间超过默认的 60秒后，该线程会被终止并从缓存中移除， 因此在没有线程任务运行时，newCachedThreadPool将不会占用系统的线程资源。
 - ~~ExecutorService cachedThreadPool = Executors.newCachedThreadPool();~~
 
-#### newFixedThreadPool
-- 创建一个固定线程数量的线程池，并将线程资源存放在队列中循环使用。
-- 在newFixedThreadPool线程池中，若处于活动状态的线程数量大于等于核心线程池的数量，则新提交的任务将在阻塞队列中排队，直到有可用的线程资源。
-- ~~ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);~~
+```java
+public static ExecutorService newCachedThreadPool() {
+    return new ThreadPoolExecutor(0, // 核心线程数
+                                  Integer.MAX_VALUE, // 最大线程数，是无界的
+                                  60L, // keepAliveTime = 60L，意味着CachedThreadPool中的空闲线程等待新任务的最长时间为60秒，空闲线程超过60秒后将会被终止。
+                                  TimeUnit.SECONDS,
+                                  new SynchronousQueue<Runnable>());
+}
+```
+CachedThreadPool的execute()的运行流程
+1. 首先执行SynchronousQueue.offer（Runnable task）。
+   如果当前maximumPool中有空闲线程正在执行SynchronousQueue.poll（keepAliveTime，TimeUnit.NANOSECONDS），
+   那么主线程执行offer操作与空闲线程执行的poll操作配对成功，主线程把任务交给空闲线程执行，execute()方法执行完成；
+   否则执行下面的步骤2）。
+2. 当初始maximumPool为空，或者maximumPool中当前没有空闲线程时，将没有线程执行SynchronousQueue.poll（keepAliveTime，TimeUnit.NANOSECONDS）。这种情况下，步骤1）将失败。
+   此时CachedThreadPool会创建一个新线程执行任务，execute()方法执行完成。
+3. 在步骤2）中新创建的线程将任务执行完后，会执行 SynchronousQueue.poll（keepAliveTime，TimeUnit.NANOSECONDS）。
+   这个poll操作会让空闲线程最多在SynchronousQueue中等待60秒钟。
+   如果60秒钟内主线程提交了一个新任务（主线程执行步骤1）），那么这个空闲线程将执行主线程提交的新任务；
+   否则，这个空闲线程将终止。由于空闲60秒的空闲线程会被终止，因此长时间保持空闲的CachedThreadPool不会使用任何资源。
 
-#### newScheduledThreadPool
+CachedThreadPool使用没有容量的SynchronousQueue作为线程池的工作队列，
+但 CachedThreadPool的maximumPool是无界的。
+这意味着，如果主线程提交任务的速度高于maximumPool中线程处理任务的速度时，CachedThreadPool会不断创建新线程。
+极端情况下，CachedThreadPool 会因为创建过多线程而耗尽CPU和内存资源。
+
+SynchronousQueue是一个没有容量的阻塞队列。每个插入操作必须等待另一个线程的对应移除操作，反之亦然。
+CachedThreadPool使用SynchronousQueue，把主线程提交的任务传递给空闲线程执行。
+
+**CachedThreadPool是大小无界的线程池，适用于执行很多的短期异步任务的小程序，或者是负载较轻的服务器。**
+
+#### ScheduledThreadPoolExecutor
 - 创建一个可定时调度的线程池，可设置在给定的延迟时间后执行或者定期执行某个线程任务。
 ```java
 ScheduledExecutorService scheduledThreadPool = new ScheduledThreadPoolExecutor(3);
@@ -1571,10 +1652,8 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 ```
 - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/ScheduledThreadPoolExecutorDemo.java)
 
-#### newSingleThreadExecutor
-- 创建一个有且只有一个可用的线程的线程池。
-- 在该线程停止或发生异常时，newSingleThreadExecutor线程池会启动一个新的线程来代替该线程继续执行任务。
-- ~~ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();~~
+- **ScheduledThreadPoolExecutor适用于需要多个后台线程执行周期任务，同时为了满足资源管理的需求而需要限制后台线程的数量的应用场景。**
+- **SingleThreadScheduledExecutor适用于需要单个后台线程执行周期任务，同时需要保证顺序地执行各个任务的应用场景。**
 
 #### newWorkStealingPool
 - 足够大小线程池，jdk1.8新增
