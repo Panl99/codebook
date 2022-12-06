@@ -330,10 +330,117 @@ synchronized(obj) {
 - HashMap在查找数据时，根据Hash值快速定位到数组的具体下标，但是在找到数组下标后需要对链表进行顺序遍历直到找到需要的数据，时间复杂度为`O(n)`。
 - 1.8底层是：**数组 + 链表或红黑树**
     - 原因：为了减少链表遍历的开销。
-    - 在链表中的元素超过**8**个以后，HashMap会将链表结构转换为**红黑树**结构以提高查询效率，因此其时间复杂度为`O(log N)`
-- `capacity`：当前数组的容量，默认为 **16**，可以扩容，扩容后数组的大小为当前的两倍，因此该值始终为 2<sup>n</sup>。
+    - 在链表中的元素超过**8**个以后，HashMap会将[链表结构转换为**红黑树**结构](#为什么链表的长度为8是变成红黑树？为什么为6时又变成链表？) 以提高查询效率，因此其时间复杂度为`O(log N)`
+- `capacity`：当前数组的容量，[默认为 **16**](#HashMap初始化长度为什么是16？) ，可以扩容，扩容后数组的大小为当前的两倍，因此该值始终为 2<sup>n</sup>。
 - `loadFactor`：负载因子，默认为**0.75**。
 - `threshold`：扩容的阈值，其值等于`capacity * loadFactor`。
+
+#### HashMap初始化长度为什么是16？
+结论：
+1. 减少hash碰撞
+2. 提高map查询效率
+3. 分配过小会导致频繁扩容
+4. 分配过大会浪费资源
+
+**首先为什么要是2<sup>n</sup> ？**  
+看hashMap的源码可知当新put(k, v)一个数据时会进行计算位于table数组(也称为桶)中的下标：`int index = key.hashCode() & (length-1);`来确定value值应该存放在底层Node数组的哪个位置。  
+因为是将二进制进行按位于，(16-1) 是 1111,末位是1，这样也能保证计算后的index既可以是奇数也可以是偶数，并且只要传进来的key足够分散，均匀那么按位于的时候获得的index就会减少重复，这样也就减少了hash的碰撞以及hashMap的查询效率。
+
+**其次为什么是16(2<sup>4</sup>)，而不是8、32或者其它呢？**  
+16应该是个经验值（Experience Value）。要在效率和内存使用上做权衡，值太小可能会频繁扩容，影响效率。太大又会浪费空间。
+
+```java
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+```
+```java
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+```
+```java
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;                        // 数组长度，默认16
+    if ((p = tab[i = (n - 1) & hash]) == null)              // hash得到一个数组下标值，来确定value值应该存放在底层Node数组的哪个位置。
+        tab[i] = newNode(hash, key, value, null);
+    else {
+        Node<K,V> e; K k;
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            e = p;
+        else if (p instanceof TreeNode)
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        else {
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    break;
+                }
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            return oldValue;
+        }
+    }
+    ++modCount;
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+```
+
+当我们通过HashMap(int initialCapacity)设置初始容量的时候，HashMap并不一定会直接采用我们传入的数值，而是经过计算，得到一个新值，目的是提高hash的效率。(1->1、3->4、7->8、9->16)
+
+#### 为什么链表的长度为8是变成红黑树？为什么为6时又变成链表？
+首先当链表长度为6时，查询的平均长度为：n/2 = 3，红黑树为：log(6) = 2.6
+为8时：链表：8/2 = 4，红黑树：log(8) = 3
+
+看HashMap类的实现描述`Implementation notes.`：
+
+注释说明了8是bin（bin就是bucket，即HashMap中hashCode值一样的元素保存的地方）从链表转成树的阈值。
+
+当bin变得很大的时候，就会被转换成TreeNodes中的bin，其结构和TreeMap相似，也就是红黑树。
+
+因为 TreeNodes 大约是普通Nodes大小的两倍，所以我们仅在 bins 包含足够的节点以保证使用时才使用它们（参见 TREEIFY_THRESHOLD）。
+当它们变得太小时（由于移除或调整大小），它们将被转换回普通垃圾箱。在使用分布良好的用户 hashCodes 时，很少使用 tree bins。
+理想情况下，在随机 hashCode 下，bin 中节点的频率遵循泊松分布，默认调整大小阈值 0.75 的参数平均约为 0.5，
+尽管由于调整大小的粒度存在较大差异.忽略方差，列表大小 k 的预期出现次数为 (exp(-0.5) pow(0.5, k) factorial(k))。第一个值是：
+```
+0:    0.60653066
+1:    0.30326533
+2:    0.07581633
+3:    0.01263606
+4:    0.00157952
+5:    0.00015795
+6:    0.00001316
+7:    0.00000094
+8:    0.00000006
+more: less than 1 in ten million
+```
+
+当hashCode离散性很好的时候，树型bin用到的概率非常小，因为数据均匀分布在每个bin中，几乎不会有bin中链表长度会达到阈值。
+但是在随机hashCode下，离散性可能会变差，然而JDK又不能阻止用户实现这种不好的hash算法，因此就可能导致不均匀的数据分布。
+不过理想情况下随机hashCode算法下所有bin中节点的分布频率会遵循泊松分布，可以看到，一个bin中链表长度达到8个元素的概率为0.00000006，几乎是不可能事件。
+
+通俗点将就是put进去的key进行计算hashCode时 只要选择计算hash值的算法足够好(hash碰撞率极低)，从而遵循泊松分布，使得桶中挂载的bin的数量等于8的概率非常小，从而转换为红黑树的概率也小，反之则概率大。
+
+所以，8是根据概率统计决定的。
 
 ### ConcurrentHashMap
 - 底层结构：在1.8版本是：数组 + 链表 + 红黑树，（1.7采用分段锁实现并发操作）
