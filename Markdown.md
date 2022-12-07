@@ -44,6 +44,7 @@
 - `<span style="color: green"> green </span>`
 - `<font color="red"> red </font>`
 - 2<sup>n</sup>表示：`2<sup>n</sup>`
+- log<sub>2</sub>10表示：`log<sub>2</sub>10`
 - [ ] test --> `- [ ] test`
 - [x] test --> `- [x] test`
 
