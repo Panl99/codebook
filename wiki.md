@@ -25,6 +25,7 @@
     - [hugo博客托管到github](#hugo博客托管到github)
 - [安装Neechigo](#安装Neechigo)
 - [注册Gmail](#注册Gmail)
+- [注册OpenAI](#注册OpenAI)
 
 
 # win10相关
@@ -380,5 +381,28 @@ Commercial support is available at
 2. Chrome浏览器设置里将语言改为`英语(美国)`，重启浏览器。
 **这里关系后续国内手机号发送验证码进行验证**，否则会报：手机号不能进行验证。
 3. 进入[gmail](https://www.google.com/gmail/about/) ，填信息，手机号验证，等操作完即可。
+
+[目录](#目录)
+
+# 注册OpenAI
+
+## 前期准备
+1. 电脑可以访问Google服务。
+2. 外国邮箱，如gmail、outlook、iCloud邮箱等。
+3. 有一个能收到验证码的外国手机号码，如果没有，请跳到下一步，注册一个能接验证码的手机号，注意这是收费的！
+
+## 注册sms-activate
+1. 使用Gmail注册短信平台：[https://sms-activate.org/](https://sms-activate.org/)
+2. 充值。可以使用支付宝支付0.5美元，大概33卢布左右，每收一次印度号短信验证码大约需要10.5卢布。
+
+## 注册OpenAI账号
+1. 使用Gmail注册：[https://beta.openai.com/signup](https://beta.openai.com/signup)
+2. 到短信验证码阶段，使用[sms-activate]()搜索openai服务，选择印度，购买一个。
+3. 在openai短信验证页输入购买的印度号码（注意去掉号码前边的区号，印度是91），发送短信验证码。
+4. 在[sms-activate]()上等待验证码。如果等不到，过两三分钟重发一次。
+
+可以使用OpenAI账号登录：[ChatGPT](https://chat.openai.com)
+
+[中国区注册OpenAI账号试用ChatGPT指南](https://readdevdocs.com/blog/makemoney/%E4%B8%AD%E5%9B%BD%E5%8C%BA%E6%B3%A8%E5%86%8COpenAI%E8%B4%A6%E5%8F%B7%E8%AF%95%E7%94%A8ChatGPT%E6%8C%87%E5%8D%97.html)
 
 [目录](#目录)
