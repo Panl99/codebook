@@ -991,6 +991,10 @@ dubbo:
     simplified: true
 ```
 
+### Dubbo源码分析
+
+[Dubbo3 源码解析](https://www.bookstack.cn/read/songxiaosheng-Dubbo3)
+
 [目录](#目录)
 
 ## Nacos
