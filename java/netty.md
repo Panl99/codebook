@@ -144,6 +144,19 @@ SimpleChannelInboundHandler 与 ChannelInboundHandler
 - Netty 的 Channel 接口所提供的 API，大大地降低了直接使用 Socket 类的复杂性。
 - 此外，Channel 也是拥有许多预定义的、专门化实现的广泛类层次结构的根。 （EmbeddedChannel、LocalServerChannel、NioDatagramChannel、NioSctpChannel、NioSocketChannel）
 
+Channel 的方法
+
+方法名 | 描述
+--- | ---
+eventLoop | 返回分配给 Channel 的 EventLoop
+pipeline | 返回分配给 Channel 的 ChannelPipeline
+isActive | 如果 Channel 是活动的，则返回 true 。活动的意义可能依赖于底层的传输。例如，一个 Socket 传输一旦连接到了远程节点便是活动的，而一个 Datagram 传输一旦被打开便是活动的
+localAddress | 返回本地的 SokcetAddress
+remoteAddress | 返回远程的 SocketAddress
+write | 将数据写到远程节点。这个数据将被传递给 ChannelPipeline ，并且排队直到它被冲刷
+flush | 将之前已写的数据冲刷到底层传输，如一个 Socket
+writeAndFlush | 一个简便的方法，等同于调用 write() 并接着调用 flush()
+
 **EventLoop 接口：** 
 
 EventLoop 定义了 Netty 的核心抽象，用于处理连接的生命周期中所发生的事件。
@@ -195,6 +208,13 @@ Netty 以适配器类的形式提供了大量默认的 ChannelHandler 实现，�
 - ChannelOutboundHandlerAdapter
 - ChannelDuplexHandler
 
+**ChannelHandler 的典型用途包括：**
+- 将数据从一种格式转换为另一种格式；
+- 提供异常的通知；
+- 提供 Channel 变为活动的或者非活动的通知；
+- 提供当 Channel 注册到 EventLoop 或者从 EventLoop 注销时的通知；
+- 提供有关用户自定义事件的通知。
+
 ### 编解码器
 当通过 Netty 发送或者接收一个消息的时候，就将会发生一次数据转换。
 - 入站消息，会被从字节解码转换为另一种格式，通常是一个 Java 对象。
@@ -214,6 +234,91 @@ Netty 的引导类为应用程序的网络层配置提供了容器，这涉及�
 
 
 
+## 传输
+
+Netty 所提供的传输:
+- [NIO](#NIO-非阻塞IO)(io.netty.channel.socket.nio): 使用 java.nio.channels 包作为基础——基于选择器的方式
+- [Epoll](#Epoll-用于Linux的本地非阻塞传输)(io.netty.channel.epoll): 由 JNI 驱动的 epoll() 和非阻塞 IO。
+  这个传输支持只有在Linux上可用的多种特性，如 SO_REUSEPORT， 比NIO 传输更快，而且是完全非阻塞的
+- [OIO](#OIO-旧的阻塞IO)(io.netty.channel.socket.oio): 使用 java.net 包作为基础——使用阻塞流
+- [Local](#用于JVM内部通信的Local传输)(io.netty.channel.local): 可以在 VM 内部通过管道进行通信的本地传输
+- [Embedded](#Embedded传输)(io.netty.channel.embedded): Embedded 传输，允许使用 ChannelHandler 而又不需要一个真正的基于网络的传输。
+  这在测试你的ChannelHandler 实现时非常有用
+
+
+### NIO-非阻塞IO
+
+选择器背后的基本概念是充当一个注册表，在那里你将可以请求在 Channel 的状态发生变化时得到通知。可能的状态变化有：
+- 新的 Channel 已被接受并且就绪；
+- Channel 连接已经完成；
+- Channel 有已经就绪的可供读取的数据；
+- Channel 可用于写数据。
+
+选择器运行在一个检查状态变化并对其做出相应响应的线程上，在应用程序对状态的改变做出响应之后，选择器将会被重置，并将重复这个过程。
+
+常量值代表了由`class java.nio.channels.SelectionKey`定义的位模式。
+这些位模式可以组合起来定义一组应用程序正在请求通知的状态变化集。
+
+选择操作的位模式:
+
+名称 | 描述
+--- | ---
+OP_ACCEPT | 请求在接受新连接并创建 Channel 时获得通知
+OP_CONNECT | 请求在建立一个连接时获得通知
+OP_READ | 请求当数据已经就绪，可以从 Channel 中读取时获得通知
+OP_WRITE | 请求当可以向 Channel 中写更多的数据时获得通知。这处理了套接字缓冲区被完全填满时的情况，这种情况通常发生在数据的发送速度比远程节点可处理的速度更快的时候
+
+**零拷贝**（zero-copy）是一种目前只有在使用 NIO 和 Epoll 传输时才可使用的特性。
+它使你可以快速高效地将数据从文件系统移动到网络接口，而不需要将其从内核空间复制到用户空间，其在像 FTP 或者 HTTP 这样的协议中可以显著地提升性能。
+但是，并不是所有的操作系统都支持这一特性。特别地，它对于实现了数据加密或者压缩的文件系统是不可用的(只能传输文件的原始内容)。反过来说，传输已被加密的文件则不是问题。
+
+### Epoll-用于Linux的本地非阻塞传输
+
+Netty为Linux提供了一组NIO API，其以一种和它本身的设计更加一致的方式使用epoll，并且以一种更加轻量的方式使用中断。
+在高负载下它的性能要优于JDK的NIO实现。
+
+在代码中使用 epoll 替代 NIO：
+- 将 `NioEventLoopGroup` 替换为 `EpollEventLoopGroup`，
+- 将 `NioServerSocketChannel.class` 替换为 `EpollServerSocketChannel.class` 即可。
+
+### OIO-旧的阻塞IO
+
+Netty 的 OIO 传输实现可以通过常规的传输 API 使用，是建立在 java.net 包的阻塞实现之上的，不是异步的。
+
+### 用于JVM内部通信的Local传输
+
+Netty 提供了一个 Local 传输，用于在同一个 JVM 中运行的客户端和服务器程序之间的异步通信。
+
+在这个传输中，和服务器 Channel 相关联的 SocketAddress 并没有绑定物理网络地址；相反，只要服务器还在运行，它就会被存储在注册表里，并在 Channel 关闭时注销。
+因为这个传输并不接受真正的网络流量，所以它并不能够和其他传输实现进行互操作。因此，客户端希望连接到（在同一个JVM中）使用了这个传输的服务器端时也必须使用它。除了这个限制，它的使用方式和其他的传输一模一样。
+
+### Embedded传输
+
+Netty 提供了一种额外的传输，使得你可以将一组 ChannelHandler 作为帮助器类嵌入到其他的 ChannelHandler 内部。
+通过这种方式，你将可以扩展一个 ChannelHandler 的功能，而又不需要修改其内部代码。
+
+Embedded 传输的关键是一个被称为 EmbeddedChannel 的具体的 Channel 实现。
+
+
+### 支持的传输和网络协议
+
+传 输 | TCP | UDP | SCTP* | UDT
+--- | --- | --- | --- | ---
+NIO | × | × | × | ×
+Epoll（仅Linux） | × | × | — | —
+OIO | × | × | × | ×
+
+在 Linux 上启用 SCTP 需要内核的支持，并且需要安装用户库。 只有SCTP传输有这些特殊要求。
+
+如果只是为了支持更高的并发连接数，服务器平台可能需要配置得和客户端不一样：
+- **非阻塞代码库**：如果代码库中没有阻塞调用（或者你能够限制它们的范围），那么在 Linux 上使用 **NIO 或者 epoll** 始终是个好主意。
+  虽然 NIO/epoll 旨在处理大量的并发连接，但是在处理较小数目的并发连接时，它也能很好地工作，尤其是考虑到它在连接之间共享线程的方式。
+- **阻塞代码库**：如果代码库严重地依赖于阻塞 I/O，那么在尝试将其直接转换为 Netty 的 NIO 传输时，可以考虑分阶段迁移：
+  先从 **OIO** 开始，等你的代码修改好之后，再迁移到 NIO（或者 epoll(Linux)）。
+- 在同一个 JVM 内部的通信：在同一个 JVM 内部的通信，不需要通过网络暴露服务，是**Local** 传输的完美用例。这将消除所有真实网络操作的开销，同时仍然使用你的 Netty 代码库。
+  如果随后需要通过网络暴露服务，那么你将只需要把传输改为 NIO 或者 OIO 即可。
+- 测试你的ChannelHandler实现：如果你想要为自己的ChannelHandler实现编写单元测试，那么请考虑使用**Embedded** 传输。
+  这既便于测试代码，而又不需要创建大量的模拟（mock）对象。你的类将仍然符合常规的 API 事件流，保证该 ChannelHandler 在和真实的传输一起使用时能够正确地工作。
 
 
 
