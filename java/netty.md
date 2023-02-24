@@ -2,7 +2,7 @@
 > [github:netty](https://github.com/netty/netty)  
 
 
-# Netty
+# Netty概念及体系结构
 
 Netty是一个异步事件驱动的Java网络应用框架。主要用于开发高性能、高可靠性的网络服务器和客户端。
 
@@ -319,6 +319,185 @@ OIO | × | × | × | ×
   如果随后需要通过网络暴露服务，那么你将只需要把传输改为 NIO 或者 OIO 即可。
 - 测试你的ChannelHandler实现：如果你想要为自己的ChannelHandler实现编写单元测试，那么请考虑使用**Embedded** 传输。
   这既便于测试代码，而又不需要创建大量的模拟（mock）对象。你的类将仍然符合常规的 API 事件流，保证该 ChannelHandler 在和真实的传输一起使用时能够正确地工作。
+
+
+## ByteBuf
+
+网络数据的基本单位总是字节，Java NIO提供ByteBuffer作为它的字节容器（用起来复杂、繁琐）。
+
+Netty的ByteBuf可以替代ByteBuffer，功能更强大，灵活性更高。
+
+### ByteBuf的API
+Netty的数据处理API通过两个组件暴露：
+- abstract class ByteBuf
+- interface ByteBufHolder
+
+ByteBuf API优点：
+- 它可以被用户自定义的缓冲区类型扩展；
+- 通过内置的复合缓冲区类型实现了透明的零拷贝；
+- 容量可以按需增长（类似于 JDK 的 StringBuilder）；
+- 在读和写这两种模式之间切换不需要调用 ByteBuffer 的 flip()方法；
+- 读和写使用了不同的索引；
+- 支持方法的链式调用；
+- 支持引用计数；
+- 支持池化。
+
+其他类可用于管理ByteBuf实例的分配，以及执行各种对于数据容器本身 和它所持有的数据的操作。
+
+### ByteBuf类——Netty的数据容器
+
+所有的网络通信都涉及字节序列的移动，Netty的ByteBuf高效易用的数据结构 通过使用不同的索引来简化它对所包含的数据的访问。
+
+### ByteBuf是如何工作的
+ByteBuf维护了两个不同的索引：一个用于读取，一个用于写入。
+- 当从 ByteBuf 读取时，它的 readerIndex 将会被递增已经被读取的字节数。
+- 当写入 ByteBuf 时，它的 writerIndex 也会被递增。
+
+![Netty-ByteBuf-一个空ByteBuf的布局结构和状态](../resources/static/images/Netty-ByteBuf-一个空ByteBuf的布局结构和状态.png)
+
+如果打算读取字节直到 readerIndex 达到 和 writerIndex 同样的值时会发生什么？
+- 会触发一个 IndexOutOfBoundsException。因为会到达 “可以读取的” 数据的末尾，就像要读取超出数组末尾的数据一样。
+
+- 名称以 read 或者 write 开头的 ByteBuf 方法，将会推进其对应的索引，
+- 名称以 set 或者 get 开头的操作则不会。但这些方法将在作为一个参数传入的一个相对索引上执行操作。
+- 可以指定 ByteBuf 的最大容量。试图移动写索引（即 writerIndex）超过这个值将会触发一个异常。（默认的限制是 Integer.MAX_VALUE。）
+
+### ByteBuf的使用模式
+1. 堆缓冲区
+   - 将数据存储在 JVM 的堆空间中。
+   - 这种模式被称为支撑数组（backing array），它能在没有使用池化的情况下提供快速的分配和释放。
+   - 非常适合于有遗留的数据需要处理的情况。
+```java
+public static void heapBuffer() {
+    ByteBuf heapBuf = BYTE_BUF_FROM_SOMEWHERE; //get reference form somewhere
+    //检查 ByteBuf 是否有一个支撑数组
+    if (heapBuf.hasArray()) { //当 hasArray() 方法返回 false 时，尝试访问支撑数组将触发一个 UnsupportedOperationException 。这个模式类似于 JDK 的 ByteBuffer 的用法。
+        //如果有，则获取对该数组的引用
+        byte[] array = heapBuf.array();
+        //计算第一个字节的偏移量
+        int offset = heapBuf.arrayOffset() + heapBuf.readerIndex();
+        //获得可读字节数
+        int length = heapBuf.readableBytes();
+        //使用数组、偏移量和长度作为参数调用你的方法
+        handleArray(array, offset, length);
+    }
+}
+```
+2. 直接缓冲区
+   - 我们期望用于对象创建的内存分配永远都来自于堆中，避免在每次调用本地 I/O 操作之前（或者之后）将缓冲区的内容复制到一个中间缓冲区（或者从中间缓冲区把内容复制到缓冲区）。
+   - 直接缓冲区对于网络数据传输优点：直接缓冲区的内容将驻留在常规的会被垃圾回收的堆之外。（ByteBuffer的Javadoc中指出的）
+     - 如果数据包含在一个在堆上分配的缓冲区中，那么事实上，在通过套接字发送它之前，JVM将会在内部把你的缓冲区复制到一个直接缓冲区中。
+   - 直接缓冲区的主要缺点是：①相对于基于堆的缓冲区，它们的分配和释放都较为昂贵。②因为数据不是在堆上，所以需要进行一次复制。
+
+显然，与使用支撑数组相比，这涉及的工作更多。因此，如果事先知道容器中的数据将会被作为数组来访问，你可能更愿意使用堆内存。
+
+3. 复合缓冲区
+- 为多个 ByteBuf 提供一个聚合视图，在这里可以根据需要添加或者删除 ByteBuf 实例，是JDK的ByteBuffer不具备的特性。
+- 通过一个 ByteBuf 子类`CompositeByteBuf` 实现这种模式，它提供了一个将多个缓冲区表示为单个合并缓冲区的虚拟表示。
+  - CompositeByteBuf 中的 ByteBuf 实例可能同时包含 直接内存分配 和非直接内存分配。
+  - 如果其中只有一个实例，那么对 CompositeByteBuf 上的 hasArray() 方法的调用将返回该组件上的 hasArray() 方法的值；否则它将返回 false 。
+  - 举例说明CompositeByteBuf的好处，让我们考虑一下一个由两部分：头部和主体 组成的将通过 HTTP 协议传输的消息。
+    这两部分由应用程序的不同模块产生，将会在消息被发送的时候组装。该应用程序可以选择为多个消息重用相同的消息主体。当这种情况发生时，对于每个消息都将会创建一个新的头部。
+    因为我们不想为每个消息都重新分配这两个缓冲区，所以使用 CompositeByteBuf 是一个完美的选择。它在消除了没必要的复制的同时，暴露了通用的 ByteBuf API。
+  ![Netty-ByteBuf-持有一个头部和主体的CompositeByteBuf](../resources/static/images/Netty-ByteBuf-持有一个头部和主体的CompositeByteBuf.png)
+
+使用 CompositeByteBuf 的复合缓冲区模式:    
+```java
+CompositeByteBuf messageBuf = Unpooled.compositeBuffer();
+ByteBuf headerBuf = ...; // can be backing or direct
+ByteBuf bodyBuf = ...; // can be backing or direct
+messageBuf.addComponents(headerBuf, bodyBuf); // 将 ByteBuf 实例追加到 CompositeByteBuf
+.....
+messageBuf.removeComponent(0); // 删除位于索引位置为 0（第一个组件）的 ByteBuf
+for (ByteBuf buf : messageBuf) { // 循环遍历所有的ByteBuf 实例
+    System.out.println(buf.toString());
+}
+```
+CompositeByteBuf 可能不支持访问其支撑数组，因此访问 CompositeByteBuf 中的数据类似于（访问）直接缓冲区的模式：
+```java
+CompositeByteBuf compBuf = Unpooled.compositeBuffer();
+int length = compBuf.readableBytes(); // 获得可读字节数
+byte[] array = new byte[length]; // 分配一个具有可读字节数长度的新数组
+compBuf.getBytes(compBuf.readerIndex(), array); // 将字节读到该数组中
+handleArray(array, 0, array.length); // 使用偏移量和长度作为参数使用该数组
+```
+
+## 字节级操作
+
+1. 随机访问索引
+```java
+ByteBuf buffer = ...;
+for (int i = 0; i < buffer.capacity(); i++) {
+  byte b = buffer.getByte(i); // ByteBuf 的索引是从零开始
+  System.out.println((char) b);
+}
+```
+- 这种方式访问数据既不会改变readerIndex 也不会改变writerIndex。
+- 通过调用readerIndex(index) 或者 writerIndex(index)来手动移动这两者。
+
+2. 顺序访问索引
+- ByteBuf 是同时具有读索引和写索引的。但JDK的ByteBuffer只有一个索引，读写时需要调用flip()方法在读模式和写模式之间进行切换。
+   
+![Netty-ByteBuf-被读索引和写索引划分为三个区域](../resources/static/images/Netty-ByteBuf-被读索引和写索引划分为三个区域.png)
+   
+3. 可丢弃字节
+- 已读过的字节，可以通过调用`discardReadBytes()`方法丢弃它们并回收空间。
+- 可丢弃字节的分段初始大小为 0，存储在 readerIndex 中，会随着 read 操作的执行而增加（get*操作不会移动 readerIndex）。
+- 丢弃已读字节后，回收的空间会变为可写空间。在调用discardReadBytes()之后，只是移动了可以读取的字节以及writerIndex，而没有对所有可写入的字节进行擦除写，所以对可写分段的内容并没有任何的保证。
+![Netty-ByteBuf-丢弃已读字节之后的ByteBuf](../resources/static/images/Netty-ByteBuf-丢弃已读字节之后的ByteBuf.png)
+  - 频繁地调用`discardReadBytes()`方法以确保可写分段的最大化，但是这很有可能会导致内存复制，因为可读字节必须被移动到缓冲区的开始位置。所以在必要的时候才丢弃已读字节，比如内存空间比较宝贵。
+
+4. 可读字节
+- ByteBuf的可读字节分段存储了实际数据。
+- 新分配的、包装的、复制的缓冲区的 默认的readerIndex 值为 0。
+- 任何名称以read、skip开头的操作都将检索 或者跳过位于当前readerIndex的数据，并将它增加已读字节数。
+
+- 如果被调用的方法需要一个 ByteBuf 参数作为写入的目标，并且没有指定目标索引参数，那么该目标缓冲区的 writerIndex 也将被增加，例如：
+  `readBytes(ByteBuf dest);`
+- 如果在缓冲区的可读字节数用完的时候 读取数据，会导致索引越界异常（IndexOutOfBoundsException）。
+```java
+// 读取所有可读字节
+
+ByteBuf buffer = ...;
+while (buffer.isReadable()) {
+    System.out.println(buffer.readByte());
+}
+```
+
+5. 可写字节
+- 可写字节分段：一个空白的、写入就绪的内存区域。
+- 新分配的缓冲区的 writerIndex 的默认值为0。
+- 任何名称以 write 开头的操作 都将从当前的 writerIndex 处开始写入数据，并将它增加已经写入的字节数。
+
+- 如果写操作的目标也是 ByteBuf，并且没有指定源索引的值，则源缓冲区的 readerIndex 也同样会被增加相同的大小。
+  `writeBytes(ByteBuf dest);`
+- 如果往目标写入超过目标容量的数据，将导致索引越界异常（IndexOutOfBoundsException）
+```java
+// 一个用随机整数值填充缓冲区，直到它空间不足为止
+// writeableBytes()方法在这里被用来确定该缓冲区中是否还有足够的空间。
+ByteBuf buffer = ...;
+while (buffer.writableBytes() >= 4) {
+    buffer.writeInt(random.nextInt());
+}
+```
+
+6. 索引管理
+- 标记和重置 ByteBuf 的 readerIndex 和 writerIndex：
+  - `markReaderIndex()`
+  - `markWriterIndex()`
+  - `resetWriterIndex()`
+  - `resetReaderIndex()`
+  
+  这些和InputStream 上的 mark(int readlimit)和 reset()方法调用类似，只是没有readlimit 参数来指定标记什么时候失效。
+- 将索引移动到指定位置：
+  - `readerIndex(int)`
+  - `writerIndex(int)`
+  
+  无效的位置都将导致一个 IndexOutOfBoundsException。
+- 将 readerIndex 和 writerIndex 都设置为 0：`clear()`，但并不会清除内存中的内容。
+  调用 clear()比调用 `discardReadBytes()`轻量得多，因为它将只是重置索引 而不会复制任何的内存。
+
+
 
 
 
