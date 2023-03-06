@@ -1,4 +1,4 @@
-
+> [mqtt-v3.1.1.pdf](../resources/static/doc/mqtt-v3.1.1.pdf)
 
 # 常见的物联网协议
 包含：
@@ -144,19 +144,127 @@ MQTT协议使用的是：二进制数据包。
 ![IoT-MQTT协议数据包的固定头](../resources/static/images/IoT-MQTT协议数据包的固定头.png)
 
 1. **数据包类型**：MQTT协议数据包的**固定头的第一个字节的高四位** 表示该数据包的类型。
-![IoT-MQTT协议消息类型](../resources/static/images/IoT-MQTT协议数据包类型.jpg)
+     ![IoT-MQTT协议消息类型](../resources/static/images/IoT-MQTT协议数据包类型.jpg)
 2. **数据包标识位**：MQTT协议数据包的**固定头的第一个字节的低四位**。不用类型数据包 标识位定义不一样。
-![IoT-MQTT协议数据包标识位](../resources/static/images/IoT-MQTT协议数据包标识位.jpg)
-    - DUP1: 控制报文的重复分发标志
-    - QoS2：PUBLISH报文的服务质量等级
-    - RETAIN3: PUBLISH报文的保留标志
+     ![IoT-MQTT协议数据包标识位](../resources/static/images/IoT-MQTT协议数据包标识位.jpg)
+   - DUP1: 控制报文的重复分发标志
+   - QoS2：PUBLISH报文的服务质量等级
+   - RETAIN3: PUBLISH报文的保留标志
 3. **数据包剩余长度**：从固定位第二个字节开始，用于标识当前数据包剩余长度的字段，= 可变头长度 + 消息体长度。
     - 这个字段最少1个字节，最多4个字节。
     - 其中，每个字节的最高位叫延续位（Continuation Bit），表示在这个字节之后是否还有一个用于标识剩余长度的字节。剩下的低7位用于标识值，范围：0~127。
     - 例如，剩余长度字段的第一个字节的最高位为1，那么意味着剩余长度至少还有1个字节，然后继续读下一个字节，下一个字节的最高位为0，那么剩余长度字段到此为止，一共2个字节。
-![IoT-MQTT协议数据包剩余长度字段](../resources/static/images/IoT-MQTT协议数据包剩余长度字段.png)
+      ![IoT-MQTT协议数据包剩余长度字段](../resources/static/images/IoT-MQTT协议数据包剩余长度字段.png)
 
 所以，这4个字节最多可以标识的包长度为：（0xFF,0xFF,0xFF,0x7F）=268 435 455字节，即256MB，这是MQTT协议中数据包的最大长度。
+
+## 建立到Broker的连接
+
+Client在发布和订阅消息之前必须先连接到Broker。Client建立连接的流程：
+1. Client向Broker发送一个 `CONNECT` 数据包；
+2. Broker收到Client的CONNECT数据包后，会回复一个`CONNACK`包：
+   - CONNACK包的返回码为0，表示允许Client接入，MQTT协议连接建立成功；
+   - CONNACK包返回码不为0，表示不允许Client接入，返回码表示接入失败的原因，之后断开底层的TCP连接。
+
+### CONNECT数据包
+
+1. 固定头
+   ![IoT-MQTT协议CONNECT数据包的固定头格式](../resources/static/images/IoT-MQTT协议CONNECT数据包的固定头格式.png)
+   固定头中的MQTT协议数据包类型字段的值为1，代表CONNECT数据包。
+
+2. 可变头
+
+    4部分组成：
+   - 协议名称。6个字节，UTF-8编码字符串：前2个字节标识字符串长度；后4个字节为协议名称固定为"MQTT"（**如果协议名称不正确，Broker会断开与Client的连接**）。
+   - 协议版本。1个字节，无符号整数。
+   - 连接标识。1个字节，每个标识位表示不同的连接选项。
+     1. bit0：保留。
+     2. bit1：会话清除标识（Clean Session）：标识Client是否建立一个持久化的会话，值为0/1。0表示Client希望建立持久会话连接，Broker会存储该Client订阅的主题和未接收的消息，否则Broker不保存这些数据，并在建立连接时清除这个Client之前存在的持久会话所保留的数据。
+     3. bit2：遗愿标识（Will Flag）：标识是否使用遗愿消息，值为0/1；
+     4. bit3、bit4：遗愿消息QoS标识（Will QoS）：标识遗愿消息的QoS，值为0、1、2；
+     5. bit5：遗愿消息Retain标识（Will Retain）：标识遗愿消息是否是Retain消息，值为0/1；
+     6. bit6：密码标识（Password Flag）：标识消息体中是否有密码字段，值为0/1；
+     7. bit7：用户名标识（User Name Flag）：标识消息体中是否由用户名字段，值为0/1。
+   - Keepalive。2个字节，连接保活设置，Keepalive代表一个单位为秒的时间间隔，Client和Broker之间在这个时间间隔之内至少要有一次消息交互，否则Client和Broker会认为它们之间的连接已经断开。
+
+3. 消息体
+
+    5个字段组成：
+   - 客户端标识符（Client Identifier）：必选，唯一，标识Client身份，Broker通过这个字段来区分不同Client。
+     - MQTT协议要求Client连接时必须携带；
+     - 但也允许Broker在实现时接受 客户端标识符为空 的CONNECT包，此时Broker会给Client分配一个内部唯一的标识符。
+     - 如果需要使用持久性会话，就必须携带。
+   - 遗愿主题（Will Topic）：可选，可变头的连接标识来决定是否包含。当Client非正常地中断连接时，Broker将向指定的遗愿主题发布遗愿消息。
+   - 遗愿QoS：可选，可变头的连接标识来决定是否包含。
+   - 遗愿消息（Will Message）：可选，可变头的连接标识来决定是否包含。当Client非正常地中断连接时，Broker将向指定的遗愿主题发布由该字段指定的内容。
+   - 用户名和密码：可选，可变头的连接标识来决定是否包含。
+     - 用户名（Username）：可变头中用户名标识为1时 消息体将包含用户名字段。Broker可以使用用户名+密码 对Client进行授权验证。不同Client可以使用相同的用户名和密码进行连接。
+     - 密码（Password）：可变头中密码标识为1时 消息体将包含密码字段。
+
+消息体的前2个字节表示字段值长度。
+
+### CONNACK数据包
+
+1. 固定头
+   ![IoT-MQTT协议CONNACK数据包的固定头格式](../resources/static/images/IoT-MQTT协议CONNACK数据包的固定头格式.png)
+   固定头中的MQTT数据包的类型字段值为2，代表CONNACK数据包。CONNACK数据包剩余长度固定为2。
+
+2. 可变头
+
+2个字节：连接确认标识 + 连接返回码
+- 连接确认标识：前7位保留 值为0，最后一位标识会话存在标识（Session Present Flag） 值为0/1。
+    - 当Client在连接时设置Clean Session=1，则CONNACK中的Session Present Flag始终为0；
+    - 当Client在连接时设置Clean Session=0，那就有两种情况：
+        - 如果Broker保存了这个Client之前留下的持久性会话，那么CONNACK中的Session Present Flag值为1；
+        - 如果Broker没有保存该Client 的任何会话数据，那么CONNACK中的Session Present Flag值为0。
+
+- 连接返回码（Connect Return Code）：用于标识Client与Broker 的连接是否建立成功。
+
+    | **值** | **返回码响应**            | **描述**                     |
+    | ----- | -------------------- | -------------------------- |
+    | 0     | 0x00 连接已接受           | 已接受连接                      |
+    | 1     | 0x01 连接被拒绝，不可接受的协议版本 | Server不支持Client请求的MQTT协议级别 |
+    | 2     | 0x02 连接被拒绝，标识符被拒绝    | 客户端标识符是正确的 UTF-8 但服务器不允许   |
+    | 3     | 0x03 连接被拒绝，服务器不可用    | 已建立网络连接，但 MQTT 服务不可用       |
+    | 4     | 0x04 连接被拒绝，用户名或密码错误  | 用户名或密码中的数据格式错误             |
+    | 5     | 0x05 拒绝连接，未授权        | 客户端无权连接                    |
+    | 6-255 |                      | 备用                         |
+
+    - 返回码2 表示Client Identifier格式不规范，比如长度超过23个字符、包含了不允许的字符等（部分Broker的实现在协议标准上做了扩展，比如允许超过23个字符的Client Identifer等）。
+    - 返回码4 表示用户名或密码格式错误；或者用户名或密码错误。
+    - 返回码5 一般表示Broker不使用用户名密码认证，而使用IP地址 或客户端标识符（Client Identifier）验证时 标识Client没有经过验证。
+
+3. 消息体
+
+CONNACK 包没有消息体
+
+### 关闭连接
+
+MQTT协议的连接关闭可以由Client或Broker二者任意一方发起。
+
+1. Client主动关闭连接  
+
+Client主动向Broker发送一个`DISCONNECT`包即可。  
+在Client发送完DISCONNECT数据包之后，就可以关闭底层的TCP连接了，不需要等待Broker的回复，Broker也不会回复DISCONNECT数据包。
+
+`DISCONNECT`包固定头格式：
+![IoT-MQTT协议DISCONNECT数据包的固定头格式](../resources/static/images/IoT-MQTT协议DISCONNECT数据包的固定头格式.png)
+
+- 固定头中的MQTT协议数据包类型字段的值为14，代表该数据包为DISCONNECT数据包。
+- DISCONNECT的数据包剩余长度固定为0。
+- DISCONNECT数据包没有可变头和消息体。
+
+为什么Client断开TCP连接前 需要发一个`DISCONNECT`包，而不是直接断开TCP连接？  
+因为：Broker收到`DISCONNECT`包才会认为Client是正常断连，就会丢弃当前连接指定的遗愿消息（Will Message）。  
+    否则会认为是非正常断连，则会向指定的遗愿主题发布遗愿消息。
+
+2. Broker主动关闭连接
+
+Broker在 Keepalive 的时间间隔里，没有收到Client的任何MQTT协议数据包时 就会主动关闭连接。
+（一些Broker的实现在MQTT协议上做了一些拓展，支持Client的连接管理，可以主动断开和某个Client的连接。）
+
+Broker主动关闭连接 会直接关闭底层的TCP连接，之前不需要向Client发送任何MQTT协议数据包。
+
 
 
 
