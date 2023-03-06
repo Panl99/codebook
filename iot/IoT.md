@@ -266,6 +266,90 @@ Broker在 Keepalive 的时间间隔里，没有收到Client的任何MQTT协议�
 Broker主动关闭连接 会直接关闭底层的TCP连接，之前不需要向Client发送任何MQTT协议数据包。
 
 
+## 订阅/发布
+
+和传统队列的不同点：如果ClientB在ClientA发完消息后才订阅的Topic，那么ClientB不会收到该消息。
+
+发布者发送消息时，订阅者是离线状态，但只要订阅者在发送者发布消息之前订阅过topic，那么上线后 也会收到该消息（离线消息）。
+（接收离线消息需要：①Client使用持久会话；②发布消息的QoS不小于1。）
+
+### PUBLISH数据包
+
+1. 固定头
+![IoT-MQTT协议PUBLISH数据包固定头格式](../resources/static/images/IoT-MQTT协议PUBLISH数据包固定头格式.png)
+
+- 数据包 类型字段为3，表示PUBLISH数据包。
+- 数据包 固定头中 标识位（Flag）有3个字段：
+    - 消息重复标识（DUP Flag）：长度1bit，值为0/1，当`DUP Flag = 1`时，代表是一条重发消息，因为Receiver没有确认收到之前的消息。该标识只在`QoS > 0`的消息中使用。
+    - QoS：长度2bit，值为0、1、2，表示消息的服务质量级别。
+    - Retain标识（Retain Flag）：长度1bit，值为0/1，为1时，表示为Retained消息，如果是Client发给Broker的PUBLISH消息，那么Broker会保存该消息，并且之后有新的订阅者该消息主题时 会优先收到该消息。
+
+2. 可变头
+
+包含两个字段：
+- 主题名（Topic）：UTF-8字符串，前2个字节表示字符串长度（最大65535）。
+- 包标识符（Packet Identifier）：只存在于QoS1 和QoS2 的PUBLISH包中。
+
+Topic规范：
+- 应包含层级，层级间用 `/` 划分
+- 开头不使用 `/`
+- 中间不含有空格
+- 只包含ASCII字符
+- 名称在可读条件下 尽可能简短
+- 字母大小写敏感
+- 可以添加设备唯一标识进去
+- 主题尽量精确，不适用宽泛的主题。比如多种传感器 应使用多个主题名
+- 不要使用`$`开头的主题，`$`开头的主题名属于Broker预留的系统主题，常用于发布Broker内部的统计信息，比如`$SYS/broker/clients/connected`
+
+3. 消息体
+
+就是要发送的数据，可以是任意格式的数据：二进制、文本、JSON等。具体格式由程序定义。
+
+消息体中数据的长度 = 固定头中数据包剩余长度 - 可变头的长度。
+
+### 订阅主题
+
+- Client向Broker发送一个`SUBSCRIBE`数据包，其中包含Client想要订阅的主题以及其他参数。
+- Broker收到SUBSCRIBE数据包后，向Client发送一个`SUBACK`数据包作为应答。
+
+1. **SUBSCRIBE数据包**
+
+- 固定头  
+    ![IoT-MQTT协议SUBSCRIBE数据包固定头格式](../resources/static/images/IoT-MQTT协议SUBSCRIBE数据包固定头格式.png)
+    固定头中的MQTT协议数据包类型字段的值为8，表示SUBSCRIBE数据包。
+- 可变头：只包含一个2字节的包标识符，标识唯一数据包。只需保证从发布者 到接收者一次消息交互中唯一即可。
+- 消息体  
+    - 由Client要订阅的主题列表构成。
+    - 包中的主题名可以包含通配符：单层通配符 `+`、多层通配符 `#`
+    - `+`可以通配某一层，如`home/f2/+/temperature`可以匹配：`home/f2/201/temperature`、`home/f2/202/temperature`、`home/f2/203/temperature`等。
+    - `#`可以通配某几层，但必须放到最后`/`后，如`home/f2/#`可以匹配：`home/f2`、`home/f2/201`、`home/f2/201/temperature`、`home/f2/201/livingroom/temperature`、`home/f2/301/temperature`等。
+    - 每个订阅的Topic后有一个字节，表示该主题的QoS（值0、1、2）。
+    
+2. **SUBACK数据包**
+
+- 固定头:固定头中的MQTT协议数据包类型字段的值为9，表示SUBACK数据包。
+- 可变头：只包含一个2字节的包标识符
+- 消息体：  
+    - SUBACK数据包包含一组返回码，返回码的数量和顺序与SUBSCRIBE数据包的订阅列表对应，用于标识订阅类别中每一个订阅项的订阅结果。
+    - 返回码值：0 ~ 2，表示订阅成功，及QoS等级。
+    - 返回码值：128，表示订阅失败。比如没权限；或者要订阅的Topic格式不正确。
+    
+### 取消订阅
+
+- Client向Broker发送一个`UNSUBSCRIBE`数据包，其中包含Client想要取消订阅的主题。
+- Broker收到UNSUBSCRIBE数据包后，向Client发送一个`UNSUBACK`数据包作为应答。
+
+1. **UNSUBSCRIBE数据包**
+    - 固定头：包类型字段的值为10，表示UNSUBSCRIBE数据包。
+    - 可变头：只包含一个2字节的包标识符
+    - 消息体：包含要取消订阅的Topic列表，Topic规则跟`SUBSCRIBE`一样，但通配符不表示通配符作用，只表示个字符，必须为具体的Topic。
+        - 订阅主题名为`home/2ndfloor/201/temperature`，取消订阅名为`home/+/201/temperature`，并不会取消之前的订阅。
+        - 订阅主题名为`home/+/201/temperature`，取消订阅名为`home/+/201/temperature`，这样才能取消之前的订阅。
+    
+2. **UNSUBACK数据包**
+    - 固定头：包类型字段的值为11，表示UNSUBACK数据包。
+    - 可变头：只包含一个2字节的包标识符。
+    - 消息体：UNSUBACK数据包没有消息体。
 
 
 ## QoS（服务质量）
@@ -282,9 +366,40 @@ Broker主动关闭连接 会直接关闭底层的TCP连接，之前不需要向C
 3. **QoS2：只有一次；发送失败会重试，但会保证Receiver只会收到一次。**
    - 必须要收到所有消息，且不能处理重复的消息，且可以接受QoS2带来的额外开销。
 
+### 实际的Subscribe QoS
+
+在MQTT协议中，从Broker到Subscriber这段消息传递的实际QoS等级 等于Publisher发布消息时指定的QoS等级 和Subscriber在订阅时与Broker协商的QoS等级中 最小的那一个。
+
+这也就解释了`publish qos=0,subscribe qos=1`的情况下Subscriber的实际QoS为0，以及`publish qos=1,subscribe qos=0`时出现QoS降级的原因。
 
 
-## MQTT.fx模拟器
+## Retained消息和LWT
+
+TODO
+
+
+## Keepalive与连接保活
+
+TODO
+
+
+## MQTT 5.0的新特性
+
+TODO
+
+## MQTT协议实战
+
+TODO
+
+
+# 搭建一个IoT平台实战
+
+TODO
+
+
+
+
+# MQTT.fx模拟器的使用
 
 1. 新建Profile，填写相关信息。
 
