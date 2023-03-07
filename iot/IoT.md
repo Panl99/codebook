@@ -394,6 +394,149 @@ TODO
 
 # 搭建一个IoT平台实战
 
+搭建IoTHub
+
+## 准备环境
+
+### 安装开源组件
+
+1. MongoDB：主要数据存储工具
+2. Redis：缓存
+3. Java：开发语言
+4. RabbitMQ：IoT平台内部 及 IoT平台到业务系统 的异步通信
+5. Mosquitto MQTT Client：使用mosquito_sub/mosquito_pub是这对命令行MQTT Client来做一些测试。这两个客户端会跟随Mosquitto broker一起安装，但我们不使用Mosquitto broker。
+6. EMQ X：作为MQTT Broker，实现MQTT/CoAP协议的接入，及其它高级功能。
+
+
+### IoTHub平台的组成
+
+1. IoTHub：要搭建的物联网平台简称。
+2. IoTHub Server API：IoTHub服务端API，提供RESTful 接口给外部系统调用。
+3. IoTHub Server：IoTHub服务端，包含Server API 和IoTHub服务端主要功能代码。
+4. IoTHub DeviceSDK：设备端SDK，设备通过调用该SDK提供的API接入IoTHub，并与业务系统进行交互。
+
+定义实体：
+1. 设备应用代码：实现设备具体功能的代码（比如打开灯，在屏幕上显示温度等）。它调用DeviceSDK 使用IoTHub提供的功能。属于DeviceSDK的“用户”。
+2. 业务系统：实现特定物联网应用服务端的业务逻辑系统。它通过调用Server API 的方式控制设备、使用设备上报的数据。属于Server API的“用户”。
+
+项目结构：两个模块
+1. 服务端 IoTHub Server
+2. 设备端 DeviceSDK
+
+
+## 设备生命周期管理
+
+### 设备接入
+
+首先需要在IotHub上注册一个设备，设备再通过由IotHub生成的username/password连接到IotHub，以实现一机一密。
+
+**设备三元组**：表示逻辑上唯一设备。所属产品id：`ProductId`、设备唯一id：`DeviceId`、设备密钥：`Secret`。
+
+EXQ X认证方式：MongoDB认证插件 和JWT认证插件临时认证。（也有其他的认证方式）
+    - EMQ X 可以用这两个插件组成认证链 对接入的Client来进行认证。即设备既可以使用存储在MongoDB中的username和password来接入EMQ X Broker，也可以通过JWT来接入EMQ X Broker。
+    - EMQ X 在加载一个插件后，会把这个插件的名字写入`<EMQ X安装目录>/emqx/data/loaded_plugins`，EMQ X在每次启动时都会自动加载这个文件里包含的插件，所以只需要手动加载一次这两个插件就可以了。
+
+设备接入流程：
+1. 业务系统调用Server API来注册一个设备。（提供参数：ProductId）
+2. Server实现来生成一个三元组，并存储到MongoDB，同时还存储设备接入EMQ X的用户名`ProductId/DeviceId`。
+3. Server API将三元组返回给业务系统。
+4. 固件将三元组烧写给设备。
+5. 设备应用代码调用DeviceSDK，并传参三元组。
+6. DeviceSDK通过 用户名：`ProductId/DeviceId`，密码：`Secret`连接到EMQ X。
+7. EMQ X Broker 到MongoDB中查询用户名和密钥，匹配成功就进行连接。
+
+
+### 设备状态管理
+
+设备离线 在线状态管理
+1. **通过订阅系统主题来感知设备上下线：**
+
+- 设备上线时：EMQ X Broker会向系统主题`$SYS/brokers/${node}/clients/${clientid}/connected`发布一条消息；
+- 设备离线时：EMQ X Broker会向系统主题`$SYS/brokers/${node}/clients/${clientid}/disconnected`发布一条消息；
+
+EMQ X Broker的节点名(${node})可以在`<EMQ X安装目录>/emqx/etc/emqx.conf`里进行配置。配置项为node.name，默认值为`emqx@127.0.0.1`。
+
+所以只需要订阅`$SYS/brokers/+/clients/+/connected`和`$SYS/brokers/+/clients/+/disconnected`就可以获取到每个EMQ X节点上所有Client的上线和离线事件。
+
+缺点：始终需要保持一个接入Broker的Client来订阅该主题，如果设备的数量高达十万甚至几十万，这个订阅该主题的Client就很容易成为 单点故障点，所以说这种解决方案的可扩展性比较差。
+
+2. **基于Hook系统的解决方案：**
+
+通过EMQ X 提供的Hook系统 来捕获Broker 内部的事件 并进行处理。
+
+EMQ自带一个WebHook插件，它的原理是：当像Client上线或下线之类的事件发生时，EMQ X会把事件的信息发送到一个事先指定好的URL上，这样我们就可以进行处理了。
+    - 开启WebHook：编辑WebHook插件的配置文件，将回调的url地址指向本地应用。
+        ```
+        1. #< EMQ X 安装目录>/emqx/etc/plugins/emqx_web_hook.conf
+        2. web.hook.api.url = http://127.0.0.1:3000/emqx_web_hook
+        ```
+    - 重新加载WebHook插件：`< EMQ X 安装目录>/emqx/bin/emqx_ctl plugins load emqx_web_hook`
+    - 在本地应用代码中实现WebHook的回调。需要注意：/emq_web_hook这个URL是在IotHub内部使用的，除了WebHook，外部是不应该能够访问的。
+
+
+管理设备的连接状态：
+1. IotHub不保存某个设备在线与否这个boolean值，而是保存一个connection列表，这个列表包含了所有用这个设备的三元组接入的connection，connection的信息由WebHook捕获的client_connected事件提供。
+2. 当收到client_connected的消息时，通过username里面的ProductId和DeviceId查找到Device记录，然后用ClientID查找Device的connection列表，如果不存在该ClientID的connection记录就新增一条connection记录；如果存在，则更新这条connection记录，状态为connected。
+3. 当收到client_disconnected的消息时，通过username里面的ProductId和DeviceId查找到Device记录，然后用ClientID查找Device的connection列表，如果存在该ClientID的connection记录，则更新这条connection记录，状态为disconnected。
+4. 业务系统可以通过调用Server API的设备详情接口获取设备的连接状态。
+
+通过这样的设计，我们不仅可以知道一个设备是否在线，还能知道其连接的具体信息。
+
+Connection模型:
+```
+connected: Boolean,
+client_id: String,
+Keepalive: Long,
+ipaddress: String,
+proto_ver: Long,
+connected_at: Long,
+disconnect_at: Long,
+conn_ack: Long,
+device: 
+```
+
+缺点：
+- 存在性能问题。每次设备上下线，包括Publish/Subscribe等，EMQ X都会发起一个HTTP POST，会有一定的性能损耗，损耗大小取决于业务和数据量。
+- 设备状态不准确。由于Web服务是并发的，有可能会在很短时间内发生的一对connect/disconnect事件，而disconnect会比connect先处理，从而导致设备的连接状态不正确。
+- 设备下线时间我们取的是处理这个事件的时间，不准确。
+
+
+### 设备的禁用与删除
+
+编写接口：禁止设备接入认证、恢复接入认证、删除设备信息。
+
+
+### 设备权限管理
+
+TODO
+
+### 拓展
+
+TODO
+
+
+## 上行数据处理
+
+南向设备上报
+
+TODO
+
+## 下行数据处理
+
+北向命令下发
+
+TODO
+
+## IotHub的高级功能
+
+TODO
+
+## 扩展EMQ X Broker
+
+TODO
+
+## 集成CoAP协议
+
 TODO
 
 
