@@ -375,12 +375,91 @@ Topic规范：
 
 ## Retained消息和LWT
 
-TODO
+### Retained消息
+
+Retained消息 是指在PUBLISH数据包中将Retain标识设为1的消息。
+Broker收到这样的PUBLISH数据包以后，将为该主题保存这个消息，当一个新的订阅者订阅该主题时，Broker会马上将这个消息发送给订阅者。
+
+主要解决：新的订阅者在设备刚刚上报了它的状态之后订阅了这个主题，那么这个新订阅者要什么时候才能收到这个设备的消息 的问题。而不必等到设备下次上报状态才能感知它的状态。
+
+Retained消息的特点：
+- 一个Topic只能有一条Retained消息，新的Retained消息会覆盖掉老的。
+- 如果订阅者使用通配符订阅Topic，那么它会收到所有匹配Topic的Retained消息。
+- 只有新的订阅者才会收到Retained消息，每次重复订阅都会被当成是新的订阅者，并会收到Retained消息。
+
+Retained消息和持久会话没有任何关系。
+- Retained消息是 Broker为每一个主题单独存储的。
+- 持久会话是Broker为每一个Client 单独存储的。
+
+删除某个Topic的Retained消息：只要向这个Topic发送一个Payload长度大于0的Retained消息即可。
+
+
+### LWT
+
+`Last Will and Testament` 遗愿：包含遗愿主题、QoS、遗愿消息等。
+
+遗愿的设置 是在建立连接时 在CONNECT包中指定的。
+- `Will Flag`：是否使用LWT。
+- `Will Topic`：遗愿主题名，不可使用通配符。
+- `Will QoS`：发布遗愿消息时使用的QoS等级。
+- `Will Retain`：遗愿消息的Retain标识。
+- `Will Message`：遗愿消息内容。
+
+当Broker检测到Client非正常断连时，就会向Client的遗愿主题 发布一条遗愿消息。
+
+Broker认为Client非正常断连的情况：
+- Broker检测到底层I/O异常。
+- Client没有在Keepalive时间间隔内 跟Broker进行消息交互。
+- Client在关闭底层TCP连接前 没有发送DISCONNECT包给Broker。
+- Broker因为协议错误 关闭了和Client的连接。比如：Client发送一个格式错误的MQTT协议数据包。
 
 
 ## Keepalive与连接保活
 
-TODO
+MQTT默认在 `1.5 * Keepalive`的时间内 Broker没有收到Client的任何数据包，会认为它和Client已经断开。Client同样认为。
+
+在Broker和Client之间没有消息传递时，MQTT通过`PINGREQ`/`PINGRESP`数据包 来监听连接状态 以满足Keepalive的约定。
+
+### PINGREQ数据包
+
+当Client在一个Keepalive时间间隔内没有向Broker发送任何数据包时，它应该向Broker发送 PINGREQ数据包 来上报自己的连接状态。
+
+PINGREQ数据包
+- 固定头：其中包类型字段为12，表示PINGREQ数据包，PINGREQ数据包剩余长度字段值固定为0。
+- 无可变头
+- 无消息体
+
+### PINGRESP数据包
+
+当Broker收到来自Client的PINGREQ数据包时，它应该回复Client一个PINGRESP数据包
+
+PINGRESP数据包
+- 固定头：其中包类型字段为13，表示PINGRESP数据包，PINGRESP数据包剩余长度字段值固定为0。
+- 无可变头
+- 无消息体
+
+### Keepalive其它注意点
+
+1. 如果在一个Keepalive时间间隔内，Client和Broker有过数据包传输，那Client就没有必要再使用PINGREQ数据包了，在网络资源比较紧张的情况下这点很重要；
+2. Keepalive的值是由Client指定的，不同的Client可以指定不同的值；
+3. Keepalive的最大值为18个小时12分15秒；
+4. Keepalive的值如果设为0的话，代表不使用Keepalive机制。
+
+
+### 连接保活
+
+Client的连接保活逻辑很简单，在检测到连接断开时再重新进行连接就可以了。
+
+大多数语言的MQTT Client都支持这个功能，并默认打开。但Android 或 ios系统上使用MQTT Client就不一定，比如应用被切到后台。
+
+在Android系统上，我们可以在一个Service中创建和保持MQTT协议连接，这样即使App被切入后台，这个Service还在运行，MQTT协议的连接还存在，就能接收消息。
+
+iOS系统的App被切入后台时，你没有办法在后台运行App的任何代码，所以无法通过MQTT协议的连接来获取消息。它的正确接收MQTT消息方式为
+1. Publisher发布一条或多条消息；
+2. Publisher通过某种渠道（比如HTTP API）告知App的应用服务器，然后服务器通过苹果的APNs向对应的iOS订阅者推送一条消息；
+3. 用户点击推送，App进入前台；
+4. App重新建立和Broker的连接；
+5. App收到Publisher刚刚发送的一条或多条消息。
 
 
 ## MQTT 5.0的新特性
