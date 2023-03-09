@@ -464,7 +464,55 @@ iOS系统的App被切入后台时，你没有办法在后台运行App的任何�
 
 ## MQTT 5.0的新特性
 
-TODO
+### 用户属性（User Properties）
+
+MQTT 5.0中可以在 PUBLISH、CONNECT和带有Return Code的数据包中 夹带一个或多个用户属性（User Properties）数据。以便知道这个消息来自谁。
+- 在PUBLISH数据包中携带的用户属性由发送方的应用定义，随消息被Broker转发到消息的订阅方。
+- CONNECT数据包和ACKs消息中也可以携带发送者自定义的用户属性数据。
+
+### 共享订阅（Shared Subscriptions）
+
+MQTT 3.1.1和之前的版本里，订阅同一主题的订阅者都会收到来自这个主题的所有消息。
+
+例如：需要处理一个传感器数据，假设这个传感器上传的数据量非常大且频率很高，但没有办法启动多个Client分担处理该工作，则可以启动一个Client来接收传感器的数据，并将这些数据分配给后面的多个Worker处理。
+这个用于接收数据的Client就会是系统的瓶颈和单点故障之一。
+
+通常，可以通过主题分片。比如，让传感器依次发布到/topic1……/topicN来变通地解决这个问题，但这仅仅解决了部分问题，同时也提高了系统的复杂度。
+
+MQTT 5.0里面，MQTT可以实现Producer/Consumer模式了。多个Client（Consumer）可以一起订阅一个共享主题（Producer），来自这个主题的消息会依次均衡地发布给这些Client，实现订阅者的负载均衡。
+
+EMQ X Broker在MQTT 3.1.1上也已经支持这个功能。
+
+### 消息过期（Publication Expiry Interval）
+
+假设设计一个基于MQTT协议的共享单车平台，用户通过平台下发一条开锁指令给一辆单车，但此时单车的网络信号（比如GSM）恰好断了，用户走了。过了2小时以后，单车的网络恢复了，它收到了2小时前的开锁指令，此时该怎么做？
+
+在MQTT 3.1.1和之前的版本中，可以在消息数据里带一个消息过期（Publication Expiry Interval）时间，在接收端判断消息是否过期。  
+但 这要求设备端的时间和服务端的时间保持一致。但对于一些电量不是很充足的设备，一旦断电，之后再启动，时间就会变得不准确，这样就会导致异常的出现。
+
+MQTT 5.0版本直接包含了消息过期功能，在发布的时候可以指定这个消息在多久后过期，这样Broker不会将已过期的离线消息发送到Client。
+
+### 重复主题
+
+在MQTT 3.1.1和之前的版本里，PUBLISH数据包每次都需要带上发布的主题名，即便每次发布的都是同一个主题。
+
+在MQTT 5.0中，如果将一条PUBLISH的主题名设为长度为0的字符串，那么Broker会使用你上一次发布的主题。  
+这样降低了多次发布到同一主题（往往都是这样）的额外开销，对网络资源和处理资源都有限的系统非常有用。
+
+### Broker能力查询
+
+在MQTT 5.0中，CONNACK数据包包含了一些预定义的头部数据，用于标识Broker支持哪些MQTT协议功能
+
+![IoT-MQTT协议v5版CONNACK包预定义头数据](../resources/static/images/IoT-MQTT协议v5版CONNACK包预定义头数据.png)
+
+Client在连接之后就可以知道Broker是否支持自己要用到的功能，这对一些通用的MQTT设备生产商或者Client库的开发者很有用。
+
+### 双向DISCONNECT
+
+在MQTT 3.1.1或之前的版本中，Client只有在主动断开时会向 Broker发送DISCONNECT数据包。如果因为某种错误，Broker要断开和 Client的连接，它只能直接断开底层TCP连接，而Client并不会知道自己连接断开的原因，也无法解决错误，只是简单地重新连接、被断开、重新连接……
+
+在MQTT 5.0中，Broker在主动断开和Client的连接时也会发送DISCONNECT数据包。同时，从Client到Broker，以及从Broker到Client的CONNCET数据包中都会包含一个Reason Code，用于标识断开的原因。
+![IoT-MQTT协议v5版主动断连ReasonCode](../resources/static/images/IoT-MQTT协议v5版主动断连ReasonCode.png)
 
 ## MQTT协议实战
 
