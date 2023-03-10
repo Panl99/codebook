@@ -646,7 +646,140 @@ TODO
 
 南向设备上报
 
-TODO
+需要的功能点：
+- 存储上行数据：IotHub接收设备端上传的数据，并将数据来源（设备的ProductName，DeviceName）、消息ID、消息类型、payload进行存储。
+- 通知业务系统：当有新的上行数据到达时，IotHub将通知并将上行数据发送给业务系统，业务系统可以自行处理这些数据，例如通知用户，将数据和其他业务数据融合后存储在业务系统的数据库等。
+- 设备数据查询：业务系统可以通过IotHub Server API查询某个设备上传的历史数据。
+
+
+### 上行数据处理方案
+
+#### 接收数据的方案
+
+1. 基于共享订阅方式。
+
+EMQ X Broker支持一个共享订阅功能，多个订阅者可以订阅同一个主题，EMQ X Broker会按照某种顺序依次把消息分发给这些订阅者，在某种意义上实现订阅者负载均衡。
+- 优点：可以根据数据量动态的增添共享订阅者，这样就不存在单点故障了，也具有良好的扩展性。
+- 缺点：引入了多个MQTT Client，提高了系统的复杂性，增加了开发、部署和运维监控的成本。
+
+共享订阅的实现：订阅者只需要订阅具有特殊前缀的主题即可，目前共享订阅支持2种前缀`$queue/`和`$share/<group>/`，且支持通配符 `#`和 `+`。
+
+
+2. 基于Hook的方案。
+
+使用EMQ X的Hook机制实现设备上行数据的接收功能。
+- EMQ X会在收到Publish数据包时将Publish的信息通过Hook传递出来。这时，就可以对数据进行存储和处理，实现接收设备的上行数据。
+- 基于Hook的方案不用在Server端建立和管理连接到Broker的MQTT Client，系统复杂度要低一些。
+
+
+基于共享订阅和基于Hook的方式都是在生产环境可以用的解决方案。
+
+#### 数据格式
+
+1. 负载（Payload）：消息所携带的数据本身。（如传感器某时刻的读数），可以用JSON格式表示。
+2. 元数据（Metadata）：描述消息的数据。包含消息发布者信息、数据类型、消息唯一id等等。
+   元数据的内容是包含在Publish数据包的Topic Name里面。
+
+#### Topic设计
+
+设备消息上行Topic格式：`upload_data/{ProductId}/{DeviceId}/{DataType}/{MessageId}`
+- 其中DataType由业务和设备约定（比如传感器温度可以为temperature），可以使主题名更加精确。
+- 通过解析Topic就可以获取到消息的元数据。
+
+#### 数据存储
+
+- 使用MongoDB来存储上报数据。
+- 字段包括 `message_id`,`product_id`,`device_id`,`data_type`,`payload`,`sent_at`,`sent_time`
+- 消息根据MessageId 或者 ProductId + DeviceId来查询
+
+#### 通知业务系统
+
+方式：
+- 调用业务系统预先注册的回调URL
+- 使用消息队列，[RabbitMQ](../messagequeue/RabbitMQ.md)、[Kafka](../messagequeue/kafka.md)、[Pulsar](../messagequeue/Pulsar.md)
+
+#### 上行数据处理流程
+
+![IoT-上报数据处理流程](../resources/static/images/IoT-上报数据处理流程.png)
+
+IotHub Server在接收到上行数据时候需要做以下几步处理：
+- 从主题名中提取出上行数据的元数据；
+- 消息去重；（可以使用Redis缓存来判断是否重复）
+- 将消息进行存储；
+- 通过RabbitMQ通知业务系统。（当有新的上行数据达到时，IotHub会向RabbitMQ名为`iothub.events.upload_data`的Direct Exchage的发送一条消息，RoutingKey为设备的ProductName。）
+
+如果Payload是二进制数据，可以对Payload进行Base64编码，EMQ X的WebHook配置修改：
+```
+## <EMQ X 安装目录>/emqx/etc/plugins/emqx_web_hook.conf
+web.hook.encode_payload = base64
+
+## 之后重新加载插件
+```
+
+### 设备状态上报
+
+上边的实现主要为 设备上报的监测数据 需要保留历史记录。
+但设备自身的相关状态（版本、电量、是否故障等）这些数据上报不会关心它的历史记录，只关心当前状态，所以上边的处理就不太适合。
+
+设备状态的管理方式：
+1. 设备用JSON的格式将当前的状态发布到主题 `update_status/{ProductId}/{DeviceId}/{MessageId}`。
+2. IotHub将设备的状态用JSON的格式存储在Devices Collection 中。
+3. IotHub将设备的状态通知到业务系统，业务系统再做后续的处理，比如通知相关运维人员等。
+4. IotHub提供接口供业务系统查询设备的当前状态。
+
+设备状态的约定：设备上报的状态一定是单向的，状态只在设备端更改，然后设备上报到IotHub，最后由IotHub通知业务系统。
+
+如果设备的状态是业务系统、IotHub和设备端都有可能更改的，那么使用设备影子可能会更好。
+
+如果业务系统需要记录设备状态的历史记录，那么使用前面实现的上行数据就可以了：把设备状态看作一般的上行数据。
+
+**为何不用Retained Message？**
+
+如TopicA发送一条Retained Message表明自己的状态时，会发生什么：
+1. 设备A向TopicA发送一条消息M，标记为Retained，QoS=1；
+2. EMQ X Broker收到M，回复设备A PUBACK；
+3. EMQ X为TopicA保存下Retained消息M_retained；
+4. EMQ X通过WebHook将消息传递给IotHub Server；
+5. EMQ X发现没有任何Client订阅TopicA，丢弃M。
+
+由于在IotHub中使用的是基于Hook的方式来获取设备发布的消息，没有实际的Client订阅设备发布状态的主题，
+所以即使发送Retained Message，也只是白白浪费Broker的存储空间罢了。
+
+**设备应该在什么时候上报状态？**
+- 建议在每次开机、状态发生变化时。
+
+
+### 时序数据库
+
+在物联网中 也可以用时序数据库来存储数据。
+
+**时序数据**是一类按照时间维度进行索引的数据，它记录了某个被测量实体在一定时间范围内，每个时间点上的一组测试值。  
+如：传感器上传的蔬菜大棚每小时的湿度和温度数据、A股中某支股票每个时间点的股价、计算机系统的监控数据等，都属于时序数据。
+
+时序数据的特点：
+- **数据量较大**，写入操作是持续且平稳的，而且写多读少；
+- **只有写入操作**，几乎没有更新操作，比如去修改大棚温度和湿度的历史数据，那是没有什么意义的；
+- **没有随机删除**，即使删除也是按照时间范围进行删除。删除蔬菜大棚08:35的温度记录没有任何实际意义，但是删除6个月以前的记录是有意义的；
+- **数据实时性和时效性很强**，数据随着时间的推移不断追加，旧数据很快失去意义；
+- **大部分以时间和实体为维度进行查询**，很少以测试值为维度查询，比如用户会查询某个蔬菜大棚某个时间段的温度数据，但是很少会去查询温度高于多少度的数据记录。
+
+如果业务数据符合上面的条件，比如业务数据属于监控、运维类，或者需要用折线图之类的进行可视化，那么就可以考虑使用时序数据库。
+
+
+**时序数据库** 有InfluxDB、OpenTSDB、TimeScaleDB等。
+
+时序数据库的一些概念：
+- `Metric`：度量，可以当作关系型数据库中的表（table）。
+- `Data Point`：数据点，可以当作关系型数据库的中的行（row）。
+- `Timestamp`：时间戳，数据点生成时的时间戳。
+- `Field`：测量值，比如温度和湿度。
+- `Tag`：标签，用于标识数据点，通常用来标识数据点的来源，比如温度和湿度数据来自哪个大棚，可以当作关系型数据库表的主键。
+- `Vents`：度量Metric，存储所有大棚的温度和湿度数据；
+- `Humidity`和`Temperature`：测量值Field；
+- `Vent No.`和`Vent Section`：Tag标签，标识测量值来自于哪个大棚；
+- `Time`：时间戳Timestamp。
+
+![IoT-时序数据库概念图](../resources/static/images/IoT-时序数据库概念图.png)
 
 ## 下行数据处理
 
