@@ -785,7 +785,158 @@ web.hook.encode_payload = base64
 
 北向命令下发
 
-TODO
+一般有两种，可以统称为指令：
+- 需要同步的数据。比如：平台将训练好的模型数据下发给设备，设备按照训练模型来执行。
+- 指令。平台下发给设备的命令要求设备完成某种操作。
+
+IoTHub需要具备的功能：
+1. 业务系统可以通过IotHub Server API提供的接口向指定的设备发送指令，指令可以包含任意格式的数据，比如字符串和二进制数据。
+2. 指令可设置过期时间，过期的指令将不会被执行。
+3. 业务系统可在设备离线时下发指令，设备在上线以后可以接收到离线时由业务系统下发的指令。
+4. 设备可以向业务系统回复指令的执行结果，IotHub会把设备的回复通知给业务系统，通知包括：哪个设备回复了哪条指令、回复的内容是什么等。
+
+### 下行数据处理方案
+
+在IoTHub中，下行数据分两种：
+- 业务系统下发给设备的消息。比如：需要同步的数据、需要执行的指令等，这些数据会经过IoTHub发送给设备。
+- IoTHub内部发给设备的消息。通常是为了实现IoTHub相关功能的内部消息。
+
+1. 基于MQTT协议的方案
+
+这种方式比较直接，IotHub Server以MQTT Client的身份接入EMQ X Broker，将数据发布到设备订阅的主题上。
+
+这种方式存在的单点故障问题，  
+IotHub Server可以同时启用多个用于发布的MQTT Client，这些Client可以从一个工作队列（比如RabbitMQ、Redis等）里获取要发布的消息，然后将其发布到对应的设备，在每次IotHub Server需要发送数据到设备时，只需要往这个队列里投递一条消息就可以了。
+![IoT-基于MQTT协议的下行数据处理架构](../resources/static/images/IoT-基于MQTT协议的下行数据处理架构.png)
+
+- 优点：具有良好的扩展性，不存在单点故障。
+- 缺点：引入多个MQTT Client这样额外的实体，提高了系统的复杂度，增加了开发、部署、运维监控的成本。
+
+2. 基于EMQ X RESTful API的方案
+
+EMQ X的RESTful API提供了一个接口，可以向某个主题发布消息。
+
+- API定义：`POST` `api/v3/mqtt/publish`。
+- 参数：
+```
+{
+    "topic": "test_topic",
+    "payload": "hello",
+    "qos": 1,
+    "retain": false,
+    "client_id": "mqttjs_ab9069449e"
+} 
+```
+
+这种方案不需要维护多个用于发布的MQTT Client，在开发和部署上的复杂度要低一些。
+![IoT-基于EMQX的RESTful接口的方案](../resources/static/images/IoT-基于EMQX的RESTful接口的方案.png)
+
+
+#### 下行数据格式
+
+和上行数据一样，由元数据、负载组成。
+
+1. 元数据（Metadata）放在Topic中，包含：
+    - `ProductId`、`DeviceId`：指定指令发送的产品、设备。
+    - `MessageId`：指令唯一标识，消息去重、设备回复指令 也会用到。
+    - `指令名称`：比如单车开锁的指令可以叫unlock。
+    - `指令类别`：实现一些特殊的指令时会用到。
+    - `过期时间`：给指令设置时效性，设备不应该执行超过时效的指令。
+2. 负载（Payload），包含指令需要的额外数据。（比如需要同步给设备的数据）
+
+#### Topic设计
+
+格式：`cmd/{ProductId}/{DeviceId}/{CommandName}/{Encoding}/{RequestId}/{ExpiresAt}`。设备订阅此Topic来接收下发命令。
+- `cmd`：固定，表示普通的下发指令。
+- `CommandName`：指令名称。比如重启设备叫做reboot。
+- `Encoding`：指令数据编码格式。
+    - 由于是HTTP接口传输数据，避免指令携带的是二进制数据，对其进行编码成字符串。（如果统一对Payload进行Base64编码，就不需要这层了，增加这层主要是为了避免设备端不必要的计算（如果指令数据是ASCII字符串就不需要再decode了），可以根据实际情况来决定是否要这层。）
+    - `plain`：表示未编码，指令数据为字符串时使用。
+    - `Base64`：表示编码，指令数据为二进制数据时使用。
+- `RequestId`：指令编号。作用：①类似于上行消息中的MessageId，用来消息去重。②唯一标识一条指令，设备如有回复时需携带。
+- `ExpiresAt`：可选，指令过期时间，格式为UNIX时间戳。如果指定了，设备就需要检查这个时间是否超时，超时则丢弃消息。
+
+
+订阅主题方式：
+1. 订阅`cmd/${ProductId}/${DeviceId}/+/+/+/#`，就可以匹配指令用的主题。`ExpiresAt`可选，放在最后用`#`来匹配。
+2. 还可以利用EMQ X的服务端订阅功能进行更高效、更灵活的订阅。  
+   服务端订阅指的是，当MQTT Client连接到EMQ X Broker时，EMQ X会按照预先定义好的规则自动为Client订阅主题。
+   用这种方式设备不需要再发送subscribe，增加和减少设备订阅的主题也不需要改动设备的代码。
+
+#### 设备端消息去重
+
+使用一个缓存组件存储RequestId 来进行消息去重，这个组件最好有以下特性：
+- K-V存储；
+- 可以设置key有效期；
+- 可以持久化，保证设备断电也不会丢失RequestId。
+
+#### 指令回复
+
+设备回复指令时，需要向一个特定的Topic发布一个消息。
+Topic格式：`cmd_resp/{ProductId}/{DeviceId}/{CommandName}/{RequestId}/{MessageId}`
+（MessageId：因为回复也是一条上行数据，需要用来唯一标识 来去重）
+
+
+#### 服务端的实现
+
+实现指令下发的IotHub Server端。
+
+1. 首先使用EMQ X的API发布消息，并提供指令下发接口供业务系统调用；
+2. 然后使用EMQ X的服务器订阅功能，实现设备的自动订阅；
+    - EMQ X的服务器订阅是在`<EMQ X安装目录>/emqx/etc/emqx.conf`里进行配置的。
+    ```
+    # 打开EMQ X的服务器订阅功能。
+    module.subscription = on
+    
+    # 配置需要自动订阅的主题名，以及QoS。
+    module.subscription.1.topic = topics
+    module.subscription.1.qos = 1
+    
+    # module.subscription.1.topic这个配置项支持两个占位符：
+    %u 代表Client接入时使用的username，
+    %c 代表Client接入时使用的Client Identifier。
+    在IotHub中，设备接入EMQ X Broker时使用的用户名为ProductId/DeviceId，那么这里我们就可以这样配置自动订阅的主题名。
+    
+    module.subscription.1.topic = cmd/%u/+/+/+/#
+    
+    目前，EMQ X只支持这种方式定义服务器订阅列表，如果需要更灵活的配置方式，可用插件的方式扩展或者让设备进行自行订阅。
+    这就是为什么使用ProductId/DeviceId作为设备接入Broker的username的原因了，这是一个小小的技巧。
+    
+    ```
+    - 如果需要配置更多的订阅主题，可以这样做：
+    ``` 
+    module.subscription.1.topic = xxx
+    module.subscription.1.qos = xx
+    module.subscription.2.topic = xxx
+    module.subscription.2.qos = xx
+    module.subscription.3.topic = xxx
+    module.subscription.3.qos = xx
+    ...
+    ```
+    - 配置完成以后需要重新启动EMQ X：`<EMQ X安装目录>/emqx/bin/emqx restart`。
+    - 验证服务器自动订阅是否生效：去EMQ Console，查看subscriptions下相关订阅是否生效。
+    - 这是服务器自动订阅的，不是Client发起的订阅，不会触发ACL校验，不需要将这个主题放在ACL列表中。
+
+3. 当设备对指令进行回复以后，通过RabbitMQ将设备的回复通知到业务系统；
+    1. IotHub Server通过WebHook获取设备对指令的回复消息；
+    2. IotHub Server通过解析消息的主题名获取指令回复的元数据；
+    3. IotHub Server向对应的RabbitMQ 名为`iothub.events.cmd_resp`的Exchange发布指令的回复。（该消息包含DeviceId、指令名、指令的RequestId及回复数据等内容。Exchange的类型为Direct，RoutingKey为设备的ProductId。）
+    4. 业务系统从RabbitMQ获取指令回复。
+
+
+#### 指令下发处理流程
+
+![IoT-指令下发处理流程](../resources/static/images/IoT-指令下发处理流程.png)
+
+1. 业务系统调用Server API发送指令。
+2. IotHub Server调用EMQ X的Publish API（RESTful）。
+3. EMQ X Broker发布消息到设备订阅的主题。
+4. DeviceSDK提取出指令的信息并通过Event的方式传递到设备应用代码。
+5. 设备应用代码执行完指令要求的操作后，通过Callback（闭包）的方式要求DeviceSDK对指令进行回复。
+6. DeviceSDK发布包含指令回复的消息到EMQ X Broker。
+7. EMQ X Broker通过WebHook将指令回复传递到IotHub Server。
+8. IotHub Server将指令回复放入到RabbitMQ对应的队列中。
+9. 业务系统从RabbitMQ的对应队列获得指令的回复。
 
 ## IotHub的高级功能
 
