@@ -940,15 +940,158 @@ Topic格式：`cmd_resp/{ProductId}/{DeviceId}/{CommandName}/{RequestId}/{Messag
 
 ## IotHub的高级功能
 
-TODO
+### RPC式调用
+
+
+### 设备数据请求
+
+
+### NTP服务
+
+
+### 设备分组
+
+
+### M2M设备间通信
+
+
+### OTA升级
+
+
+### 设备影子
+
+
+### IoTHub状态监控
+
+
+
 
 ## 扩展EMQ X Broker
 
-TODO
+### Erlang语言
+
+
+### 搭建环境
+
+
+### 实现一个基于RabbitMQ的Hook插件emqx-rabbitmq-hook
+
+
+
 
 ## 集成CoAP协议
 
+### CoAP协议简介
+
+MQTT协议的设计主要用于计算资源、网络资源有限的环境下，大部分情况下都比较稳定。  
+但是MQTT协议需要建立一个TCP长连接，并需要在固定的时间间隔发送心跳包，对于一些使用电池供电的小型设备而言，能耗还是比较明显的。  
+对于一些采集设备的终端而言，其大部分时间是往上发布数据，建立一个可以用于反控的TCP连接，可能也有些多余。  
+
+CoAP（Constrained Application Protocol）协议：建立在UDP上的弱化版HTTP协议。  
+CoAP协议是C/S架构，设备是Client，接收设备、发送数据的是Server。  
+CoAP协议的消息模型：  
+- 二进制头（Header）
+- 消息选项（Options）
+- 负载（Payload）
+
+CoAP的消息最小长度为4字节。每个消息都有唯一id，便于追踪消息去向 和去重。  
+CoAP消息分两种：
+1. `CON`：需要被确认的消息。
+    - CON是一种可靠消息，如果发送方没有收到接收方的回复ACK，会不停的重发消息。
+    - 如果Server不能处理Client的CON消息，可以回复`RST`消息，Client收到后就不会等待ACK了。
+2. `NON`：不需要被确认的消息。
+    - NON是一种不可靠消息，通常用于传输 类似传感器读数之类的数据。
+
+**CoAP协议的请求/应答机制**：
+- 请求/应答 是建立在CON和NON基础上。
+- CoAP协议的请求类似于HTTP请求，包含GET、POST、PUT、DELETE 4种方法 和请求的URL。
+- CoAP请求可以用CON发：`Client -CON-> Server`，`Server -ACK-> Client`；也可以用NON发：`Client -NON-> Server`，`Server -NON-> Client`。
+- "异步"的CoAP请求/应答：如果Server没法立刻应答Client，可以先回复一个空ACK，准备好后再回复包含同样Token的CON消息。
+![IoT-异步的CoAP协议请求应答流程](../resources/static/images/IoT-异步的CoAP协议请求应答流程.png)
+
+
+**CoAP OBSERVE**
+- OBSERVE是CoAP协议的一个扩展，Client可以向Server请求 “观察” 一个资源，当这个资源状态发生变化时，Server将通知Client该资源的当前状态。
+  利用这个机制，可以实现类似于MQTT协议的Subscribe机制，对设备进行反控。
+- Client可以指定 “观察” 时长，当超过这个时长后，Server将不再向Client发送通知。
+- 在NAT转换后，尤其是在3G/4G的网络下，从Server到Client的UDP传输是很不可靠的，所以不建议单纯用CoAP协议做数据收集之外的事情，比如设备控制等。
+
+**CoAP HTTP Gateway**
+- 由于CoAP协议和HTTP协议有很大的相似性，因此通常可以用一个Gateway将CoAP协议转换成HTTP协议，便于接入已有的基于Web的系统。
+- Client通过CON命令发送的请求被Gateway转换成了HTTP GET请求并发给Web Server，Web Server的HTTP Response被Gateway转换成CoAP协议的ACK并发送给Client。
+
+
+### 集成CoAP协议实战
+
+本IoTHub的CoAP包含以下功能：
+- 允许设备用CoAP协议接入，并上传数据和状态；
+- DeviceSDK仍然需要向设备应用屏蔽底层的协议细节；
+- CoAP设备使用与MQTT设备相同的认证和权限系统。
+
+
+1. **配置EMQ 的CoAP插件**
+- EMQ X提供了`emqx_coap`插件用于CoAP协议的接入，该插件是一个CoAP Gateway，会按一定的规则转换成MQTT的Publish/Subscribe。
+- 加载emqx_coap插件：运行`<EMQ X安装目录>/emqx/bin/emqx_ctl plugins load emqx_coap`，在默认配置下，插件使用端口5683接收CoAP协议数据。
+
+CoAP请求被转换成MQTT Publish：
+- 方法：PUT
+- URL：`coap://<host>:<port>/mqtt/<topic>?c=<client_id>&u=<username>&p=<password>`
+- CoAP请求PUT `coap://127.0.0.1:5683/mqtt/topic/test?c=c1&u=u1&p=p1`会被转换成主题为`topic/test`的MQTT Publish消息，使用的username/password为u1/p1，ClientId为c1。
+
+CoAP请求被转换成MQTT Subscribe：
+- 方法：GET
+- URL：`coap://<host>:<port>/mqtt/<topic>?c=<client_id>&u=<username>&p=<password>`
+- CoAP请求GET `coap://127.0.0.1:5683/mqtt/topic/test?c=c1&u=u1&p=p1`会被转换成主题为`topic/test`的MQTT Subscribe消息，使用的username/password为u1/p1，ClientId为c1。
+
+
+2. **CoAP设备端代码要点：**
+- 在DeviceSDK中新建一个IotCoAPDevice类作为CoAP设备接入的入口。
+    - 仍使用设备的ProductId和DeviceId进行接入认证。
+    - 创建上传数据 和更新状态的方法。内容就按照转换规则去构造CoAP请求。（这里主要是上报的Publish）
+
+3. **CoAP的连接状态：**
+
+CoAP协议是基于UDP的，按道理是没有连接的，但是查看对应设备的连接状态会发现有一个已连接的connection，为什么？
+``` 
+curl http://localhost:3000/devices/IotApp/H9rTa3uSm
+...
+{"connected":true,"client_id":"IotApp/H9rTa3uSm/upload_coap",
+"ipaddress":"127.0.0.1","connected_at":1560432017}
+...
+```
+因为经过`emqx_coap`转换后，EMQ Broker会认为这是一个MQTT Client的接入 并发布的数据，所以会保留一个MQTT connection。
+当上传CoAP数据的代码执行完之后 没有发送DISCONNECT包，所以connection状态是已连接的。
+
+这个连接什么时候会变成未连接？ 按MQTT协议规范，超过`1.5 * keep_alive`时间没有收到该连接的消息时，就会认为该连接已关闭。
+
+配置CoAP协议连接超时时间：`<EMQ X安装目录>/emqx/etc/plugins/emqx_coap.conf`中可以配置`keep_alive`的值，默认为120秒。  
+所以当180秒之后在查询该设备连接状态会变为未连接：
+``` 
+curl http://localhost:3000/devices/IotApp/H9rTa3uSm
+...
+{"connected":false,"client_id":"IotApp/H9rTa3uSm/upload_coap",
+"ipaddress":"127.0.0.1","connected_at":1560432017,"disconnect_at":1560432197}
+...
+```
+
+
+
+# 总结
+
+1. 对于设备，通过调用DeviceSDK，不用再关心底层数据传输细节，只需要向服务器发送数据、处理服务器下发数据即可。
+2. 对于业务，通过调用IoTHub提供的API，不需要再建立到Broker的连接，只处理设备上报的数据、下发数据到设备即可。
+3. 通过抽象，将MQTT协议的Client-Broker-Client模式转换成了Client-Server模式。
+  - 通过Topic设计，将元数据 和Payload分开，实现业务逻辑 和设备应用逻辑的解耦。
+  - IoTHub作为业务系统和设备之间的中间件，可通过复用业务逻辑来简化和加快物联网应用的开发；
+    屏蔽业务系统和设备应用代码底层的协议细节，并提供一些常用的基础功能，如OTA升级、指令下发、数据上报、设备认证与管理、设备分组、影子设备、NTP服务等。
+  - 如此基于IotHub开发一套物联网应用，就只需要关注于业务逻辑的实现。
+    如果要开发新的物联网应用，都可以基于IotHub，业务系统可以复用IotHub的Server API，
+    设备端也可以直接复用DeviceSDK代码，如果设备换了硬件平台，只需将DeviceSDK移植到相应的语言上。
+
+## EMQ X的高级功能
+
 TODO
+
 
 
 
