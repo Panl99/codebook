@@ -25,6 +25,7 @@
 - 消息的发送 和接收 都是异步的。
 
 MQTT协议的架构由 Broker 和连接到Broker的多个Client组成。
+
 ![IoT-MQTT通信模型](../resources/static/images/IoT-MQTT通信模型.png)
 
 ## MQTT-SN协议
@@ -144,17 +145,23 @@ MQTT协议使用的是：二进制数据包。
 ![IoT-MQTT协议数据包的固定头](../resources/static/images/IoT-MQTT协议数据包的固定头.png)
 
 1. **数据包类型**：MQTT协议数据包的**固定头的第一个字节的高四位** 表示该数据包的类型。
-     ![IoT-MQTT协议消息类型](../resources/static/images/IoT-MQTT协议数据包类型.jpg)
+   
+![IoT-MQTT协议消息类型](../resources/static/images/IoT-MQTT协议数据包类型.jpg)
+
 2. **数据包标识位**：MQTT协议数据包的**固定头的第一个字节的低四位**。不用类型数据包 标识位定义不一样。
-     ![IoT-MQTT协议数据包标识位](../resources/static/images/IoT-MQTT协议数据包标识位.jpg)
+
+![IoT-MQTT协议数据包标识位](../resources/static/images/IoT-MQTT协议数据包标识位.jpg)
+
    - DUP1: 控制报文的重复分发标志
    - QoS2：PUBLISH报文的服务质量等级
    - RETAIN3: PUBLISH报文的保留标志
+
 3. **数据包剩余长度**：从固定位第二个字节开始，用于标识当前数据包剩余长度的字段，= 可变头长度 + 消息体长度。
     - 这个字段最少1个字节，最多4个字节。
     - 其中，每个字节的最高位叫延续位（Continuation Bit），表示在这个字节之后是否还有一个用于标识剩余长度的字节。剩下的低7位用于标识值，范围：0~127。
     - 例如，剩余长度字段的第一个字节的最高位为1，那么意味着剩余长度至少还有1个字节，然后继续读下一个字节，下一个字节的最高位为0，那么剩余长度字段到此为止，一共2个字节。
-      ![IoT-MQTT协议数据包剩余长度字段](../resources/static/images/IoT-MQTT协议数据包剩余长度字段.png)
+
+![IoT-MQTT协议数据包剩余长度字段](../resources/static/images/IoT-MQTT协议数据包剩余长度字段.png)
 
 所以，这4个字节最多可以标识的包长度为：（0xFF,0xFF,0xFF,0x7F）=268 435 455字节，即256MB，这是MQTT协议中数据包的最大长度。
 
@@ -169,8 +176,10 @@ Client在发布和订阅消息之前必须先连接到Broker。Client建立连�
 ### CONNECT数据包
 
 1. 固定头
-   ![IoT-MQTT协议CONNECT数据包的固定头格式](../resources/static/images/IoT-MQTT协议CONNECT数据包的固定头格式.png)
-   固定头中的MQTT协议数据包类型字段的值为1，代表CONNECT数据包。
+
+![IoT-MQTT协议CONNECT数据包的固定头格式](../resources/static/images/IoT-MQTT协议CONNECT数据包的固定头格式.png)
+
+固定头中的MQTT协议数据包类型字段的值为1，代表CONNECT数据包。
 
 2. 可变头
 
@@ -206,8 +215,10 @@ Client在发布和订阅消息之前必须先连接到Broker。Client建立连�
 ### CONNACK数据包
 
 1. 固定头
-   ![IoT-MQTT协议CONNACK数据包的固定头格式](../resources/static/images/IoT-MQTT协议CONNACK数据包的固定头格式.png)
-   固定头中的MQTT数据包的类型字段值为2，代表CONNACK数据包。CONNACK数据包剩余长度固定为2。
+
+![IoT-MQTT协议CONNACK数据包的固定头格式](../resources/static/images/IoT-MQTT协议CONNACK数据包的固定头格式.png)
+
+固定头中的MQTT数据包的类型字段值为2，代表CONNACK数据包。CONNACK数据包剩余长度固定为2。
 
 2. 可变头
 
@@ -248,6 +259,7 @@ Client主动向Broker发送一个`DISCONNECT`包即可。
 在Client发送完DISCONNECT数据包之后，就可以关闭底层的TCP连接了，不需要等待Broker的回复，Broker也不会回复DISCONNECT数据包。
 
 `DISCONNECT`包固定头格式：
+
 ![IoT-MQTT协议DISCONNECT数据包的固定头格式](../resources/static/images/IoT-MQTT协议DISCONNECT数据包的固定头格式.png)
 
 - 固定头中的MQTT协议数据包类型字段的值为14，代表该数据包为DISCONNECT数据包。
@@ -276,6 +288,7 @@ Broker主动关闭连接 会直接关闭底层的TCP连接，之前不需要向C
 ### PUBLISH数据包
 
 1. 固定头
+
 ![IoT-MQTT协议PUBLISH数据包固定头格式](../resources/static/images/IoT-MQTT协议PUBLISH数据包固定头格式.png)
 
 - 数据包 类型字段为3，表示PUBLISH数据包。
@@ -315,8 +328,11 @@ Topic规范：
 1. **SUBSCRIBE数据包**
 
 - 固定头  
-    ![IoT-MQTT协议SUBSCRIBE数据包固定头格式](../resources/static/images/IoT-MQTT协议SUBSCRIBE数据包固定头格式.png)
-    固定头中的MQTT协议数据包类型字段的值为8，表示SUBSCRIBE数据包。
+
+固定头中的MQTT协议数据包类型字段的值为8，表示SUBSCRIBE数据包。
+
+![IoT-MQTT协议SUBSCRIBE数据包固定头格式](../resources/static/images/IoT-MQTT协议SUBSCRIBE数据包固定头格式.png)
+    
 - 可变头：只包含一个2字节的包标识符，标识唯一数据包。只需保证从发布者 到接收者一次消息交互中唯一即可。
 - 消息体  
     - 由Client要订阅的主题列表构成。
@@ -512,6 +528,7 @@ Client在连接之后就可以知道Broker是否支持自己要用到的功能�
 在MQTT 3.1.1或之前的版本中，Client只有在主动断开时会向 Broker发送DISCONNECT数据包。如果因为某种错误，Broker要断开和 Client的连接，它只能直接断开底层TCP连接，而Client并不会知道自己连接断开的原因，也无法解决错误，只是简单地重新连接、被断开、重新连接……
 
 在MQTT 5.0中，Broker在主动断开和Client的连接时也会发送DISCONNECT数据包。同时，从Client到Broker，以及从Broker到Client的CONNCET数据包中都会包含一个Reason Code，用于标识断开的原因。
+
 ![IoT-MQTT协议v5版主动断连ReasonCode](../resources/static/images/IoT-MQTT协议v5版主动断连ReasonCode.png)
 
 ## MQTT协议实战
@@ -592,13 +609,13 @@ EMQ X Broker的节点名(${node})可以在`<EMQ X安装目录>/emqx/etc/emqx.con
 通过EMQ X 提供的Hook系统 来捕获Broker 内部的事件 并进行处理。
 
 EMQ自带一个WebHook插件，它的原理是：当像Client上线或下线之类的事件发生时，EMQ X会把事件的信息发送到一个事先指定好的URL上，这样我们就可以进行处理了。
-    - 开启WebHook：编辑WebHook插件的配置文件，将回调的url地址指向本地应用。
-        ```
-        1. #< EMQ X 安装目录>/emqx/etc/plugins/emqx_web_hook.conf
-        2. web.hook.api.url = http://127.0.0.1:3000/emqx_web_hook
-        ```
-    - 重新加载WebHook插件：`< EMQ X 安装目录>/emqx/bin/emqx_ctl plugins load emqx_web_hook`
-    - 在本地应用代码中实现WebHook的回调。需要注意：/emq_web_hook这个URL是在IotHub内部使用的，除了WebHook，外部是不应该能够访问的。
+- 开启WebHook：编辑WebHook插件的配置文件，将回调的url地址指向本地应用。
+    ```
+    1. #< EMQ X 安装目录>/emqx/etc/plugins/emqx_web_hook.conf
+    2. web.hook.api.url = http://127.0.0.1:3000/emqx_web_hook
+    ```
+- 重新加载WebHook插件：`< EMQ X 安装目录>/emqx/bin/emqx_ctl plugins load emqx_web_hook`
+- 在本地应用代码中实现WebHook的回调。需要注意：/emq_web_hook这个URL是在IotHub内部使用的，除了WebHook，外部是不应该能够访问的。
 
 
 管理设备的连接状态：
@@ -656,18 +673,17 @@ TODO
 
 #### 接收数据的方案
 
-1. 基于共享订阅方式。
+1. **基于共享订阅方式**  
+   - EMQ X Broker支持一个共享订阅功能，多个订阅者可以订阅同一个主题，EMQ X Broker会按照某种顺序依次把消息分发给这些订阅者，在某种意义上实现订阅者负载均衡。
+   - 共享订阅的实现：订阅者只需要订阅具有特殊前缀的主题即可，目前共享订阅支持2种前缀`$queue/`和`$share/<group>/`，且支持通配符 `#`和 `+`。
 
-EMQ X Broker支持一个共享订阅功能，多个订阅者可以订阅同一个主题，EMQ X Broker会按照某种顺序依次把消息分发给这些订阅者，在某种意义上实现订阅者负载均衡。
 - 优点：可以根据数据量动态的增添共享订阅者，这样就不存在单点故障了，也具有良好的扩展性。
 - 缺点：引入了多个MQTT Client，提高了系统的复杂性，增加了开发、部署和运维监控的成本。
 
-共享订阅的实现：订阅者只需要订阅具有特殊前缀的主题即可，目前共享订阅支持2种前缀`$queue/`和`$share/<group>/`，且支持通配符 `#`和 `+`。
 
+2. **基于Hook的方案**  
+   使用EMQ X的Hook机制实现设备上行数据的接收功能。
 
-2. 基于Hook的方案。
-
-使用EMQ X的Hook机制实现设备上行数据的接收功能。
 - EMQ X会在收到Publish数据包时将Publish的信息通过Hook传递出来。这时，就可以对数据进行存储和处理，实现接收设备的上行数据。
 - 基于Hook的方案不用在Server端建立和管理连接到Broker的MQTT Client，系统复杂度要低一些。
 
@@ -801,18 +817,19 @@ IoTHub需要具备的功能：
 - 业务系统下发给设备的消息。比如：需要同步的数据、需要执行的指令等，这些数据会经过IoTHub发送给设备。
 - IoTHub内部发给设备的消息。通常是为了实现IoTHub相关功能的内部消息。
 
-1. 基于MQTT协议的方案
+1. **基于MQTT协议的方案**
 
 这种方式比较直接，IotHub Server以MQTT Client的身份接入EMQ X Broker，将数据发布到设备订阅的主题上。
 
 这种方式存在的单点故障问题，  
 IotHub Server可以同时启用多个用于发布的MQTT Client，这些Client可以从一个工作队列（比如RabbitMQ、Redis等）里获取要发布的消息，然后将其发布到对应的设备，在每次IotHub Server需要发送数据到设备时，只需要往这个队列里投递一条消息就可以了。
+
 ![IoT-基于MQTT协议的下行数据处理架构](../resources/static/images/IoT-基于MQTT协议的下行数据处理架构.png)
 
 - 优点：具有良好的扩展性，不存在单点故障。
 - 缺点：引入多个MQTT Client这样额外的实体，提高了系统的复杂度，增加了开发、部署、运维监控的成本。
 
-2. 基于EMQ X RESTful API的方案
+2. **基于EMQ X RESTful API的方案**
 
 EMQ X的RESTful API提供了一个接口，可以向某个主题发布消息。
 
@@ -829,6 +846,7 @@ EMQ X的RESTful API提供了一个接口，可以向某个主题发布消息。
 ```
 
 这种方案不需要维护多个用于发布的MQTT Client，在开发和部署上的复杂度要低一些。
+
 ![IoT-基于EMQX的RESTful接口的方案](../resources/static/images/IoT-基于EMQX的RESTful接口的方案.png)
 
 
@@ -1007,6 +1025,7 @@ CoAP消息分两种：
 - CoAP协议的请求类似于HTTP请求，包含GET、POST、PUT、DELETE 4种方法 和请求的URL。
 - CoAP请求可以用CON发：`Client -CON-> Server`，`Server -ACK-> Client`；也可以用NON发：`Client -NON-> Server`，`Server -NON-> Client`。
 - "异步"的CoAP请求/应答：如果Server没法立刻应答Client，可以先回复一个空ACK，准备好后再回复包含同样Token的CON消息。
+
 ![IoT-异步的CoAP协议请求应答流程](../resources/static/images/IoT-异步的CoAP协议请求应答流程.png)
 
 
