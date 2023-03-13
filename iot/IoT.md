@@ -1077,6 +1077,90 @@ const publish = [
 
 ### NTP服务
 
+NTP：同步网络中各个计算机时间的一种协议。
+
+IoTHub中 需要保证设备 和服务端的时间同步，在设备上都要运行一个NTP服务，定时跟NTP服务器来进行时间同步，IoTHub服务器也一样。  
+这样大部分情况下就能保证设备和服务器的时间一致，除非设备掉电或者断网。
+
+1. **IoTHub的NTP服务**
+
+设备无法运行NTP服务时（设备不自带、设备资源有限），需要IoTHub基于现有数据通道来实现一个类似NTP服务器的时间同步功能：
+- 设备发起数据请求，请求NTP对时，请求中包含当前的设备时间deviceSendTime。
+- IotHub收到NTP对时的请求下，通过下发指令的方式将收到NTP对时请求的时间IotHubRecvTime，IotHub发送指令的时间IotHubSendTime，以及deviceTime发送到设备。
+- 设备收到NTP对时指令后，记录当前时间deviceRecvTime，然后通过公式`（IotHubRecvTime + IotHubSendTime + deviceRecvTimedeviceSendTime）/ 2`获取当前的精确时间。时间的单位都为毫秒。
+
+整个流程没有涉及业务系统，这里的数据请求和指令下发都只存在于IotHub和设备间，把这样的数据请求和指令都定义为IotHub的内部请求和指令，它们有如下特点：
+- 数据请求的resource以 $ 开头；
+- 指令下发的指令名以 $ 开头；
+- payload格式统一为JSON。
+
+这也就意味着：
+- 业务系统不能发送以$开头的指令；
+- 设备应用代码也不能通过sendDataRequest接口发送$开头的请求；
+- 在调用时需要对输入参数进行校验。
+
+2. **DeviceSDK的实现**
+
+- DeviceSDK要实现NTP对时请求，可以用[设备数据请求](#设备数据请求)的接口实现，约定NTP对时请求的Resource叫做`$ntp`。
+- DeviceSDK在收到IotHub下发的NTP对时指令时进行正确计算，这里约定NTP对时的下发指令叫作`$set_ntp`。
+```js
+//IotHub_Device/sdk/iot_device.js
+handleCommand({commandName, requestId, encoding, payload, expiresAt, commandType = "cmd"}) {
+    if (expiresAt == null || expiresAt > Math.floor(Date.now() / 1000)) {
+        ...
+        if (commandName.startsWith("$")) {
+            if(commandName == "$set_ntp") {
+                this.handleNTP(payload)
+            }
+        } else {
+            this.emit("command", commandName, data, respondCommand)
+        }
+    }
+}
+```
+- 在处理内部指令时，DeviceSDK不会通过 “command” 事件将内部指令的信息传递给设备应用代码。
+`if(commandName.startsWith("$"))`这个判断不是多余的，虽然后面还要按照指令名去对比，但是如果IotHub的功能升级了，增加了新的内部命令，不做这个判断的话，当新的内部命令发给还未升级的DeviceSDK设备时，就会把内部命令暴露给设备应用代码。
+
+- 最后计算当前的准确时间，再传递给设备应用代码。
+```js
+//IotHub_Device/sdk/iot_device.js
+handleNTP(payload) {
+    var time = Math.floor((payload.iothub_recv + payload.iothub_send + Date.now() - payload.device_time) / 2)
+    this.emit("ntp_set", time)
+}
+```
+
+3. **服务端的实现**
+
+- 服务端的实现很简单，收到NTP数据请求以后，将公式中需要的几个时间用指令的方式下发给设备。
+```js
+//IotHub_Server/services/message_service.js
+static handleDataRequest({productId, deviceId, resource, payload, ts}) {
+    // 这里的校验类似于DeviceSDK中，当IotHub弃用了某个内部数据请求时，如果不检查的话，使用还未升级的DeviceSDK设备可能会导致这个弃用的数据请求被转发至业务系统。
+    if(resource.startsWith("$")){ 
+        if(resource == "$ntp"){
+            this.handleNTP(payload, ts) // 因为NTP要使用收到消息的时间，所以这里添加了ts参数。
+        }
+    } else {
+        NotifyService.notifyDataRequest(...)
+    }
+}
+
+static handleNTP({payload, ts, productId, deviceId}) {
+    var data = {
+        device_time: payload.device_time,
+        iothub_recv: ts * 1000,
+        iothub_send: Date.now()
+    }
+    Device.sendCommand({
+        productId: productId,
+        deviceId: deviceId,
+        data: JSON.stringify(data),
+        commandName: "$set_ntp"
+    })
+}
+// （注意 EMQ X WebHook传递过来的ts单位是秒，后续解决）
+```
 
 ### 设备分组
 
