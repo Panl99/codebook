@@ -960,9 +960,120 @@ Topic格式：`cmd_resp/{ProductId}/{DeviceId}/{CommandName}/{RequestId}/{Messag
 
 ### RPC式调用
 
+当前[指令下发流程](#指令下发处理流程)是通过异步方式返回给业务系统的：业务系统调用下发指令接口，获得一个RequestId，设备对指令进行回复后，业务系统再从RabbitMQ队列中，使用RequestId获取对应的指令执行结果。
+
+RPC式调用是指 业务系统调用IoTHub下发指令后，IoTHub会把设备的回复直接返回给业务系统，这样业务系统只用1次HTTP请求就可以获取指令执行结果。
+1. 业务系统对Iot Hub Server API的下发指令接口发起HTTP Post请求。
+2. IotHub Server调用EMQ X的指令接口。
+3. EMQ X将指令发送到设备。
+4. 设备执行完指令，将指令执行结果发送到EMQ X Broker。
+5. EMQ X Broker将指令执行结果发送到IotHub Server。
+6. IotHub Server API将指令结果放入HTTP Response Body中，完成对HTTP Post请求的响应。
+
+如果IoTHub Server在指定时间内没有收到设备对指令的回复，会返回错误信息给业务系统。（如设备无响应）
+
+这种方式可以用来执行一些简单、时效性要求高的一些指令。
+
+1. **Topic设计**
+
+- RPC指令下发格式：`rpc/{ProductId}/{DeviceId}/{CommandName}/{Encoding}/{RequestId}/{ExpiresAt}`
+- RPC指令回复格式：`rpc_resp/{ProductId}/{DeviceId}/{CommandName}/{RequestId}/{MessageId}`
+
+2. **等待指令回复**
+
+使用Redis来缓存设备对RPC指令的回复：
+- 业务系统调用了Server API下发RPC式指令，Server API的代码调用EMQ X的Publish功能后，然后从Redis中获取**key：`rpc_resp/{RequestId}`的value**。
+  如果value不为空，则返回value；如果value为空，则等待一小段时间后重试（比如10毫秒后）。
+- IotHub Server在收到设备对RPC指令的回复以后，将回复的payload保存到Redis中，key：`rpc_resp/{RequestId}`。
+- 如果Server API在指定时间内仍然无法获取到key：`rpc_resp/{RequestId}`的value，则返回“错误” 给业务系统。
+
+3. **服务端实现**
+
+- 封装等待设备回复的过程。
+- Device类的sendCommand方法添加参数commandType，来决定是发送普通指令 还是RPC指令。
+- 在WebHook中处理RPC式指令的回复。根据Topic头是rpc_resp来判断是RPC式调用，并将Payload放在Redis中。
+
+4. **Server API：发送RPC指令**
+
+- 接口添加参数表示是否RPC式命令，RPC式调用最多等待设备回复时间为5秒，设置命令有效期为5秒。
+
+5. **更新设备ACL列表**
+
+- 将设备的回复主题`rpc_resp/{ProductId}/{DeviceId}/{CommandName}/{RequestId}/{MessageId}`加入到设备ACL列表。
+- 需要重新注册一个设备 或者手动更新已注册设备 存储在MongoDB的ACL列表。
+```js
+//IotHub_Server/models/devices
+deviceSchema.methods.getACLRule = function () {
+const publish = [
+    'upload_data/${this.productId}/${this.deviceId}/+/+',
+    'update_status/${this.productId}/${this.deviceId}/+',
+    'cmd_resp/${this.productId}/${this.deviceId}/+/+/+',
+    'rpc_resp/${this.productId}/${this.deviceId}/+/+/+',
+]
+...
+}
+```
+
+6. **更新服务器订阅列表**
+
+- IoTHub会将RPC式指令发送到主题`rpc/{ProductId}/{DeviceId}/{CommandName}/{Encoding}/{RequestId}/{ExpiresAt}`，所以需要在EMQ X的服务器订阅列表中添加这个主题。
+``` 
+## <EMQ X 安装目录>/emqx/etc/emqx.conf
+module.subscription.1.topic = cmd/%u/+/+/+/#
+module.subscription.1.qos = 1
+module.subscription.2.topic = rpc/%u/+/+/+/#
+module.subscription.2.qos = 1
+
+## 重启EMQ X Broker：<EMQ X安装目录>/emqx/bin/emqx restart。
+```
+- **注意：** 不能用`+/%u/+/+/+/#`代替`rpc/%u/+/+/+/#`和`cmd/%u/+/+/+/#`，因为这样设备会订阅到其它不该订阅的主题。
+
+7. **DeviceSDK的实现**
+
+- 只需要保证可以匹配到相应的RPC指令的主题名，并将回复发布到正确的主题上。
+- 对于设备应用代码来说，它并不知道指令是否是RPC式调用。不管是RPC式调用，还是普通的指令下发，设备应用代码的处理都是一样的：执行指令，然后回复结果。这是我们想要的效果。
+
+
+使用RPC式调用，业务系统的代码会更少，逻辑更简单。  
+RPC式调用的缺点 是它不能用于执行时间比较长的指令。
 
 ### 设备数据请求
 
+当前设备获取数据只能通过命令下发的方式从服务器到设备端，由服务器主动触发，相当于Push模式。
+
+本节实现Pull模式，设备主动从服务端拉取数据。（服务端包含：IoTHub、业务系统）
+1. 设备发送数据请求到特定的主题：`get/{ProductId}/{DeviceId}/{Resource}/{MessageId}`，其中Resource代表要请求的资源名称。
+2. IotHub将请求的内容，包括DeviceId和Resource已经请求的Payload通过RabbitMQ发送给业务系统。
+3. 业务系统调用指令下发接口，请求IotHub将相应的数据下发给设备。
+4. IotHub将数据用指令的方式下发给设备，指令名称以及设备是否需要回复这个指令，由设备和业务系统约定，IotHub不做强制要求。
+
+
+1. **更新设备ACL列表**
+
+- 将设备的数据请求主题`get/{ProductId}/{DeviceId}/{Resource}/{MessageId}`加入到设备ACL列表。
+- 需要重新注册一个设备 或者手动更新已注册设备 存储在MongoDB的ACL列表。
+```js
+//IotHub_Server/models/devices
+deviceSchema.methods.getACLRule = function () {
+const publish = [
+    'upload_data/${this.productId}/${this.deviceId}/+/+',
+    'update_status/${this.productId}/${this.deviceId}/+',
+    'cmd_resp/${this.productId}/${this.deviceId}/+/+/+',
+    'rpc_resp/${this.productId}/${this.deviceId}/+/+/+',
+    'get/${this.productId}/${this.deviceId}/+/+',
+]
+...
+}
+```
+
+2. **服务端实现**
+
+- 服务端需要解析新的主题名，然后将相应的数据转发到业务系统。
+- Data Request相关的数据将会被发送到名为`iothub.events.data_request`的RabbitMQ Exchange中，Exchange的类型为Direct，Routing key为ProductId。
+
+3. **DeviceSDK的实现**
+
+- 设备端只需要实现向对应的主题发送消息就可以。当业务系统下发数据后，设备只需要把业务系统下发的数据当作一条正常的指令处理。
 
 ### NTP服务
 
