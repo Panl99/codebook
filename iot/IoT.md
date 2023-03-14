@@ -1164,6 +1164,304 @@ static handleNTP({payload, ts, productId, deviceId}) {
 
 ### 设备分组
 
+IoTHub Server API提供两个接口
+- 给设备设置一个或多个标签，拥有相同标签的设备属于同一分组；
+- 根据标签批量下发指令。
+
+设备分组功能需要解决的两个问题
+- 设备如何订阅相应的标签主题？
+  - 当前IotHub的设备端是通过EMQ X的服务器订阅功能完成订阅的，在设备分组的场景下，设备的标签是可以动态增加和删除的，所以无法使用EMQ X的服务器订阅功能。
+    那么就需要使用MQTT协议的`subscribe`和`unsubscribe`功能来完成标签的订阅。
+- 设备如何知道自己应该订阅哪些标签的主题？
+  - 当业务系统修改了设备的标签，IotHub需要将设备的标签信息告知设备，这样设备才能去`subscribe`和`unsubscribe`相应的标签主题。
+    IotHub同时会使用Push和Pull模式来告知设备它的标签信息。
+
+1. **功能设计**
+
+给设备添加标签，设备根据标签去订阅对应主题。
+- **标签字段**：Device模型添加一个tags字段，类型为数组，表示设备的多个标签。
+- **标签信息同步**：
+  - **Push模式**：当设备的标签信息发生变化，即业务系统调用Server API修改设备标签后，IotHub将设备标签数组通过指令下发给设备，指令名为`$set_tags`。
+  - **Pull模式**：当设备连接到IotHub后，会发起一个Resource名为`$tags`的数据请求，IotHub在收到请求后会将设备标签数组通过指令下发给设备，指令名为`$set_tags`。
+    - 为什么不使用MQTT协议的Retained消息来解决标签信息同步的问题？（每次设备标签信息发生变化后，向一个设备相关的主题上发布一个Retained消息，里面包含标签信息，这样无论设备在什么时候连接到IotHub都能获取到标签，不再需要Pull了。）  
+      实际跟理论有些出入：MQTT协议规定了如果Client不主动设置`clean_session=true`，那么Broker应该永久为Client保存session，包括设备订阅的主题、未应答的QoS>1的消息等。  
+      但在实际情况中，Broker的存储空间是有限的，Broker不会永久保存session，大部分的Broker都会设置一个session过期时间，可以在`<EMQ X安装目录>/emqx/etc/emqx.conf`里设置EMQ X client session过期时间。
+      `zone.external.session_expiry_interval = 2h`默认过期时间2小时（阿里云QoS1消息保存7天）。  
+      假如修改设备标签后 恰好设备离线超出session过期时间，那么设备就收不到标签相应的指令了，所以使用Pull模式来保证设备可以获取标签数据。
+  - **设备持久化存储标签**：在MQTT协议架构里，Client是无法从Broker处获取自己订阅的主题的，所以设备需要在本地保存自己的标签，以便和`$set_tags`指令数据里面的标签进行对比，因此设备需要提供持久化的存储。
+    - 假设设备的存储坏了（这是不可避免的），存储的标签数据没有了，更换了存储标签重新接入以后，设备对比IotHub发来的标签数组，是无法知道它应该`unsubscribe`哪些标签的，所以设备可能会订阅到它不应该订阅的主题。这种情况下建议设备使用新的ClientId接入。
+  - **标签信息携带版本号**：在实际的项目中，一般会使用EMQ X Broker集群，如果设备的网络状态不是很稳定，有可能会出现标签指令乱序的情况：  
+    比如 业务系统连续对一个设备的标签修改两次，结果第二次修改的指令比第一次修改的指令先到达，这样在设备端第一次修改的内容就会覆盖第二次修改的内容。  
+    为了避免这种情况的发生，`$set_tags`指令会带一个标签信息的版本号**`tags_version`**：
+    - 业务系统每次修改设备信息时，`tags_version`加1；
+    - 设备端收到`$set_tags`指令时，用指令里的`tags_version`和本地保存的`tags_version`对比，如果指令里的`tags_version`大于本地保存的`tags_version`，才会执行后续的处理。
+    - 这里的`tags_version`只是用来应对MQTT Pubulish数据包未按照预定顺序到达设备时的情况，对于业务系统调用Server API对设备标签的并发修改，需要其他机制来应对（比如乐观锁）。
+- **Topic设计**：设备通过标签接收下发指令的主题格式：`tags/{ProductId}/{tag}/cmd/{CommandName}/{Encoding}/{RequestId}/{ExpiresAt}`
+
+2. **服务端实现**
+
+- 添加tags字段：在Device模型中，添加字段保存tags和tags_version。
+```js
+//IotHub_Server/models/device.js
+const deviceSchema = new Schema({
+    ...
+    tags: {
+        type: Array,
+        default: []
+    },
+    tags_version: {
+        type: Number,
+        default: 1
+    }
+})
+```
+在查询设备信息时需要返回设备的tags。
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.toJSONObject = function () {
+    return {
+        productId: this.productId,
+        deviceId: this.deviceId,
+        secret: this.secret,
+        device_status: JSON.parse(this.device_status),
+        tags: this.tags
+    }
+}
+```
+
+- 更新设备ACL列表
+
+把设备订阅的标签主题加入设备的ACL列表中
+
+`tags/{ProductId}/{tag}/cmd/{CommandName}/{Encoding}/{RequestId}/{ExpiresAt}`
+```js
+//IotHub_Server/models/devices
+deviceSchema.methods.getACLRule = function () {
+    const subscribe = [
+        'tags/${this.productId}/+/cmd/+/+/+/#'
+    ]
+    ...
+}
+```
+注意：这个主题名在tag这一层级用了通配符，这样会允许Client订阅到不属于它的标签主题，但是在输出时设备对ACL是做了严格控制的，所以安全性还是可以得到保证的。  
+这样的话每次修改设备标签时就不用修改设备的ACL列表，这是一种权衡。
+
+需要重新注册一个设备 或者手动更新已注册设备 存储在MongoDB的ACL列表。
+
+- 发送`$set_tags`指令
+
+设备在连接到IotHub时会主动请求标签信息，离线的标签指令对设备来说没有意义，所以使用QoS0发送`$set_tags`指令。
+
+首先需要在发送指令的方法上加上QoS参数。
+```js
+deviceSchema.statics.sendCommand = function ({productId, deviceId, commandName, data, encoding = "plain", ttl = undefined, commandType = "cmd", qos = 1}) {
+    var requestId = new ObjectId().toHexString()
+    var topic = '${commandType}/${productId}/${deviceId}/${commandName}/${encoding}/${requestId}'
+    if (ttl != null) {
+        topic = '${topic}/${Math.floor(Date.now() / 1000) + ttl}'
+    }
+    emqxService.publishTo({topic: topic, payload: data, qos: qos})
+    return requestId
+}
+```
+然后封装发送`$set_tags`指令的方法。
+```js
+deviceSchema.methods.sendTags = function () {
+    this.sendCommand({
+        commandName: "$set_tags",
+        data: JSON.stringify({tags: this.tags || [], tags_version: tags_version || 1}),
+        qos: 0
+    })
+}
+```
+
+- 处理设备标签数据请求
+
+当设备发送resource名为`$tags`的数据请求时，IotHub响应并将当前设备的标签下发到设备。
+```js
+//IotHub_Server/services/message_service.js
+static handleDataRequest({productId, deviceId, resource, payload, ts}) {
+    if (resource.startsWith("$")) {
+        if (resource == "$ntp") {
+            ...
+        } else if (resource == "$tags") {
+            Device.findOne({product_id: productId, device_id: deviceId}, function (err, device) {
+                if (device != null) {
+                    var data = JSON.parse(payload.toString())
+                    // 在设备的标签数据请求中带上设备本地的tags_version，只有服务端的tags_version大于设备端的时才下发标签指令。
+                    if (data.tags_version < device.tags_version) { 
+                        device.sendTags()
+                    }
+                }
+            })
+        }
+    } else {
+        ...
+    }
+}
+```
+
+- Server API：修改设备标签
+
+Server API提供一个接口供业务系统修改设备的标签，多个标签名用逗号分隔。
+```js
+//IotHub_Server/route/devices.js
+router.put("/:productId/:deviceId/tags", function (req, res) {
+    var productId = req.params.productId
+    var deviceId = req.params.deviceId
+    var tags = req.body.tags.split(",")
+    Device.findOne({"product_id": productId, "device_id": deviceId}, function (err, device) {
+        if (err != null) {
+            res.send(err)
+        } else if (device != null) {
+            device.tags = tags
+            device.tags_version += 1 // 每次修改标签后，将tags_version加1。
+            device.save()
+            device.sendTags()
+            res.status(200).send("ok")
+        } else {
+            res.status(404).send("device not found")
+        }
+    })
+}
+```
+
+- Server API：批量指令下发
+
+Server API需要提供接口，使业务系统可以按照标签批量下发指令。
+```js
+//IotHub_Server/routes/tags.js
+var express = require('express');
+var router = express.Router();
+const emqxService = require("../services/emqx_service")
+const ObjectId = require('bson').ObjectID;
+
+router.post("/:productId/:tag/command", function (req, res) {
+    var productId = req.params.productId
+    var ttl = req.body.ttl != null ? parseInt(req.body.ttl) : null
+    var commandName = req.body.command
+    var encoding = req.body.encoding || "plain"
+    var data = req.body.data
+    var requestId = new ObjectId().toHexString()
+    var topic = 'tags/${productId}/${req.params.tag}/cmd/${commandName}/${encoding}/${requestId}'
+    if (ttl != null) {
+        topic = '${topic}/${Math.floor(Date.now() / 1000) + ttl}'
+    }
+    emqxService.publishTo({topic: topic, payload: data})
+    res.status(200).json({request_id: requestId})
+})
+module.exports = router
+```
+设备在回复批量下发的指令时，其流程和普通指令下发的流程一样，IotHub也会用同样的方式将设备对指令的回复传递给业务系统。  
+不同的是，在批量下发指令时，针对同一个RequestId，业务系统会收到多个回复。  
+由于涉及多个设备的指令回复处理，批量指令下发无法提供RPC式的调用。
+
+
+3. **DeviceSDK端实现**
+
+设备在连接到IotHub时，需要主动请求标签数据，在收到来自服务端的标签数据时，需要对比本地存储的标签数据，然后`subscribe`或者`unsubscribe`对应的主题。
+
+- 设备端的持久性存储
+  - 由于需要和服务端的标签进行对比，设备需要在本地使用持久化的存储来保存已订阅的标签。
+  - 一般来说，DeviceSDK需要根据自身平台的特点来提供存储的接口。
+- 处理`$set_tags`指令  
+  当收到IotHub下发的`$set_tags`指令时，DeviceSDK需要进行以下操作：  
+  1. 将指令数据里的`tags_version`和本地存储的`tags_version`进行比较，不大于本地时忽略该指令，否则进入下一步；
+  2. 比较本地保存的tags和指令数据里的tags：①对本地有 而指令里没有的tag，`unsubscribe`相应的主题；②对本地没有 而指令里有的tag，`subscribe`相应的主题；
+  3. 将指令里的tags和tags_version存入本地存储。
+```js
+//IotHub_Device/sdk/iot_device.js
+setTags(serverTags) {
+    var self = this
+    var subscribe = []
+    var unsubscribe = []
+    this.persistent_store.getTags(function (localTags) {
+        if (localTags.tags_version < serverTags.tags_version) {
+            serverTags.tags.forEach(function (tag) {
+                if (localTags.tags.indexOf(tag) == -1) {
+                    subscribe.push('tags/${self.productId}/${tag}/cmd/+/+/+/#')
+                }
+            })
+            localTags.tags.forEach(function (tag) {
+                if (serverTags.tags.indexOf(tag) == -1) {
+                    unsubscribe.push('tags/${self.productId}/${tag}/cmd/+/+/+/#')
+                }
+            })
+            if(subscribe.length > 0) {
+                self.client.subscribe(subscribe, {qos: 1}, function (err, granted) {
+                    console.log(granted)
+                })
+            }
+            if(unsubscribe.length > 0) {
+                self.client.unsubscribe(unsubscribe)
+            }
+            
+            self.persistent_store.saveTags(serverTags)
+        }
+    })
+}
+```
+然后在接收到`$set_tags`指令时，调用setTags。
+```js
+//IotHub_Device/sdk/iot_device.js
+handleCommand({commandName, requestId, encoding, payload, expiresAt, commandType = "cmd"}) {
+    ...
+    if (commandName.startsWith("$")) {
+        payload = JSON.parse(data.toString())
+        if (commandName == "$set_ntp") {
+            this.handleNTP(payload)
+        } else if (commandName == "$set_tags") {
+            this.setTags(payload)
+        }
+    } else {
+        ...
+    }
+}
+```
+
+- `$tags`数据请求
+
+在设备连接到IotHub时，发起标签的数据请求。
+```js
+//IotHub_Device/sdk/iot_device.js
+sendTagsRequest(){
+    this.sendDataRequest("$tags")
+}
+
+connect() {
+    ...
+    this.client.on("connect", function () {
+        self.sendTagsRequest()
+        self.emit("online")
+    })
+    ...
+}
+```
+
+- 处理批量下发指令
+
+DeviceSDK在处理批量下发指令时，其流程和普通的指令下发没有区别，只需要匹配批量指令下发的主题名即可。
+```js
+//IotHub_Device/sdk/iot_device.js
+dispatchMessage(topic, payload) {
+    var cmdTopicRule = "(cmd|rpc)/:productId/:deviceId/:commandName/:encoding/:requestId/:expiresAt?"
+    var tagTopicRule = "tags/:productId/:tag/cmd/:commandName/:encoding/:requestId/:expiresAt?"
+    var result
+    if ((result = pathToRegexp(cmdTopicRule).exec(topic)) != null) {
+        ...
+    } else if ((result = pathToRegexp(tagTopicRule).exec(topic)) != null) {
+        if (this.checkRequestDuplication(result[5])) {
+            this.handleCommand({
+                commandName: result[3],
+                encoding: result[4],
+                requestID: result[5],
+                expiresAt: result[6] != null ? parseInt(result[6]) : null,
+                payload: payload,
+            })
+        }
+    }
+}
+```
 
 ### M2M设备间通信
 
