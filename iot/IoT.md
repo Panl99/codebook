@@ -1465,6 +1465,91 @@ dispatchMessage(topic, payload) {
 
 ### M2M设备间通信
 
+在某些场景下，接入IotHub的设备可能需要和其他接入的设备进行通信，例如管理终端通过P2P的方式查看监控终端的实时视频，在建立P2P连接之前，需要管理终端和监控终端进行通信，交换一些建立会话的数据。
+
+两个不同的设备DeviceA、DeviceB作为MQTT Client接入EMQ X Broker，它们之间进行通信的流程很简单：  
+DeviceA订阅主题TopicA，DeviceB订阅主题TopicB，如果DeviceA想向DeviceB发送信息，只需要向TopicB发布消息就可以了，反之亦然。  
+
+不过，IotHub和DeviceSDK需要对这个过程进行抽象和封装，DeviceSDK想对设备应用代码屏蔽掉MQTT协议层的细节，就需要做到如下功能：  
+- 设备间以DeviceId作为标识发送消息；
+- 当DeviceA收到DeviceB的消息时，它知道这个消息是来自DeviceB的，可以通过DeviceB的DeviceId对DeviceB进行回复。
+
+在IotHub Server端，需要控制设备间通信的范围，这里约定只有同一个ProductId下的设备可以相互通信。
+
+1. **Topic设计**
+
+接收其他设备发来消息的主题格式：`m2m/{ProductId}/{DeviceId}/{SenderDeviceId}/{MessageId}`。在设备间通信场景下，设备需要同时发布和订阅这个主题。
+- ProductId、DeviceId：和之前的使用方式一样，唯一标识一个接收消息的设备；
+- SenderDeviceId：消息发送方的的设备名，表明消息的来源方，接收方在需要回复消息时使用；
+- MessageId：消息的唯一ID，以便对消息进行去重。
+
+在两个设备开始通信前，发送方设备如何获取接收方设备的DeviceId？  
+这取决于设备和业务系统的业务逻辑，业务系统可以通过指令下发、设备主动数据请求等方式将这些信息告知发送方设备。
+
+2. **服务端实现**
+
+- 更新设备ACL列表
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.getACLRule = function () {
+    const publish = [
+        'upload_data/${this.productId}/${this.deviceId}/+/+',
+        'update_status/${this.productId}/${this.deviceId}/+',
+        'cmd_resp/${this.productId}/${this.deviceId}/+/+/+',
+        'rpc_resp/${this.productId}/${this.deviceId}/+/+/+',
+        'get/${this.productId}/${this.deviceId}/+/+',
+        'm2m/${this.productId}/+/${this.deviceId}/+',
+    ]
+    ...
+}
+```
+需要重新注册一个设备 或者手动更新已注册设备 存储在MongoDB的ACL列表。
+
+- 新增服务端订阅列表
+``` 
+## <EMQ X 安装目录>/emqx/etc/emqx.config
+module.subscription.3.topic = m2m/%u/+/+
+module.subscription.3.qos = 1
+
+## 重启EMQ X Broker：<EMQ X安装目录>/emqx/bin/emqx restart。
+```
+
+3. **DeviceSDK端实现**
+
+- 发送消息：DeviceSDK实现一个方法，可以向指定的DeviceId发送消息。
+```js
+//IotHub_Device/sdk/iot_device.js
+sendToDevice(deviceId, payload){
+    if (this.client != null) {
+        // productId是发送方的，保证消息只能发送给同一productId的设备
+        var topic = 'm2m/${this.productId}/${deviceId}/${this.deviceId}/${new ObjectId().toHexString()}'
+        this.client.publish(topic, payload, {
+            qos: 1
+        })
+    }
+}
+```
+- 接收消息：DeviceSDK需要处理来自设备间通信主题的消息，并用event的方式将消息和发送方传递给设备应用代码。
+```js
+//IotHub_Device/sdk/iot_device.js
+dispatchMessage(topic, payload) {
+    ...
+    var m2mTopicRule = "m2m/:productId/:deviceId/:senderDeviceId/:MessageId"
+    var result
+    var self = this
+    ...
+    else if ((result = pathToRegexp(m2mTopicRule).exec(topic)) != null) {
+        this.checkRequestDuplication(result[4], function (isDup) {
+            if (!isDup) {
+                // 将发送方的DeviceId和消息内容通过“device_message”事件传递给设备应用代码。
+                self.emit("device_message", result[3], payload)
+            }
+        })
+    }
+    ...
+}
+```
+
 
 ### OTA升级
 
