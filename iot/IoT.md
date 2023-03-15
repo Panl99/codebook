@@ -1897,6 +1897,484 @@ DeviceSDK除了把OTA升级相关的数据通过`ota_upgrade`事件传递给设�
 
 ### 设备影子
 
+#### 什么是设备影子
+
+1. 阿里云
+
+- 物联网平台提供设备影子功能，用于缓存设备状态。设备在线时，可以直接获取云端指令；设备离线时，上线后可以主动拉取云端指令。  
+- 设备影子是一个JSON文档，用于存储设备上报状态和应用程序期望状态信息。  
+- 每个设备有且只有一个设备影子，设备可以通过MQTT协议获取和设置设备影子，并同步状态。该同步可以是影子同步给设备，也可以是设备同步给影子。  
+
+2. 腾讯云
+
+- 设备影子文档是服务器端为设备缓存的一份状态和配置数据。它以JSON文本形式存储。
+- 设备影子包含了两种主要功能：
+  - 服务端和设备端数据同步  
+    设备影子提供了一种在网络情况不稳定、设备上下线频繁的情况下，服务端和设备端稳定实现数据同步的功能。  
+    （这里要说明一下，IotHub之前实现的数据/状态上传、指令下发功能都是可以在网络情况不稳定的情况下，稳定实现单向数据同步的。）  
+    设备影子主要解决的是：当一个状态或者数据可以被设备和服务器端同时修改时，在网络状态不稳定的情况下，如何保持其在服务端和设备端状态的一致性。  
+    当你需要双向同步时，就可以考虑使用设备影子了。例如，智能灯泡的开关状态既可以远程改变（比如通过手机App进行开关），也可以在本地通过物理开关改变，那么就可以使用设备影子，使得这个状态在服务端和设备端保持一致。  
+  - 设备端数据/状态缓存  
+    设备影子还可以作为设备状态/数据在服务端的缓存，由于它保证了设备端和服务端的一致性，因此在业务系统需要获取设备上的某个状态时，只需要读取服务端的数据就可以了，不需要和设备进行交互，实现了设备和业务系统的解耦。  
+
+#### 设备影子的数据结构
+
+```json
+{
+  "state": {
+    "reported": {
+      "lights": "on"
+    },
+    "desired": {
+      "lights": "off"
+    }
+  },
+  "metadata": {
+    "reported": {
+      "lights": {
+        "timestamp": 123456789
+      }
+    },
+    "desired": {
+      "lights": {
+        "timestamp": 123456789
+      }
+    }
+  },
+  "version": 1,
+  "timestamp": 123456789
+}
+```
+- reported：指当前设备上报的状态，业务系统如果需要读取当前设备的状态，以这个值为准；
+- desired：指服务端希望改变的设备状态，但还未同步到设备上。
+- metadata：状态的元数据，内容是state中包含的状态字段的最后更新时间。
+- version：设备影子的版本。
+- timestamp：设备影子的最后一次修改时间。
+
+
+#### 设备影子的数据流向
+
+1. **服务端向设备端同步**
+
+当业务系统通过服务端的接口修改设备影子后，IotHub会向设备端进行同步，流程如下4步：
+- （1）IotHub向设备下发指令`UPDATE_SHADOW`，指令中包含了更新后的设备影子文档。以前面的设备影子文档为例，其中最重要的部分是desired和version。
+```json
+{
+    "state": {
+      ...
+      "desired": {
+        "lights": "off"
+      }
+    },
+    ...
+    "version": 1,
+    ...
+}
+```
+- （2）设备根据desired里面的值更新设备的状态，这里应该是关闭智能灯。
+- （3）设备向IotHub回复状态更新成功的信息。
+```json
+{
+  "state": {
+    "desired": null
+  },
+  "version": 1
+}
+```
+这里设备必须使用第（2）步得到version值，当IotHub收到这个回复时，要检查回复里的version是否和设备影子中的version一致。  
+如果一致，那么将设备影子中reported里面字段的值修改为与desired对应的值，同时删除desired，并修改metadata里面相应的值，修改过后的设备影子文档如下。
+```json
+{
+  "state": {
+    "reported": {
+      "lights": "off"
+    }
+  },
+  "metadata": {
+    "reported": {
+      "lights": {
+        "timestamp": 123456789
+      }
+    }
+  },
+  "version": 1,
+  "timestamp": 123456789
+}
+```
+文档中desired字段被删除了，同时state中的reported字段从`{"lights":"on"}`变成了`{"lights":off}`。  
+如果不一致，则说明在此期间设备影子又被修改了，那么回到第一步，重新执行。  
+- （4）设备影子更新成功后，IotHub向设备回复一条消息`SHADOW_REPLY`。
+```json
+{
+  "status": "success",
+  "timestamp": 123456789,
+  "version": 1
+}
+```
+
+2. **设备端向服务端同步**
+
+设备端的流程有如下3步。
+- （1）当设备连接到IotHub时，向IotHub发起数据请求，IotHub收到请求后会下发`UPDATE_SHADOW`指令，执行一次服务端向设备端同步，设备需要记录下当前设备影子的version。
+- （2）当设备的状态发生变化，比如通过物理开关关闭智能电灯时，IotHub发送`REPORT_SHADOW`数据，包含第一步获得的version，代码如下。
+```json
+{
+  "state": {
+    "reported": {
+      "lights": "off"
+    }
+  },
+  "version": 1
+}
+```
+- （3）当IotHub收到这个数据后，检查`REPORT_SHADOW`里的version是否和设备影子里的数据一致。
+  - 如果一致，那么用`REPORT_SHADOW`里的reported值修改设备影子中reported的字段。
+  - 如果不一致，那么IotHub会下发指令`UPDATE_SHADOW`，再执行一次服务端向设备端的同步。
+
+
+#### 服务端实现
+
+服务端需要对设备影子进行存储。在业务系统修改设备影子时，需要将设备影子同步到设备端，同时还需要处理来自设备的设备影子同步消息，将设备端的数据同步到数据库中。  
+最后服务端还要提供接口供业务系统查询和修改设备影子。
+
+1. **存储设备影子**
+
+我们在Device模型里新增一个字段 “shadow” 来保存设备影子，一个空的设备影子如下所示。
+```json
+{
+  "state": {},
+  "metadata": {},
+  "version": 0
+}
+```
+按照上述代码设置这个字段的默认值。
+```js
+const deviceSchema = new Schema({
+    ...
+    shadow : {
+        type: String,
+        default: JSON.stringify({
+            "state": {},
+            "metadata": {},
+            "version": 0
+        })
+    }
+})
+```
+
+2. **下发设备影子的相关指令**
+
+IotHub需要向设备发送2种与设备影子相关的指令：（使用IotHub指令下发通道即可）
+- 一种是更新设备影子，这里使用指令名`$update_shadow`，
+- 另一种是成功更新设备影子后，对设备的回复信息，这里使用指令名`$shadow_reply`。
+
+3. **Server API：更新设备影子**
+
+IotHub提供一个接口供业务系统修改设备影子，它需要接收一个JSON对象`{desired:{key1=value1,...},version=xx}`作为参数，  
+业务系统在调用时需要提供设备影子的版本，以避免业务系统用老版本数据覆盖当前的新版本数据。
+```js
+//IotHub_Server/routes/devices.js
+router.put("/:productName/:deviceName/shadow", function (req, res) {
+    var productName = req.params.productName
+    var deviceName = req.params.deviceName
+    Device.findOne({
+            "product_name": productName,
+            "device_name": deviceName
+        },
+        function (err, device) {
+            if (err != null) {
+                res.send(err)
+            } else if (device != null) {
+                if (device.updateShadowDesired(req.body.desired, req.body.version)) {
+                    res.status(200).send("ok")
+                } else {
+                    res.status(409).send("version out of date")
+                }
+            } else {
+                res.status(404).send("device not found")
+            }
+        })
+})
+```
+如果业务系统提交的version大于当前的设备影子version，则更新设备影子的desired字段，以及相关的metadata字段，更新成功后向设备下发指令`$update_shadow`。
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.updateShadowDesired = function(desired, version) {
+    var ts = Math.floor(Date.now() / 1000)
+    var shadow = JSON.parse(this.shadow)
+    if (version > shadow.version) {
+        shadow.state.desired = shadow.state.desired || {}
+        shadow.metadata.desired = shadow.metadata.desired || {}
+        for (var key in desired) {
+            shadow.state.desired[key] = desired[key]
+            shadow.metadata.desired[key] = {timestamp: ts}
+        }
+        shadow.version = version
+        shadow.timestamp = ts
+        this.shadow = JSON.stringify(shadow)
+        this.save()
+        this.sendUpdateShadow()
+        return true
+    } else {
+        return false
+    }
+}
+deviceSchema.methods.sendUpdateShadow = function () {
+    this.sendCommand({
+        commandName: "$update_shadow",
+        data: this.shadow,
+        qos: 0
+    })
+}
+```
+因为设备在连接时还会主动请求一次影子数据，所以这里使用qos=0就可以了。
+
+4. **响应设备端影子消息**
+
+设备端会向IotHub发送3种与设备影子相关的消息，IotHub Server需要对这些消息进行回应：
+- 设备主动请求设备影子数据，使用设备数据请求的通道，收到resource为`$shadow`的数据请求；
+- 设备更新完状态后向IotHub回复的消息，使用上传数据的通道，将DataType设为`$shadow_updated`；
+- 设备主动更新影子数据，使用上传数据的通道，将DataType设为`$shadow_reported`。
+
+（1）影子数据请求  
+在收到resource名为`$shadow`的数据请求后，IotHub应该下发`$update_shadow`指令。
+```js
+//IotHub_Server/services/message_service.js
+static handleDataRequest({productId, deviceId, resource, payload, ts}) {
+    if (resource.startsWith("$")) {
+        ...
+    } else if (resource == "$shadow_updated") {
+        Device.findOne({product_id: productId, device_id: deviceId}, function (err, device) {
+            if (device != null) {
+                device.sendUpdateShadow()
+            }
+        })
+    }
+    ...
+}
+```
+（2）设备状态更新完成以后的回复  
+在收到`DataType="$shadow_updated"`的上传数据后，IotHub应该按照数据的内容对设备影子进行更新。
+```js
+//IotHub_Server/service/message_service.js
+static handleUploadData({productId, deviceId, ts, payload, messageId, dataType} = {}) {
+    if (dataType.startsWith("$")) {
+        if (dataType == "$shadow_updated") {
+            Device.findOne({product_id: productId, device_id: deviceId}, function (err, device) {
+                if (device != null) {
+                    device.updateShadow(JSON.parse(payload.toString()))
+                }
+            })
+        }
+    } else {
+        ...
+    }
+}
+```
+更新时需要先检查回复的version，如果此时desired中的字段值为null，则需要在reported里面删除相应的字段，更新成功后需要回复设备。
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.updateShadow = function(shadowUpdated) {
+    var ts = Math.floor(Date.now() / 1000)
+    var shadow = JSON.parse(this.shadow)
+    if (shadow.version == shadowUpdated.version) {
+        if (shadowUpdated.state.desired == null) {
+            shadow.state.desired = shadow.state.desired || {}
+            shadow.state.reported = shadow.state.reported || {}
+            shadow.metadata.reported = shadow.metadata.reported || {}
+            for (var key in shadow.state.desired) {
+                if (shadow.state.desired[key] != null) {
+                    shadow.state.reported[key] = shadowUpdated.state.desired[key]
+                    shadow.metadata.reported[key] = {timestamp: ts}
+                } else {
+                    delete (shadow.state.reported[key])
+                    delete (shadow.metadata.reported[key])
+                }
+            }
+            shadow.timestamp = ts
+            shadow.version = shadow.version + 1
+            delete (shadow.state.desired)
+            delete (shadow.metadata.desired)
+            this.shadow = JSON.stringify(shadow)
+            this.save()
+            this.sendCommand({
+                commandName: "$shadow_reply",
+                data: JSON.stringify({
+                    status: "success",
+                    timestamp: ts, version:
+                    shadow.version
+                }),
+                qos: 0
+            })
+        }
+    } else {
+        // 设备影子的version和上报的version不一致，IotHub Server需要再发起一次服务端向设备端的同步
+        this.sendUpdateShadow()
+    }
+}
+```
+（3）设备主动更新影子  
+在收到`DataType="$shadow_reported"`的上传数据后，IotHub应该按照数据的内容对设备影子进行更新。
+```js
+//IotHub_Server/services/message_service.js
+static handleUploadData({productId, deviceId, ts, payload, messageId, dataType} = {}) {
+    if (dataType.startsWith("$")) {
+    ...
+    else if (datatype == "$shadow_reported") {
+        Device.findOne({product_id: productId, device_id: deviceId}, function (err, device) {
+                if (device != null) {
+                    device.reportShadow(JSON.parse(payload.toString()))
+                }
+            })
+        }
+    }
+    ...
+}
+```
+在更新设备影子时也需要检查version和null字段。
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.reportShadow = function(shadowReported) {
+    var ts = Math.floor(Date.now() / 1000)
+    var shadow = JSON.parse(this.shadow)
+    if (shadow.version == shadowReported.version) {
+        shadow.state.reported = shadow.state.reported || {}
+        shadow.metadata.reported = shadow.metadata.reported || {}
+        for (var key in shadowReported.state.reported) {
+            if (shadowReported.state.reported[key] != null) {
+                shadow.state.reported[key] = shadowReported.state.reported[key]
+                shadow.metadata.reported[key] = {timestamp: ts}
+            } else {
+                delete (shadow.state.reported[key])
+                delete (shadow.metadata.reported[key])
+            }
+        }
+        shadow.timestamp = ts
+        shadow.version = shadow.version + 1
+        this.shadow = JSON.stringify(shadow)
+        this.save()
+        this.sendCommand({
+            commandName: "$shadow_reply",
+            data: JSON.stringify({
+                status: "success",
+                timestamp: ts, version:
+                shadow.version
+            }),
+            qos: 0
+        })
+    } else {
+        this.sendUpdateShadow()
+    }
+}
+```
+
+5. **Server API：查询设备影子**
+
+只需要在设备详情接口返回设备影子的数据就可以了。
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.toJSONObject = function () {
+    return {
+        ...
+        shadow: JSON.parse(this.shadow),
+    }
+}
+```
+
+
+#### DeviceSDK端实现
+
+设备端需要处理来自IotHub Server的设备影子同步指令，同时在本地状态发生变化时，向IotHubServer发送相应的数据。
+
+1. **设备影子数据请求**
+
+在设备连接到IotHub时，需要主动发起一个数据请求，请求设备影子的数据。
+```js
+//IotHub_Device/sdk/iot_device.js
+this.client.on("connect", function () {
+    self.sendTagsRequest()
+    self.sendDataRequest("$shadow")
+    self.emit("online")
+})
+```
+
+2. **处理`$update_shadow`指令**
+   
+DeviceSDK在处理`$update_shadow`指令时有两件事情要做：
+- 如果desired不为空，要将desired数据传递给设备应用代码；
+- 需要提供接口供设备应用代码在更新完设备状态后向IotHub Server回复。
+```js
+//IotHub_Device/sdk/iot_device.js
+handleCommand({commandName, requestID, encoding, payload, expiresAt, commandType = "cmd"}) {
+    ...
+    else if (commandName == "$update_shadow") {
+        this.handleUpdateShadow(payload);
+    }
+    ...
+}
+
+handleUpdateShadow(shadow) {
+    if (this.shadowVersion <= shadow.version) {
+        this.shadowVersion = shadow.version
+        if (shadow.state.desired != null) {
+            var self = this
+            // 这里同样使用一个闭包封装对IotHub Server进行回复，并传递给设备应用代码
+            var respondToShadowUpdate = function () {
+                self.uploadData(JSON.stringify({
+                    state: {
+                        desired: null
+                    },
+                    version: self.shadowVersion
+                }), "$shadow_updated")
+            }
+            this.emit("shadow", shadow.state.desired, respondToShadowUpdate)
+        }
+    }
+}
+```
+this.shadowVersion初始化为0。
+```js
+//IotHub_Device/sdk/iot_device.js
+constructor(...) {
+    ...
+    this.shadowVersion = 0
+}
+```
+   
+3. **主动更新影子设备状态**
+
+设备可以上传`DataType="$shadow_reported"`的数据主动修改设备影子状态，下面通过一个reportShadow方法来完成这个操作。
+```js
+//IotHub_Device/sdk/iot_device.js
+reportShadow(reported) {
+    this.uploadData(JSON.stringify({
+        state: {
+            reported: reported
+        },
+        version: this.shadowVersion
+    }), "$shadow_reported")
+}
+```
+   
+4. **处理`$shadow_reply`指令**
+
+当IotHub Server根据设备上传的数据成功修改设备影子后，IotHub Server会下发`$shadow_reply`指令。
+这个指令的处理逻辑很简单，如果指令携带的version大于本地的version，那么就将本地的version更新为指令携带的version。
+```js
+handleCommand({commandName, requestId, encoding, payload, expiresAt, commandType = "cmd"}) {
+    ...
+    else if (commandName == "$update_shadow") {
+        this.handleUpdateShadow(payload);
+    } else if (commandName == "$shadow_reply") {
+        if (payload.version > this.shadowVersion && payload.status == "success") {
+            this.shadowVersion = payload.version
+        }
+    }
+}
+...
+}
+```
+
 
 ### IoTHub状态监控
 
