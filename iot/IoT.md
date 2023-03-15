@@ -664,7 +664,7 @@ TODO
 南向设备上报
 
 需要的功能点：
-- 存储上行数据：IotHub接收设备端上传的数据，并将数据来源（设备的ProductName，DeviceName）、消息ID、消息类型、payload进行存储。
+- 存储上行数据：IotHub接收设备端上传的数据，并将数据来源（设备的ProductId，DeviceId）、消息ID、消息类型、payload进行存储。
 - 通知业务系统：当有新的上行数据到达时，IotHub将通知并将上行数据发送给业务系统，业务系统可以自行处理这些数据，例如通知用户，将数据和其他业务数据融合后存储在业务系统的数据库等。
 - 设备数据查询：业务系统可以通过IotHub Server API查询某个设备上传的历史数据。
 
@@ -722,7 +722,7 @@ IotHub Server在接收到上行数据时候需要做以下几步处理：
 - 从主题名中提取出上行数据的元数据；
 - 消息去重；（可以使用Redis缓存来判断是否重复）
 - 将消息进行存储；
-- 通过RabbitMQ通知业务系统。（当有新的上行数据达到时，IotHub会向RabbitMQ名为`iothub.events.upload_data`的Direct Exchage的发送一条消息，RoutingKey为设备的ProductName。）
+- 通过RabbitMQ通知业务系统。（当有新的上行数据达到时，IotHub会向RabbitMQ名为`iothub.events.upload_data`的Direct Exchage的发送一条消息，RoutingKey为设备的ProductId。）
 
 如果Payload是二进制数据，可以对Payload进行Base64编码，EMQ X的WebHook配置修改：
 ```
@@ -1590,14 +1590,309 @@ OTA升级指令是一个IotHub内部使用的指令，指令数据包括：
 在进行OTA升级前，业务系统需要将升级包上传到一个设备可以访问的网络文件存储服务器中，并提供升级包的下载URL；
 同时需要提供升级包的md5签名，以免因为网络原因导致设备下载到不完整的升级包，进而导致升级错误。
 
+3. 上报升级进度
 
+设备接收到升级指令后的操作流程：
+- 下载升级包；
+- 校验安装包的md5签名；
+- 执行安装/烧写；
+- 向IotHub上报新的软件版本号。
 
+如果升级以后需要 重启设备应用，设备会在应用启动时，自动通过状态上报功能上报自己的软件版本号；  
+如果升级以后 不需要重启设备应用，那么设备应用代码应该使用状态上报功能上再报自己的软件版本号。
 
+在上述流程中，设备需要上报升级进度，包括升级包下载的进度、升级中发生的错误等，设备上报的进度数据是JSON格式的，内容如下：
+```json
+{
+    "type": "firmware",
+    "version": "1.1",
+    "progress": 70,
+    "desc": "downloading"
+}
+```
+- type：代表此次升级的类型，比如固件、应用等；
+- version：代表此次升级的版本；
+- progress：当前的升级进度；（由于只有在下载升级包时才能够保证设备应用是在运行的，所以**progress只记录下载升级包的进度**，取值为1～100。）  
+  在安装升级包时，很多时候设备应用都是处于被关闭的状态，无法上报进度。同时progress也被当作错误码使用：
+  - `-1`代表下载失败，
+  - `-2`代表签名校验识别失败，
+  - `-3`代表安装/烧写失败，
+  - `-4`代表其他错误导致的安装失败。
+- desc：当前安装步骤的描述，也可以记录错误信息。
 
+由于在软件包安装过程中，设备应用可能处于不可控状态，所以确定安装升级包是否成功的依据只有一个：检查设备状态中的软件版本号是否更新为期望的版本号，而不能只依赖设备上报的进度数据。
 
+4. OTA升级流程
 
+![IoT-OTA升级流程](../resources/static/images/IoT-OTA升级流程.png)  
+虚线代表该步骤可能会被重复执行多次
 
+- （1）业务系统将升级文件上传到文件存储服务器，获得升级文件可下载的URL。
+- （2）业务系统调用IotHub的接口请求对设备下发OTA升级指令。OTA升级指令包含升级包URL等信息。
+- （3）IotHub下发OTA指令到设备。
+- （4）设备通过指令数据中的升级文件URL从文件存储服务器下载升级文件。
+- （5）在下载和升级过程中，设备上报进度或错误信息。
+- （6）设备完成升级后，通过状态上报功能上报新的软件版本号。
 
+#### 服务端实现
+
+1. **Topic设计**
+
+下发OTA升级指令 可以使用已有的指令下发通道，只需要增加一个Topic供设备上报升级进度。
+
+设备上报升级进度主题格式：`update_ota_status/{ProductId}/{DeviceId}/{messageId}`。（相似：设备状态上报主题）
+   
+2. **更新设备ACL列表**
+```js
+//IotHub_Server/models/device.js
+deviceSchema.methods.getACLRule = function () {
+    const publish = [
+        'upload_data/${this.productId}/${this.deviceId}/+/+',
+        'update_status/${this.productId}/${this.deviceId}/+',
+        'cmd_resp/${this.productId}/${this.deviceId}/+/+/+',
+        'rpc_resp/${this.productId}/${this.deviceId}/+/+/+',
+        'get/${this.productId}/${this.deviceId}/+/+',
+        'm2m/${this.productId}/+/${this.deviceId}/+',
+        'update_ota_status/${this.productId}/${this.deviceId}/+',
+    ]
+    ...
+}
+```
+需要重新注册一个设备 或者手动更新已注册设备 存储在MongoDB的ACL列表。
+
+3. **下发OTA指令**
+
+这里使用`$ota_upgrade`作为OTA升级的指令名，同时支持 单一设备下发 和批量下发。
+```js
+//IotHub_Server/services/ota_service.js
+const Device = require("../models/device")
+static sendOTA({productId, deviceId = null, tag = null, fileUrl, version, size, md5, type}) {
+    var data = JSON.stringify({
+        url: fileUrl,
+        version: version,
+        size: size,
+        md5: md5,
+        type: type
+    })
+    if (deviceId != null) {
+        Device.sendCommand({ // 单设备下发
+            productId: productId,
+            deviceId: deviceId,
+            commandName: "ota_upgrade",
+            data: data
+        })
+    } else if (tag != null) {
+        Device.sendCommandByTag({ // 批量下发
+            productId: productId,
+            tag: tag,
+            commandName: "ota_upgrade",
+            data: data
+        })
+    }
+}
+```
+```js
+//IotHub_Server/models/device.js
+deviceSchema.statics.sendCommandByTag = function({productId, tag, commandName, data, encoding = "plain", ttl = undefined, qos = 1}) {
+    var requestId = new ObjectId().toHexString()
+    var topic = 'tags/${productId}/${tag}/cmd/${commandName}/${encoding}/${requestId}'
+    if (ttl != null) {
+        topic = '${topic}/${Math.floor(Date.now() / 1000) + ttl}'
+    }
+    emqxService.publishTo({topic: topic, payload: data, qos: qos})
+}
+```
+
+4. **处理设备上报的升级进度**
+
+在IotHub中，把设备升级的进度放到Redis中进行存储，同时把这块业务逻辑放到一个Service类中。
+```js
+//IotHub_Server/services/ota_service.js
+const redisClient = require("../models/redis")
+class OTAService{
+    static updateProgress(productId, deviceId, progress){
+        redisClient.set('ota_progress/${productId}/${deviceId}', JSON.stringify(progress))
+    }
+}
+module.exports = OTAService
+```
+在收到升级进度时调用下边方法：
+```js
+//IotHub_Server/services/message_service.js
+static dispatchMessage({topic, payload, ts} = {}) {
+    ...
+    var statusTopicRule = "(update_status|update_ota_status)/:productId/:deviceId/:messageId"
+    ...
+    const statusRegx = pathToRegexp(statusTopicRule)
+    ...
+    var result = null;
+    ...
+    else if ((result = statusRegx.exec(topic)) != null) {
+        this.checkMessageDuplication(result[4], function (isDup) {
+            if (!isDup) {
+                if (result[1] = "update_status") {
+                    MessageService.handleUpdateStatus({
+                        productId: result[2],
+                        deviceId: result[3],
+                        deviceStatus: payload.toString(),
+                        ts: ts
+                    })
+                } else if (result[1] = "update_ota_status") {
+                    var progress = JSON.parse(payload.toString())
+                    progress.ts = ts
+                    OTAService.updateProgress(result[2], result[3], progress)
+                }
+            }
+        })
+    }
+}
+```
+
+5. **Server API：执行OTA升级**
+
+业务系统调用IotHub接口下发设备OTA升级指令。
+```js
+//IotHub_Server/routes/ota.js
+var express = require('express');
+var router = express.Router();
+var Device = require("../models/device")
+var OTAService = require("../services/ota_service")
+router.post("/:productId/:deviceId", function(req, res) {
+    var productId = req.params.productId
+    var deviceId = req.params.deviceId
+    Device.findOne({product_id: productId, device_id: deviceId}, function (err, device) {
+        if(err){
+            res.send(err)
+        } else if (device != null) {
+            OTAService.sendOTA({
+                productId: device.product_id,
+                deviceId: device.device_id,
+                fileUrl: req.body.url,
+                size: parseInt(req.body.size),
+                md5: req.body.md5,
+                version: req.body.version,
+                type: req.body.type
+            })
+            res.status(200).send("ok")
+        } else {
+            res.status(400).send("device not found")
+        }
+    })
+})
+module.exports = router
+```
+
+6. **Server API：查询设备升级进度**
+
+业务系统可以查询某个设备的升级进度，首先把从Redis中读取升级进度的操作封装起来。
+```js
+//IotHub_Server/services/ota_service.js
+static getProgress(productId, deviceId, callback){
+    redisClient.get('ota_progress/${productId}/${deviceId}', function(err, value) {
+        if (value != null) {
+            callback(JSON.parse(value))
+        } else {
+            callback({})
+        }
+    })
+}
+```
+然后在ServerAPI处调用这个方法。
+```js
+//IotHub_Server/routes/ota.js
+router.get("/:productId/:deviceId", function (req, res) {
+    var productId = req.params.productId
+    var deviceId = req.params.deviceId
+    OTAService.getProgress(productId, deviceId, function (progress) {
+        res.status(200).json(progress)
+    })
+})
+```
+
+#### DeviceSDK端实现
+
+1. **上报升级进度**
+
+首先新增一个类来封装上报升级进度的操作。
+```js
+//IotHub_Device/sdk/ota_progress.js
+const ObjectId = require('bson').ObjectID;
+
+class OTAProgress {
+    constructor({productId, deviceId, mqttClient, version, type}) {
+        this.productId = productId
+        this.deviceId = deviceId
+        this.mqttClient = mqttClient
+        this.version = version
+        this.type = type
+    }
+
+    sendProgress(progress) {
+        var meta = {
+            version: this.version,
+            type: this.type
+        }
+        var topic = 'update_ota_status/${this.productId}/${this.deviceId}/${new ObjectId().toHexString()}'
+        this.mqttClient.publish(topic,
+            JSON.stringify({...meta, ...progress}),
+            {qos: 1})
+    }
+
+    download(percent, desc = "download") {
+        this.sendProgress({
+            progress: percent, desc:
+            desc
+        })
+    }
+
+    downloadError(desc = "download error") {
+        this.download(-1, desc)
+    }
+
+    checkMD5Error(desc = "check md5 error") {
+        this.sendProgress({progress: -2, desc: desc})
+    }
+
+    installError(desc = "install error") {
+        this.sendProgress({progress: -3, desc: desc})
+    }
+
+    error(desc = "error") {
+        this.sendProgress({progress: -4, desc: desc})
+    }
+}
+```
+这个类提供了几个方法来封装OTA升级的各个节点上报进度的操作，设备应用代码只需要在相应的节点调用对应的方法即可。  
+比如：下载升级包时调用progress.download(17)，安装失败时调用progress.installError()。
+
+2. **响应OTA指令**
+
+在收到`$ota_upgrade`指令以后，DeviceSDK代码需要把指令数据传递给设备应用代码。
+```js
+//IotHub_Device/sdk/iot_device.js
+handleCommand({commandName, requestID, encoding, payload, expiresAt, commandType = "cmd"}) {
+    ...
+    if (commandName.startsWith("$")) {
+        payload = JSON.parse(data.toString())
+        if (commandName == "$set_ntp") {
+            this.handleNTP(payload)
+        } else if (commandName == "$set_tags") {
+            this.setTags(payload)
+        } else if (commandName == "$ota_upgrade") {
+            var progress = new OTAProgress({
+                productId: this.productId,
+                deviceId: this.deviceId,
+                mqttClient: this.client,
+                version: payload.version,
+                type: payload.type
+            })
+            this.emit("ota_upgrade", payload, progress)
+        }
+    }
+    ...
+}
+```
+DeviceSDK除了把OTA升级相关的数据通过`ota_upgrade`事件传递给设备应用代码，还传递了一个OTAProgress对象，设备应用代码可以调用这个对象方法正确上报升级进度。
 
 
 ### 设备影子
