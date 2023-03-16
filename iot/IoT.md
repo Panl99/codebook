@@ -2448,15 +2448,133 @@ zone.internal.allow_anonymous = true
 
 ## 扩展EMQ X Broker
 
+IotHub Server通过使用EMQ X WebHook插件来获取设备的上下线事件和发布的数据。但存在以下问题：
+- **WebHook缺乏对身份的校验**，EMQ X在Post到指定的WebHook URL时，没有带上任何的身份认证信息，所以IotHub没有办法知道消息是否真的来自EMQ X。
+- **性能的损耗**，在每次设备上下线和发布数据时，EMQ X都会发起一个HTTP请求：建立连接、发送数据、关闭连接，这部分的开销对EMQ X的性能有可见的影响。
+  特别还有对于那些我们不关注的事件，比如设备订阅、设备取消订阅、送达等发生的时候EMQ X依然向WebHook URL发起一个请求，这完全是性能的浪费。
+- **顽健性**，假设IotHub的Web服务因为某种原因宕机了，在修复好之前，EMQ X获取的上行数据都会丢失。
+
+所以IotHub需要一个定制化更强的Hook机制：
+- 能够对消息和事件的提供者进行验证；
+- 只有在IotHub感兴趣的事件发生时，才触发Hook机制；
+- 用可持久化的队列来解耦消息和事件的提供者（EMQ X）、消费者（IotHub Server），同时保证在IotHub Server不可用期间，消息和事件不会丢失。
+
+编写一个基于RabbitMQ的Hook插件来实现上述条件：
+- 可配置触发Hook的事件。
+- 当事件发生时，插件将事件和数据放入RabbitMQ的可持久化的Queue中，保证事件数据不会丢失。
+
+RabbitMQ有一套完整的接入认证和ACL功能，所以我们可以通过使用RabbitMQ的认证体系进行身份验证，保证事件来源的可靠性（只会来自EMQ X）。
+
+编写插件逻辑：  
+基于EMQ X提供的Hook，可以通过编写插件的方式在这些Hook上注册处理函数，在插件内部可以调用EMQ中的数据和方法，在这些处理函数里执行自定义的业务逻辑完成对EMQ功能的扩展。  
+MongoDB认证插件、JWT认证插件、WebHook插件和将要开发的RabbitMQ Hook都是使用的这样的机制。
+
 ### Erlang语言
+
+- 一条Erlang语句结束符：`.`（英文句号）
+- "变量"命名需要大写字符开始：`X=10.`（Erlang里没有变量、赋值这两个概念，`=`表示等号，非赋值）
+- 变量赋值后不可变：一次性赋值变量。（`=`实际上表示计算等号两边是否相等，第一次会给X绑定值10，之后再对`X=1.`会发现X为10，不等于1，所以会报错）
+
+- 原子：小写字母开头的元素。（可以理解为Java中的枚举）
+- 元组：`{20,50}`可以表达一个点的坐标。一个三维坐标`P={{x,100},{y,80},{z,170}}`，用原子标识元素的含义，增加程序的可读性。
+- 记录：元组的另一种形式，它可以用一个名字标注元组的各个元素，不过在使用记录前，需要先声明记录。  
+  声明一个记录：
+  ```
+  -record(record_name, {
+    field1="default",
+    field2=1,
+    field3
+    }
+  )
+  ```
+  创建对应记录：
+  ```
+  #record_name{field1="new",field3=100}
+  ```
+- 列表：`L=[x,20,{a,3.0}].`，可以用`|`来拼接列表`L1=[100, 200|L].`
+
+**模式匹配**
+```
+1> {X, {y, Y}, {z, Z}}={{x, 100}, {y, 80}, {z, 170}}.
+{{x,100},{y,80},{z,170}}
+
+2>X.
+{x,100}
+3>Y.
+80
+4>Z.
+170
+5>
+```
+编写Erlang语言程序，大部分工作是在写模式匹配，能看懂模式匹配，就基本能看懂Erlang代码
+
+**模块、函数**
+
+Erlang的源文件是以.erl结尾的，一个.erl文件就是一个模块，在一个模块里可以定义多个函数，还可以用显式的export方式使方法可以被其他模块使用。
+```
+-module(module1). // 声明一个模块module1
+-export([func/0]). // 将方法导出去，便于在其他地方调用。0表示函数参数数量
+func()-> // 在模块中定义一个方法
+    ...
+```
+```
+module1:func(). // 在其他地方调用func()方法
+```
+在Erlang里面可以有同名函数，而且同名函数可以拥有一样的参数数量。
+```
+func()->
+    ...
+func(X,80)->
+    ...
+func(X,Y)->
+    ...
+```
+Erlang在决定调用哪个同名函数的时候，是通过对参数列表进行模式匹配来确定的。以上面的例子为例：
+- func(100,200)将调用第三个func()函数，  
+- 而func(100,80)会调用第二个func()函数。  
+这样就不用像其他语言一样，在func(X,Y)的函数体里面写“if Y==80”这样的分支了。
+  
+**宏定义**
+```
+-define(MACRO_NAME, XXX)
+```
+使用宏：
+```
+?MACRO_NAME
+```
+
+**OTP**
+
+OTP（Open Telecom Platform，开发电信平台）是Erlang一个框架和库的集合，类似于Java的J2EE容器，
+Erlang程序利用OTP比较快速地开发大规模的分布式系统，EMQ X就是运行在OTP上的Erlang程序。
 
 
 ### 搭建环境
 
+EMQ X的插件需要调用EMQ X内部的一些函数，所以没有办法单独编译EMQ X插件，而是需要将插件代码放到EMQ X源码中一起编译。所以首先要搭建EMQ X的编译环境。
+
+[github emqx](https://github.com/emqx/emqx/blob/master/README-CN.md)
+
+编写插件参考模板：  
+[插件开发](https://www.emqx.io/docs/zh/v4.3/advanced/plugins.html#%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91)  
+[emqx-plugin-template](https://github.com/emqx/emqx-plugin-template)  
 
 ### 实现一个基于RabbitMQ的Hook插件emqx-rabbitmq-hook
 
+[emqx_rabbitmq_hook](https://github.com/sufish/emqx_rabbitmq_hook.git)
 
+1. 建立RabbitMQ连接和连接池
+2. 处理client.connected事件
+3. 处理client.disconnected事件
+4. 处理message.publish事件
+5. 编译插件
+6. 插件的配置文件
+7. 应用配置项
+
+用emqx-rabbitmq-hook插件替换IotHub之前使用的WebHook插件:
+1. 发布emqx-rabbitmq-hook插件
+2. 集成emqx-rabbitmq-hook
+3. 更新IoTHub功能
 
 
 ## 集成CoAP协议
