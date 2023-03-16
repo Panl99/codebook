@@ -2378,7 +2378,72 @@ handleCommand({commandName, requestId, encoding, payload, expiresAt, commandType
 
 ### IoTHub状态监控
 
+监控EMQ X Broker的运行状态，比如在线设备的数量有多少，IotHub一共发送了多少消息、接收了多少消息等。
 
+EMQ X Broker提供了两种对运行状态进行监控的方式👇
+
+#### 使用RESTful API
+
+Pull模式
+
+EMQ X的RESTful API中提供了获取Broker当前运行状态的接口。
+
+`GET api/v4/stats/` [【官方文档】返回集群下所有状态数据](https://www.emqx.io/docs/zh/v4.3/advanced/http-api.html#%E7%8A%B6%E6%80%81)
+
+可以定期（比如10分钟）调用监控API，获取相应的数据统计，并存储结果，比如放入之前使用的时序数据库。这样便于查询历史状态数据和状态数据可视化。
+
+#### 使用系统主题
+
+Push模式
+
+EMQ X定义了一系列以`$SYS`开头的系统主题，会周期性地向这些主题发布包含运行数据的MQTT协议消息。
+
+[【官方文档】系统主题](https://www.emqx.io/docs/zh/v4.3/advanced/system-topic.html)
+
+可以运行一个MQTT Client去订阅相应的系统主题，当收到MQTT协议消息后，将数据存入时序数据库就可以了。
+
+以当前客户端连接数为例，EMQ X会把消息发向主题`$SYS/brokers/${node}/stats/connections/count`，只需要订阅`$SYS/brokers/+/stats/connections/count`即可。
+
+系统主题也是支持共享订阅的，以当前连接数为例，可以启动多个MQTT Client，订阅`$queue/$SYS/brokers/+/stats/connections/count`，那么这些MQTT Client就会依次获得当前订阅数的消息，这样就实现了订阅端负载均衡，并避免了单点故障。
+
+默认设置下，EMQ X会每隔1分钟向这些系统主题发布运行数据，这个时间周期是可以配置的。  
+例如，在开发环境中，可以把这个时间间隔设置得短一点（比如2秒）。
+``` 
+### <EMQ X 安装目录>/emqx/conf/emqx.conf
+broker.sys_interval = 2s
+```
+但在生产环境中建议设置一个较大的值。默认情况下，EMQ X只会向和节点运行在同一服务器上的MQTT Client订阅系统主题，可以通过修改`<EMQ X安装目录>/emqx/conf/acl.conf`来修改这个默认配置。
+`{allow, {ipaddr, "127.0.0.1"}, pubsub, ["$SYS/#", "#"]}`
+
+#### EMQ X的Listener Zone
+
+IotHub的EMQ X Broker启用了Client认证，Client需要提供用户名和密码才能接入，那么这些订阅系统主题，接收Broker运行数据的MQTT Client也需要分配用户名和密码。
+
+在现有的架构里，我们可以用JWT为这些MQTT Client生成一个临时的token作为接入的认证，那有没有办法在保持现有认证体系的前提下，让内部使用的Client安全地绕过认证呢？
+
+EMQ X提供了[监听器（Listener）Zone功能](https://www.emqx.io/docs/zh/v4.3/getting-started/config.html#zone-listener) ，
+监听器是指用于接收MQTT协议连接的server socket，比如可以配置EMQ X分别在端口1000和2000接受MQTT协议的连接，那么端口1000和2000就是两个监听器。
+Zone的意思是可以将监听器进行分组，不同的组应用不同的策略，比如通过端口1000接入的Client需要认证，而通过端口2000接入的Client则不需要认证。
+
+EMQ X默认情况下提供两个Zone：External和Internal，分别对应接受外部MQTT协议连接和内部MQTT协议连接。
+External Zone的MQTTS(MQTT over SSL)监听器监听的是8883端口，IotHub对外开放，供设备连接的就是这个监听器。
+可以在配置文件找到这个监听器的配置。
+```
+### <EMQ X 安装目录>/emqx/conf/emqx.conf
+listener.ssl.external = 8883
+```
+Internal Zone的MQTT（非SSL）监听器监听的是127.0.0.1的11883端口。
+```
+### < EMQ X 安装目录>/emqx/conf/emqx.conf
+listener.tcp.internal = 127.0.0.1:11883
+```
+如上文所说，每个Zone都可以单独设置一些策略，比如Internal Zone在默认情况下是允许匿名接入的。
+```
+### < EMQ X 安装目录>/conf/emqx.conf
+zone.internal.allow_anonymous = true
+```
+所以用于接收系统主题的MQTT Client可以连接到127.0.0.1:11883，这样就不需要用户名和密码了。  
+在实际生产中，应该用例如防火墙的规则对外屏蔽掉Internal监听器的端口，只向外暴露External监听器的端口。
 
 
 ## 扩展EMQ X Broker
