@@ -649,14 +649,165 @@ device:
 
 编写接口：禁止设备接入认证、恢复接入认证、删除设备信息。
 
+1. 在三元组表添加字段：`status` 来确定设备可接入状态
+2. 配置emqx-auth-mysql插件，添加鉴权字段`status`（mongo插件有(P262)，mysql待确认怎么加）
+3. 如果设备已接入，需主动断连设备：
+    1. 创建账号，满足emq使用HTTP Basic认证方式对API调用者进行身份验证，命令：`mgmt insert <appId> <name>`：`/emqx/bin/emqx_ctl mgmt insert iothub iothubAdmin`会返回一个AppSecret。（默认账户：admin/public）
+    2. 可以修改配置文件管理API访问地址：`/emqx/etc/plugins/emqx_management.conf`
+    3. nacos配置上边创建的账号信息
+    4. 踢除客户端接口：`DELETE /api/v4/clients/{clientid}`
+4. 禁用设备：
+    1. 修改三元组状态为禁用；
+    2. 断连设备。
+5. 恢复设备：修改三元组状态为启用
+6. 删除设备：
+    1. 删除设备；
+    2. 断开设备连接；
+    3. 删除设备连接信息。
+
 
 ### 设备权限管理
 
-TODO
+设备权限管理是指对一个设备的Publish（发布）和 Subscribe（订阅）权限进行控制，
+设备只能发布到它有发布权限的主题上，同时它也只能订阅它有订阅权限的主题。
+
+为什么要对发布/订阅进行权限管理？
+1. 避免多个客户端订阅同一个主题时，命令下发时多个客户端都可以收到，并且多个客户端都可以再向该主题推送该指令，导致无法判断指令来自谁。
+2. 同样，多个客户端向同一主题发送消息，主题订阅者们无法判断消息来自谁。
+
+[EMQ X的ACL功能](https://www.emqx.io/docs/zh/v4.3/advanced/acl.html#acl-%E6%8F%92%E4%BB%B6) ：
+1. 用户认证表
+```mysql
+CREATE TABLE `mqtt_user` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `username` varchar(100) DEFAULT NULL,
+    `password` varchar(100) DEFAULT NULL,
+    `salt` varchar(35) DEFAULT NULL,
+    `is_superuser` tinyint(1) DEFAULT 0,
+    `created` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+2. ACL规则表
+```mysql
+CREATE TABLE `mqtt_acl` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `allow` int(1) DEFAULT 1 COMMENT '0: deny（拒绝）, 1: allow（允许）',
+  `ipaddr` varchar(60) DEFAULT NULL COMMENT '设置 IP 地址',
+  `username` varchar(100) DEFAULT NULL COMMENT '连接客户端的用户名，此处的值如果设置为 $all 表示该规则适用于所有的用户',
+  `clientid` varchar(100) DEFAULT NULL COMMENT '连接客户端的 Client ID',
+  `access` int(2) NOT NULL COMMENT '1: subscribe, 2: publish, 3: pubsub',
+  `topic` varchar(100) NOT NULL DEFAULT '' COMMENT '控制的主题，可以使用通配符，并且可以在主题中加入占位符来匹配客户端信息，例如 t/%c 则在匹配时主题将会替换为当前客户端的 Client ID。%u：用户名；%c：Client ID',
+  PRIMARY KEY (`id`),
+  INDEX (ipaddr),
+  INDEX (username),
+  INDEX (clientid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+```mysql
+-- 所有用户不可以订阅系统主题
+INSERT INTO mqtt_acl (allow, ipaddr, username, clientid, access, topic) VALUES (0, NULL, '$all', NULL, 1, '$SYS/#');
+-- 允许 10.59.1.100 上的客户端订阅系统主题
+INSERT INTO mqtt_acl (allow, ipaddr, username, clientid, access, topic) VALUES (1, '10.59.1.100', NULL, NULL, 1, '$SYS/#');
+-- 禁止客户端订阅 /smarthome/+/temperature 主题
+INSERT INTO mqtt_acl (allow, ipaddr, username, clientid, access, topic) VALUES (0, NULL, '$all', NULL, 1, '/smarthome/+/temperature');
+-- 允许客户端订阅包含自身 Client ID 的 /smarthome/${clientid}/temperature 主题
+INSERT INTO mqtt_acl (allow, ipaddr, username, clientid, access, topic) VALUES (1, NULL, '$all', NULL, 1, '/smarthome/%c/temperature');
+```
+3. 使用插件`emqx_auth_mysql`配置数据源
+```
+# etc/plugins/emqx_auth_mysql.conf
+
+# 默认：
+# auth.mysql.acl_query = select allow, ipaddr, username, clientid, access, topic from mqtt_acl where ipaddr = '%a' or username = '%u' or username = '$all' or clientid = '%c'
+auth.mysql.acl_query = select allow, ipaddr, username, clientid, access, topic from mqtt_acl where username = '%u'
+```
+4. 未查找到 ACL 权限信息时，是否授权
+```
+# etc/emqx.conf
+
+## ACL 未匹配时默认授权
+## Value: allow（允许） | deny（拒绝）
+acl_nomatch = deny
+```
+5. 配置ACL授权结果为拒绝时的响应动作，ignore表示忽略未授权的操作；disconnect表示Broker将断开和发起未授权的Publish或Subscribe的Client的连接。
+``` 
+# etc/emqx.conf
+
+## Value: ignore | disconnect
+acl_deny_action = ignore
+```
+6. 配置ACL缓存
+
+ACL 缓存允许客户端在命中某条 ACL 规则后，便将其缓存至内存中，以便下次直接使用，客户端发布、订阅频率较高的情况下开启 ACL 缓存可以提高 ACL 检查性能。
+
+查询缓存也可能会导致结果不准确，应该根据实际情况选择是否打开，但大多数时候设备的可订阅主题与查询的主题不会频繁变动。
+
+在 `etc/emqx.conf` 可以配置 ACL 缓存大小与缓存时间：
+``` 
+# etc/emqx.conf
+
+## 是否启用
+enable_acl_cache = on
+
+## 单个客户端最大缓存规则数量
+acl_cache_max_size = 32
+
+## 缓存失效时间，超时后缓存将被清除
+acl_cache_ttl = 1m
+
+```
+
+**集成EMQ的ACL到IotHub**
+
+- 事先定义好设备可以订阅和发布的主题范围；
+- 在注册设备时，生成设备的ACL记录；
+- 在删除设备时，删除相应的ACL记录。
+
+```java
+// 定义设备可以访问的主题
+public class DeviceACL {
+    private String username; // broker username
+    private String subscribe;
+    private String publish;
+    private String pubsub;
+}
+```
+```mysql
+DROP TABLE IF EXISTS `device_acl`;
+CREATE TABLE `device_acl` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'broker Username',
+  `subscribe` varchar(4096) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订阅列表',
+  `publish` varchar(4096) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '发布列表',
+  `pubsub` varchar(4096) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '发布/订阅列表',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='设备访问控制表';
+```
+
+定义接口：获取设备可以订阅/发布的主题`DeviceACL getACLRule()`，在注册设备的时候保存DeviceACL，在删除设备的时候删除DeviceACL。
 
 ### 拓展
 
-TODO
+IoTHub如何设计可扩展性 来满足业务增长需求？
+- web服务、数据库都已具备良好的扩展性
+- 如何扩展EMQ Broker？
+
+**EMQ X的纵向扩展：单机如何接入更多的设备**
+
+需要修改的配置项，主要包括：
+- 修改操作系统参数，提高可打开的文件句柄数；
+- 优化TCP协议栈参数；
+- 优化Erlang虚拟机参数，提高Erlang Process限制；
+- 修改EMQ X配置，提高最大并发连接数。
+
+测试在8核32GB的Linux服务器，加载全部应用和扩展插件，并且使用MQTTS，在系统负载保持平稳的前提下，大概可以支持15~20W的Client接入。
+
+**EMQ X的横向扩展：多节点组成集群**
 
 
 ## 上行数据处理
