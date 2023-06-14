@@ -29,6 +29,7 @@
     - [自定义配置](#自定义配置)
         - [覆盖SpringBoot自动配置-TODO](#覆盖SpringBoot自动配置)
         - [通过属性文件外置配置](#通过属性文件外置配置)
+            - [application.yml与bootstrap.yml的区别](#application.yml与bootstrap.yml的区别)
             - [自动配置微调](#自动配置微调)
             - [应用程序Bean的配置外置-TODO](#应用程序Bean的配置外置)
             - [使用Profile进行配置](#使用Profile进行配置)
@@ -604,6 +605,30 @@ Spring MVC核心入口类
 (3) 内置，在config包内。  
 (4) 内置，在Classpath根目录。  
 - **同一优先级位置同时有application.properties和application.yml，那么application.yml里的属性会覆盖application.properties里的属性。**
+
+#### application.yml与bootstrap.yml的区别
+
+`application.yml`和`bootstrap.yml`是Spring Boot框架中用于配置应用程序的两个主要配置文件。
+
+1. **application.yml**:
+   `application.yml`是主要的应用程序配置文件，用于配置应用程序的各种属性。
+   在这个文件中，你可以定义应用程序的数据库连接、端口号、日志级别、缓存设置、安全配置等。
+   这些配置是特定于应用程序的，并且应用于应用程序的所有环境（如开发、测试和生产环境）。
+
+2. **bootstrap.yml**:
+   `bootstrap.yml`是一个可选的配置文件，用于在Spring Boot应用程序启动时加载和配置外部资源。
+   这些资源包括配置服务器、分布式跟踪系统、消息代理等。通过使用`bootstrap.yml`，可以在应用程序启动之前配置这些资源，确保它们可用于应用程序的正常运行。
+   该文件通常用于配置Spring Cloud应用程序，以连接分布式系统中的其他组件。
+
+总结:
+
+`application.yml`是主要的应用程序配置文件，用于配置应用程序的属性和行为。
+`bootstrap.yml`是一个可选的配置文件，用于在应用程序启动之前加载和配置外部资源。
+`application.yml`通常用于应用程序级别的配置，而`bootstrap.yml`主要用于分布式系统中的配置和集成。
+
+`bootstrap.yml`优先级高于`application.yml`
+
+[application.yml与bootstrap.yml的区别](https://www.cnblogs.com/cy0628/p/15193872.html)
 
 [返回目录](#目录)
 
