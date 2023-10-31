@@ -95,6 +95,9 @@ Advanced Message Queuing Protocol ，高级消息队列协议
 
 ## RabbitMQ实战
 
+### [RabbitMQ消费模式：推模式(Push)、拉模式(Pull)](https://blog.csdn.net/u011709538/article/details/131404741)
+
+### [RabbitMQ的6种消息模式 + 消息补偿消息幂等](https://www.jianshu.com/p/5aba0843345d)
 
 
 

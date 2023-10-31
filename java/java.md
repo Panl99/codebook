@@ -1773,6 +1773,8 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 ### CompletableFuture
 - [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/CompletableFutureDemo.java)
 
+子线程会跟随主线程任务结束而结束，CompletableFuture.allOf(List<CompletableFuture>).join()阻塞所有线程直到所有线程执行完毕。
+
 [返回目录](#目录)
 
 ## ThreadLocal

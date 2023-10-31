@@ -893,6 +893,11 @@ public class RedissonLockDemo {
 
 ## Redisson
 
+redisson 提供了以下方法：
+- lock()：会阻塞未获取锁的请求，默认持有30s锁，但当业务方法在30s内没有执行完时，会有看门狗（默认每隔10s）给当前锁续时30s。
+- tryLock()：尝试获取锁，获取不到则直接返回获取失败，默认持有30s锁，但当业务方法在30s内没有执行完时，会有看门狗（默认每隔10s）给当前锁续时30s。
+- tryLock(long time, TimeUnit unit)：尝试获取锁，等待time TimeUnit，默认持有30s锁，但当业务方法在30s内没有执行完时，会有看门狗（默认每隔10s）给当前锁续时30s。
+- tryLock(long waitTime, long leaseTime, TimeUnit unit)：尝试获取锁，等待waitTime TimeUnit，锁最长持有leaseTime TimeUnit，当业务方法在leaseTime TimeUnit时长内没有执行完时，会强制解锁。
 
 ## Lettuce
 

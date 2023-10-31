@@ -2172,7 +2172,7 @@ DeviceSDK除了把OTA升级相关的数据通过`ota_upgrade`事件传递给设�
 
 设备端的流程有如下3步。
 - （1）当设备连接到IotHub时，向IotHub发起数据请求，IotHub收到请求后会下发`UPDATE_SHADOW`指令，执行一次服务端向设备端同步，设备需要记录下当前设备影子的version。
-- （2）当设备的状态发生变化，比如通过物理开关关闭智能电灯时，IotHub发送`REPORT_SHADOW`数据，包含第一步获得的version，代码如下。
+- （2）当设备的状态发生变化，比如通过物理开关关闭智能电灯时，设备发送`REPORT_SHADOW`数据，包含第一步获得的version，代码如下。
 ```json
 {
   "state": {
