@@ -33,6 +33,7 @@
             - [自动配置微调](#自动配置微调)
             - [应用程序Bean的配置外置-TODO](#应用程序Bean的配置外置)
             - [使用Profile进行配置](#使用Profile进行配置)
+            - [@Value与yml配置多种数据类型配置的使用](#@Value与yml配置多种数据类型配置的使用)
     - [Actuator：监控与管理](#Actuator监控与管理)
     - [SpringBoot注解](#SpringBoot注解)
         - [SpringBoot提供的自动配置中使用的条件化注解](#SpringBoot提供的自动配置中使用的条件化注解)
@@ -595,7 +596,7 @@ Spring MVC核心入口类
 (3) JVM系统属性  
 (4) 操作系统环境变量  
 (5) 随机生成的带random.*前缀的属性（在设置其他属性时，可以引用它们，比如${random.long}）  
-(6) 应用程序以外的application.properties或者appliaction.yml文件  
+(6) 应用程序以外的application.properties或者appliaction.yml文件  `使用外部配置启动应用，java -jar  xxxx --spring.config.location=配置文件绝对路径`
 (7) 打包在应用程序内的application.properties或者appliaction.yml文件  
 (8) 通过@PropertySource标注的属性源  
 (9) 默认属性  
@@ -754,6 +755,59 @@ logging:
 ```
 
 [返回目录](#目录)
+
+#### @Value与yml配置多种数据类型配置的使用
+
+[https://cloud.tencent.com/developer/article/1861247](https://cloud.tencent.com/developer/article/1861247)
+
+```java
+// 配置list示例
+
+// 1、配置类
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+@ConfigurationProperties("test")
+public class ListConfig {
+    
+    private List<String> list;
+
+    public List<String> getList() {
+        return list;
+    }
+
+    public void setList(List<String> list) {
+        this.list = list;
+    }
+}
+
+// 2、yml配置
+/**
+ * yml配置：
+ *
+ * test:
+ *   list:
+ *     - 123
+ *     - 456
+ *     - 789
+ *
+ *
+ * test:
+ *   list:
+ *     use: ${test.list[0]},${test.list[1]},${test.list[2]}
+ *
+ */
+
+3、使用
+@Resource
+private ListConfig listConfig;
+
+log.info(">>>>>>>>listConfig: {}", listConfig.getList());
+
+```
 
 ## Actuator监控与管理
 - **添加依赖**  
