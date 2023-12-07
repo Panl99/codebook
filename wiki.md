@@ -6,6 +6,7 @@
     - [xshell6、xftp6强制更新才能用](#xshell6xftp6强制更新才能用)
     - [centos8安装](#centos8安装)
     - [centos8离线安装Nginx](#centos8离线安装Nginx)
+    - [修改动态端口范围](#修改动态端口范围)
 - [Chrome使用](#Chrome使用)
     - [网站登录才能复制](#网站登录才能复制)
     - [CSDN登录才能复制](#CSDN登录才能复制)
@@ -202,6 +203,14 @@ Commercial support is available at
     - `firewall-cmd --add-service=http --permanent`
     - `firewall-cmd --add-port=80/tcp --permanent`
 - 重启防火墙`firewall-cmd --reload`
+
+## 修改动态端口范围
+是用管理员身份打开PowerShell执行
+
+- 修改动态端口范围：`netsh int ipv4 set dynamicport tcp start=5535 num=60000`
+- 查看动态端口范围：`netsh int ipv4 show dynamicport tcp`
+
+[Windows修改动态端口范围](https://www.cnblogs.com/liqing1009/p/15007656.html)
 
 [目录](#目录)
 
