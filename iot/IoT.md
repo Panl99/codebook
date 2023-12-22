@@ -278,6 +278,51 @@ Broker在 Keepalive 的时间间隔里，没有收到Client的任何MQTT协议�
 Broker主动关闭连接 会直接关闭底层的TCP连接，之前不需要向Client发送任何MQTT协议数据包。
 
 
+### MQTT客户端连接参数
+
+- 客户端 ID（Client ID）
+  - MQTT 服务器使用 Client ID 识别客户端，连接到服务器的每个客户端都必须要有唯一的 Client ID。Client ID 的长度通常为 1 至 23 个字节的 UTF-8 字符串。
+  - 如果客户端使用一个重复的 Client ID 连接至服务器，将会把已使用该 Client ID 连接成功的客户端踢下线。
+- 用户名与密码（Username & Password）
+  - MQTT 协议可以通过用户名和密码来进行相关的认证和授权，但是如果此信息未加密，则用户名和密码将以明文方式传输。如果设置了用户名与密码认证，那么最好要使用 mqtts 或 wss 协议。
+  - 大多数 MQTT 服务器默认为匿名认证，匿名认证时用户名与密码设置为空字符串即可。
+- 连接超时（Connect Timeout）
+  - 连接超时时长，收到服务器连接确认前的等待时间，等待时间内未收到连接确认则为连接失败。
+- 保活周期（Keep Alive）
+  - 保活周期，是一个以秒为单位的时间间隔。客户端在无报文发送时，将按 Keep Alive 设定的值定时向服务端发送心跳报文，确保连接不被服务端断开。
+  - 在连接建立成功后，如果服务器没有在 Keep Alive 的 1.5 倍时间内收到来自客户端的任何包，则会认为和客户端之间的连接出现了问题，此时服务器便会断开和客户端的连接。
+- 清除会话（Clean Session）
+  - 为 false 时表示创建一个持久会话，在客户端断开连接时，会话仍然保持并保存离线消息，直到会话超时注销。为 true 时表示创建一个新的临时会话，在客户端断开时，会话自动销毁。 
+  - 持久会话避免了客户端掉线重连后消息的丢失，并且免去了客户端连接后重复的订阅开销。这一功能在带宽小，网络不稳定的物联网场景中非常实用。
+  - 服务器为持久会话保存的消息数量取决于服务器的配置，比如 EMQ 提供的免费的公共 MQTT 服务器设置的离线消息保存时间为 5 分钟，最大消息数为 1000 条，且不保存 QoS 0 消息。
+  - 注意： 持久会话恢复的前提是客户端使用固定的 Client ID 再次连接，如果 Client ID 是动态的，那么连接成功后将会创建一个新的持久会话。
+- 遗嘱消息（Last Will）
+  - 遗嘱消息是 MQTT 为那些可能出现意外断线的设备提供的将遗嘱优雅地发送给其他客户端的能力。设置了遗嘱消息消息的 MQTT 客户端异常下线时，MQTT 服务器会发布该客户端设置的遗嘱消息。
+  - 意外断线包括：因网络故障，连接被服务端关闭；设备意外掉电；设备尝试进行不被允许的操作而被服务端关闭连接等。
+  - 遗嘱消息可以看作是一个简化版的 MQTT 消息，它也包含 Topic、Payload、QoS、Retain 等信息。
+    - 当设备意外断线时，遗嘱消息将被发送至遗嘱 Topic；
+    - 遗嘱 Payload 是待发送的消息内容；
+    - 遗嘱 QoS 与普通 MQTT 消息的 QoS 一致，详细请见MQTT QoS（服务质量）介绍。
+    - 遗嘱 Retain 为 true 时表明遗嘱消息是保留消息。MQTT 服务器会为每个主题存储最新一条保留消息，以方便消息发布后才上线的客户端在订阅主题时仍可以接收到该消息。
+- 协议版本
+  - 使用较多的 MQTT 协议版本有 MQTT v3.1、MQTT v3.1.1 及 MQTT v5.0。目前，MQTT 5.0 已成为绝大多数物联网企业的首选协议，我们建议初次接触 MQTT 的开发者直接使用该版本。
+
+- MQTT 5.0 新增连接参数
+  - Clean Start & Session Expiry Interval
+    - MQTT 5.0 中将 Clean Session 拆分成了 Clean Start 与 Session Expiry Interval。
+    - Clean Start 用于指定连接时是创建一个全新的会话还是尝试复用一个已存在的会话。为 true 时表示必须丢弃任何已存在的会话，并创建一个全新的会话；为 false 时表示必须使用与 Client ID 关联的会话来恢复与客户端的通信（除非会话不存在）。
+    - Session Expiry Interval 用于指定网络连接断开后会话的过期时间。设置为 0 或未设置，表示断开连接时会话即到期；设置为大于 0 的数值，则表示会话在网络连接关闭后会保持多少秒；设置为 0xFFFFFFFF 表示会话永远不会过期。
+  - 连接属性（Connect Properties）
+    - MQTT 5.0 还新引入了连接属性的概念，进一步增强了协议的可扩展性。
+
+- 如何建立一个安全的 MQTT 连接？
+  - 虽然 MQTT 协议提供了用户名、密码、Client ID 等认证机制，但是这对于物联网安全来说还远远不够。基于传统的 TCP 通信使用明文传输，信息的安全性很难得到保证，数据也会存在被窃听、篡改、伪造、冒充的风险。
+  - SSL/TLS 的出现很好的解决了通信中的风险问题，其以非对称加密技术为主干，混合了不同模式的加密方式，既保证了通信中消息都以密文传输，避免了被窃听的风险，同时也通过签名防止了消息被篡改。
+  - 不同 MQTT 服务器启用 SSL/TLS 的步骤都各有不同，EMQX 内置了对 TLS/SSL 的支持，包括支持单/双向认证、X.509 证书、负载均衡 SSL 等多种安全认证。
+  - 单向认证 是一种仅通过验证服务器证书来建立安全通信的方式，它能保证通信是加密的，但是不能验证客户端的真伪，通常需要与用户名、密码、Client ID 等认证机制结合。参考[EMQX MQTT 服务器启用 SSL/TLS 安全连接](https://www.emqx.com/zh/blog/emqx-server-ssl-tls-secure-connection-configuration-guide) 来建立一个安全的单向认证 MQTT 连接。
+  - 双向认证 是指在进行通信认证时要求服务端和客户端都提供证书，双方都需要进行身份认证，以确保通信中涉及的双方都是受信任的。 双方彼此共享其公共证书，然后基于该证书执行验证、确认。一些对安全性要求较高的应用场景，就需要开启双向 SSL/TLS 认证。参考[EMQX 启用双向 SSL/TLS 安全连接](https://www.emqx.com/zh/blog/enable-two-way-ssl-for-emqx) 建立一个安全的双向认证 MQTT 连接。
+
+
 ## 订阅/发布
 
 和传统队列的不同点：如果ClientB在ClientA发完消息后才订阅的Topic，那么ClientB不会收到该消息。
@@ -2924,6 +2969,12 @@ TODO
 
 [MQTT服务端(vert.x mqtt broker)连接总数和并发测试](https://blog.csdn.net/sunfragrence/article/details/87359586)
 
+把插件[mqtt-xmeter-2.0.2-jar-with-dependencies.jar](../resources/static/iot/mqtt-xmeter-2.0.2-jar-with-dependencies.jar) 添加到JMeter安装目录/lib/ext/ 下,重启JMeter即可.
+
+每个线程代表一个mqtt客户端, 如果在windows测试,需要开放更多本机tcp动态端口出来,本机使用管理员权限打开PowerShell执行:
+- `netsh int ipv4 show dynamicport tcp`: 查看当前开启的动态端口范围.
+- `netsh int ipv4 set dynamicport tcp start=5535 num=60000`: 设置开启本机的动态端口范围,从5535开始,开启总数6W个.
+
 **方式3：使用阿里云的性能测试 PTS**
 
 目前最常见的 MQTT 性能测试方式，是基于 JMeter 的 MQTT-Xmeter 插件实现的。该插件的底层原理就是每个线程都模拟一个 MQTT Client，向 MQTT Broker 发送连接请求。
@@ -2931,3 +2982,43 @@ TODO
 阿里云的性能测试 PTS 允许单个线程发起并保持最多 100 个，单台施压机最大 5 万个，单次压测最大 1 亿个 MQTT 连接数。
 
 [如何发起 MQTT 亿级连接和千万消息吞吐性能测试](https://juejin.cn/post/7088590151357562917)
+
+
+**方式4：使用emq提供的emqtt-bench**
+
+- 测试机配置: 
+  在阿里云申请的一台8C32GB（规格为ecs.g7ne.2xlarge）做测试机. 该规格可以开启多张网卡, 单网卡绑定的公网ip可以支持最大65535个端口,即能创建约6W个左右mqtt客户端连接.
+- 服务器/客户端系统: 
+  centos7.9
+- Emq版本: 
+  emqx v4.3.5，测试工具emqtt-bench v0.4.17
+- 测试方式: 
+  使用测试机绑定配置5张网卡,每张网卡配置可支持6W的tcp连接数.(测试工具限制每个线程需要使用一个端口看作一台客户端,由于机器限制,每张网卡最多有65535个端口,除去自己本身使用的端口,大概一台机器/网卡最多6w个左右的动态端口可用)
+- 测试前提:
+  需要对emq所在的服务器及测试机服务器进行优化配置,具体配置内容可以参考[emq官方推荐的配置](https://www.emqx.io/docs/zh/v4.3/tutorial/tune.html#tcp-%E5%8D%8F%E8%AE%AE%E6%A0%88%E7%BD%91%E7%BB%9C%E5%8F%82%E6%95%B0)
+- 测试流程:
+  - (1)在测试机上安装压测工具:
+    ①`wget https://github.com/emqx/emqtt-bench/releases/download/0.4.17/emqtt-bench-0.4.17-el7-amd64.tar.gz`
+    ②`tar -zxf emqtt-bench-0.4.17-el7-amd64.tar.gz`
+  - (2)连接测试指令:
+    ①`./emqtt_bench conn -h emqx地址 -p 端口 -c 总连接数量 --ifaddr 网卡地址 -V mqtt版本 --username 用户名 --password 密码`
+    ②其他参数可以查看[官方文档说明](https://www.emqx.io/docs/zh/v4.3/tutorial/benchmark.html#%E4%BD%BF%E7%94%A8)
+- 连接测试:
+  在每张网卡上启动6w连接，共计30W连接
+  ```shell
+    ./emqtt_bench conn -h 1.14.xxx.72  -p 1883 -c 1 --ifaddr 172.18.16.36 -V 3 --username 用户名 --password 密码
+    ./emqtt_bench conn -h 1.14.xxx.72  -p 1883 -c 1 --ifaddr 172.18.16.37 -V 3 --username 用户名 --password 密码
+    ./emqtt_bench conn -h 1.14.xxx.72  -p 1883 -c 1 --ifaddr 172.18.16.38 -V 3 --username 用户名 --password 密码
+    ./emqtt_bench conn -h 1.14.xxx.72  -p 1883 -c 1 --ifaddr 172.18.16.39 -V 3 --username 用户名 --password 密码
+    ./emqtt_bench conn -h 1.14.xxx.72  -p 1883 -c 1 --ifaddr 172.18.16.40 -V 3 --username 用户名 --password 密码
+  ```
+- 吞吐量测试:
+  在客户端终端1启动 500 个消息订阅者：
+  ```shell
+    ./emqtt_bench sub -t t -h emqx地址  -p 1883 -S -V 3 --username 用户名 --password 密码 -c 500
+  ```
+  在客户端终端2启动 10 个消息发布者，并且每秒发布 10 条消息：
+  ```shell
+    ./emqtt_bench pub -t t -h emqx地址  -p 1883 -S -V 3 --username 用户名 --password  密码  -c 10 -I 100
+  ```
+  测试结果可以看到CPU已满载，达到测试最大值，经过多次调试，得出当前4C8G三节点集群稳定处理的吞吐量约为4.5w/sec.
