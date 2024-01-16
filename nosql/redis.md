@@ -899,6 +899,10 @@ redisson 提供了以下方法：
 - tryLock(long time, TimeUnit unit)：尝试获取锁，等待time TimeUnit，默认持有30s锁，但当业务方法在30s内没有执行完时，会有看门狗（默认每隔10s）给当前锁续时30s。
 - tryLock(long waitTime, long leaseTime, TimeUnit unit)：尝试获取锁，等待waitTime TimeUnit，锁最长持有leaseTime TimeUnit，当业务方法在leaseTime TimeUnit时长内没有执行完时，会强制解锁。
 
+### Redisson客户端配置
+
+[https://github.com/redisson/redisson/wiki/2.-配置方法#23-常用设置](https://github.com/redisson/redisson/wiki/2.-%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95#23-%E5%B8%B8%E7%94%A8%E8%AE%BE%E7%BD%AE)
+
 ## Lettuce
 
 
