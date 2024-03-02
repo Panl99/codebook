@@ -45,25 +45,71 @@ RabbitMQ是采用Erlang语言实现[AMQP](#AMQP)的消息中间件。
 ## RabbitMQ基本概念
 
 1. server：又称broker，接收客户端连接，实现AMQP实体服务。
-2. connection：和具体broker网络连接。
-3. channel：网络通道，基本上所有操作都在channel中进行，channel是消息读写的通道，每个channel表示一个会话任务，客户端可以建立多个channel。
+2. connection：和具体broker网络连接：
+   - 无论是生产者还是消费者，都需要和 RabbitMQ Broker 建立连接，这个连接就是一条 TCP 连接，也就是Connection。  
+   - 一旦 TCP 连接建立起来，客户端紧接着可以创建一个 AMQP 信道（Channel），每个信道都会被指派一个唯一的 ID。信道是建立在 Connection 之上的虚拟连接，RabbitMQ 处理的每条 AMQP 指令都是通过信道完成的。
+3. channel：网络通道，基本上所有操作都在channel中进行，channel是消息读写的通道，每个channel表示一个会话任务，客户端可以建立多个channel。  
+   - [可以直接使用Connection就能完成信道的工作，为什么还要引入信道呢？](#可以直接使用Connection就能完成信道的工作，为什么还要引入信道呢？)
 4. message：消息，服务器和应用之间传递的数据。
    - 由properties和body组成。
    - properties可以对消息进行修饰，比如：消息的优先级，延迟等特性。
    - body是消息的实体内容。
 5. Virtual host：虚拟主机，用于逻辑隔离，最上层消息的路由。一个Virtual host可以包含多个Exchange和Queue，同一个Virtual host下Exchange和Queue名字唯一。
-6. **Exchange**：交换机，生产者发送消息到交换机，交换机根据路由键转发消息到绑定的队列。
-   - fanout：把所有消息路由到绑定的队列中。
-   - direct：把消息路由到绑定键跟路由键相同的队列中。（完全匹配）
-   - topic：把消息路由到绑定键跟路由键匹配的队列中。（模糊匹配）
-     - 路由键和绑定键使用点号`.`分隔字符串。
-     - 绑定键中，`*`匹配一个单词；`#`匹配多个单词。
-   - headers：根据发送消息内容中的headers属性匹配路由。（性能差，不实用）
+6. **Exchange**：交换机，生产者发送消息到交换机，交换机根据路由键转发消息到一个或多个绑定的队列。  
+   - 交换机有4种类型：
+      - fanout：该类型的交换器不关心BindingKey，会将所有发送到该交换器的消息路由到所有与该交换器绑定的队列中。
+      - direct：把消息路由到绑定键(BindingKey) 跟 路由键(RoutingKey)相同的队列中。（完全匹配）
+      - topic：把消息路由到绑定键(BindingKey) 跟 路由键(RoutingKey)匹配的队列中。（模糊匹配）
+        - 绑定键(BindingKey) 和 路由键(RoutingKey)使用点号`.`分隔字符串。
+        - 绑定键(BindingKey)中，`*`匹配一个单词；`#`匹配多个单词(也可以是0个)。
+      - headers：根据发送消息内容中的headers属性匹配路由。（性能差，不实用）
+   
+   - [为什么不直接将消息路由到队列，要一个交换机来转发呢？](#为什么不直接将消息路由到队列，要一个交换机来转发呢？)
 7. **Banding**：绑定，将交换机和队列关联起来，绑定时指定一个绑定键BindingKey，绑定键跟路由键匹配时消息会被路由到队列。（通常情况下，绑定键就是路由键）
-8. **RoutingKey**：路由键，生产者将消息发送给交换机时指定，指定消息的路由规则，虚拟机根据它来确定如何路由一条消息。
+8. **RoutingKey**：路由键，生产者将消息发送给交换机时指定，指定消息的路由规则，RoutingKey 需要与交换器类型和绑定键（BindingKey）联合使用才能最终生效，虚拟机根据它来确定如何路由一条消息。
 9. **Queue**：消息队列，用于存储消息。
+   - RabbitMQ 中消息都只能存储在队列中。
+   - 这一点和 Kafka 这种消息中间件相反。Kafka 将消息存储在 topic（主题）这个逻辑层面，而相对应的队列逻辑只是 topic 实际存储文件中的位移标识。
 
 
+大多数时候，包括官方文档和 RabbitMQ Java API 中都把 BindingKey 和 RoutingKey 看作 RoutingKey，为了避免混淆，可以这么理解：
+- 在使用绑定的时候，其中需要的路由键是 BindingKey。涉及的客户端方法如：
+   - channel.exchangeBind，对应的 AMQP 命令为 Exchange.Bind
+   - channel.queueBind，对应的 AMQP 命令为 Queue.Bind
+- 在发送消息的时候，其中需要的路由键是 RoutingKey。涉及的客户端方法如：
+   - channel.basicPublish，对应的 AMQP 命令为 Basic.Publish
+
+由于某些历史的原因，包括现存能搜集到的资料显示：大多数情况下习惯性地将 BindingKey 写成 RoutingKey，尤其是在使用 direct 类型的交换器的时候。
+
+
+Rabbitmq模型架构：
+
+![rabbitmq模型架构.png](../resources/static/images/rabbitmq-rabbitmq模型架构.png)
+
+## RabbitMQ运转流程
+
+### 生产者发送消息过程
+
+1. 生产者连接到 RabbitMQ Broker，建立一个连接（Connection），开启一个信道（Channel）。
+2. 生产者声明一个交换器，并设置相关属性，比如交换机类型、是否持久化等。
+3. 生产者声明一个队列并设置相关属性，比如是否排他、是否持久化、是否自动删除等 。
+4. 生产者通过路由键将交换器和队列绑定起来。
+5. 生产者发送消息至 RabbitMQ Broker，其中包含路由键、交换器等信息。
+6. 相应的交换器根据接收到的路由键查找相匹配的队列。
+7. 如果找到，则将从生产者发送过来的消息存入相应的队列中。
+8. 如果没有找到，则根据生产者配置的属性选择丢弃还是回退给生产者。
+9. 关闭信道。
+10. 关闭连接。
+
+### 消费者接收消息过程
+
+1. 消费者连接到 RabbitMQ Broker，建立一个连接（Connection），开启一个信道（Channel）。
+2. 消费者向 RabbitMQ Broker 请求消费相应队列中的消息，可能会设置相应的回调函数，以及做一些准备工作。
+3. 等待 RabbitMQ Broker 回应并投递相应队列中的消息，消费者接收消息。
+4. 消费者确认（ack）接收到的消息。
+5. RabbitMQ 从队列中删除相应已经被确认的消息。
+6. 关闭信道。
+7. 关闭连接。
 
 ## 死信队列
 
@@ -114,9 +160,34 @@ Advanced Message Queuing Protocol ，高级消息队列协议
 
 
 
+## 疑问
+
+### 为什么不直接将消息路由到队列，要一个交换机来转发呢？
+
+AMQP 协议中的核心思想就是生产者和消费者的解耦，生产者从不直接将消息发送给队列。生产者通常不知道是否一个消息会被发送到队列中，只是将消息发送到一个交换机。先由 Exchange 来接收，然后 Exchange 按照特定的策略转发到 Queue 进行存储。Exchange 就类似于一个交换机，将各个消息分发到相应的队列中。
+
+在实际应用中我们只需要定义好 Exchange 的路由策略，而生产者则不需要关心消息会发送到哪个 Queue 或被哪些 Consumer 消费。在这种模式下**生产者只面向 Exchange 发布消息，消费者只面向 Queue 消费消息**，Exchange 定义了消息路由到 Queue 的规则，将各个层面的消息传递隔离开，使每一层只需要关心自己面向的下一层，降低了整体的耦合度。
+
+
+### 可以直接使用Connection就能完成信道的工作，为什么还要引入信道呢？
+
+一个场景中，一个应用程序中有很多个线程需要从 RabbitMQ 中消费消息，或者生产消息，那么必然需要建立很多个 Connection，也就是许多个 TCP 连接。
+
+然而对于操作系统而言，建立和销毁 TCP 连接是非常昂贵的开销，如果遇到使用高峰，性能瓶颈也随之显现。
+
+RabbitMQ 采用类似 NIO（Non-blocking I/O）的做法，选择 TCP 连接复用，不仅可以减少性能开销，同时也便于管理。
+
+
+每个线程把持一个信道，所以信道复用了 Connection 的 TCP 连接。
+同时 RabbitMQ 可以确保每个线程的私密性，就像拥有独立的连接一样。当每个信道的流量不是很大时，复用单一的 Connection 可以在产生性能瓶颈的情况下有效地节省 TCP 连接资源。但是当信道本身的流量很大时，这时候多个信道复用一个 Connection 就会产生性能瓶颈，进而使整体的流量被限制了。
+此时就需要开辟多个 Connection，将这些信道均摊到这些 Connection 中，至于这些相关的调优策略需要根据业务自身的实际情况进行调节。
+
 # RabbitMQ优化
 
 ## RabbitMQ参数优化
+
+
+并发数 = CPU核数 * （x+y）/x，其中x是线程执行时间，y是阻塞等待时间
 
 
 
