@@ -405,6 +405,17 @@ lpop2:2
     - 创建HelloWorld.lua文件，文件内容： `print("Hello World!");`
     - 执行命令： `lua HelloWorld.lua`
         - 输出结果：Hello World!
+  
+### LuaForWindows安装
+
+[https://www.cnblogs.com/yang37/p/16648277.html](https://www.cnblogs.com/yang37/p/16648277.html)
+
+直接运行安装包即可：[LuaForWindows_v5.1.5-52.exe](../resources/static/packet/lua)
+
+安装好后测试：
+
+![luaforwindows安装测试](../resources/static/images/luaforwindows安装测试.png)
+
 
 ## Lua基本用法
 ### Lua语法
