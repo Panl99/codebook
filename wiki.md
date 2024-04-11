@@ -233,6 +233,11 @@ Commercial support is available at
 ## CSDN登录才能复制
 `javascript:document.body.contentEditable='true';document.designMode='on';`
 
+```js
+Array.from(document.querySelectorAll("code")).map(a=>{a.style="user-select:text;"})
+$("#content_views").off("copy")
+```
+
 [目录](#目录)
 
 # IDEA使用
