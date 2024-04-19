@@ -484,7 +484,50 @@ public class TestController {
 |            | @RestController | |  | 组合注解，相当于@Controller 和@ResponseBody的组合
 |            | @ExceptionHandler | |  | 用于全局控制器的异常处理
 |            | @InitBinder | |  | WebDataBinder 用来自动绑定前台请求的参数到模型(Model)中
+| 缓存 | @Cacheable | 方法上/类上 | | 当标记在一个类上时则表示该类所有的方法都是支持缓存的。当标记在一个方法上时表示该方法的结果可以被缓存起来，以便后续的调用可以直接返回缓存中的结果，而不必真正执行方法的代码。
+|      | @CacheEvict | 方法上/类上 | | 删除缓存，标记在类上时表示其中所有的方法的执行都会触发缓存的清除操作。
+|      | @CachePut | 方法上/类上 | | 与@Cacheable相同，不同点是标注的方法在执行前不会去检查缓存中是否存在之前执行过的结果，而是每次都会执行该方法，并将执行结果以键值对的形式存入指定的缓存中。
+|      | @Caching | 方法上/类上 | | @Caching注解可以让我们在一个方法或者类上同时指定多个Spring Cache相关的注解。其拥有三个属性：cacheable、put和evict，分别用于指定@Cacheable、@CachePut和@CacheEvict。
+|      | @CacheConfig | 类上 | | 缓存配置
 
+```java
+@Cacheable("books")
+public Book findBook(ISBN isbn) {...}
+
+// 匹配多个参数
+@Cacheable({"books", "isbns"})
+public Book findBook(ISBN isbn) {...}
+
+// SpEL 
+@Cacheable(cacheNames="books", key="#isbn")
+public Book findBook(ISBN isbn, boolean checkWarehouse, boolean includeUsed)
+
+@Cacheable(cacheNames="books", key="#isbn.rawNumber")
+public Book findBook(ISBN isbn, boolean checkWarehouse, boolean includeUsed)
+
+@Cacheable(cacheNames="books", key="T(someType).hash(#isbn)")
+public Book findBook(ISBN isbn, boolean checkWarehouse, boolean includeUsed)
+
+// 缓存条件，调用前判断满足name.length() < 32时才缓存
+@Cacheable(cacheNames="book", condition="#name.length() < 32")
+public Book findBook(String name)
+
+// 调用前判断满足name.length() < 32时 并且 调用后判断result.hardback 为false才缓存（当condition为true，unless为false时才缓存）
+@Cacheable(cacheNames="book", condition="#name.length() < 32", unless="#result.hardback")
+public Book findBook(String name)
+
+@Cacheable(cacheNames="book", condition="#name.length() < 32", unless="#result?.hardback")
+public Optional<Book> findBook(String name)
+```
+```java
+// allEntries=true表示清除所有缓存
+@CacheEvict(cacheNames="books", allEntries=true) 
+public void loadBooks(InputStream batch)
+
+// beforeInvocation=true表示在调用方法之前清除缓存
+@CacheEvict(cacheNames="books", beforeInvocation=true)
+public void loadBooks(InputStream batch)
+```
 
 
 [返回目录](#目录)
