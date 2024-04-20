@@ -4,23 +4,60 @@
 
 # 目录
 - [Spring](#Spring)
-    - [为什么使用Spring](#为什么使用Spring)
-    - [Spring模块](#Spring模块)
-    - [IOC](#IOC)
-        - [依赖注入](#依赖注入)
-    - [AOP](#AOP)
-    - [Spring MVC](#SpringMVC)
-        - [SpringMVC流程](#SpringMVC流程)
-    - [Spring Bean的生命周期](#SpringBean的生命周期)
-    - [Spring事务](#Spring事务)
-    - [访问数据库](#访问数据库)
-    - [Web应用开发](#Web应用开发)
-        - [使用REST](#使用REST)
+    - [Core](#Core)
+      - [IoC Container](#IoC Container)
+          - [依赖注入](#依赖注入)
+      - [Events](#Events)
+      - [Resources](#Resources)
+      - [i18n](#i18n)
+      - [Validation](#Validation)
+      - [Data Binding](#Data Binding)
+      - [Type Conversion](#Type Conversion)
+      - [SpEL](#SpEL)
+      - [AOP](#AOP)
+    - [Testing](#Testing)
+      - [Mock Objects](#Mock Objects)
+      - [TestContext Framework](#TestContext Framework)
+      - [Spring MVC Test](#Spring MVC Test)
+      - [WebTestClient](#WebTestClient)
+    - [Data Access](#Data Access)
+      - [Transactions](#Transactions)
+      - [DAO Support](#DAO Support)
+      - [JDBC](#JDBC)
+      - [R2DBC](#R2DBC)
+      - [O/R Mapping](#O/R Mapping)
+      - [XML Marshalling](#XML Marshalling)
+    - [Web Servlet](#Web Servlet)
+      - [Spring MVC](#Spring MVC)
+        - [SpringBean的生命周期](#SpringBean的生命周期)
         - [数据格式化 FormatterRegistry](#数据格式化)
-    - [Spring Security](#SpringSecurity)
-    - [Spring Data JPA](#SpringDataJPA)
+      - [WebSocket](#WebSocket)
+      - [SockJS](#SockJS)
+      - [STOMP Messaging](#STOMP Messaging)
+    - [Web Reactive](#Web Reactive)
+      - [Spring WebFlux](#Spring WebFlux)
+      - [WebClient](#WebClient)
+      - [WebSocket(reactive-stack)](#WebSocket(reactive-stack))
+      - [RSocket](#RSocket)
+    - [Integration](#Integration)
+      - [Remoting](#Remoting)
+      - [JMS](#JMS)
+      - [JCA](#JCA)
+      - [JMX](#JMX)
+      - [Email](#Email)
+      - [Tasks](#Tasks)
+      - [Scheduling](#Scheduling)
+      - [Caching](#Caching)
+    - [Languages](#Languages)
+      - [Kotlin](#Kotlin)
+      - [Groovy](#Groovy)
+      - [Dynamic Languages](#Dynamic Languages)
+    - [Appendix](#Appendix)
+      - [Spring properties](#Spring properties)
+
     - [Spring注解](#Spring注解)
     - [Spring中使用的设计模式](#Spring中使用的设计模式)
+    
 
 - [SpringBoot](#SpringBoot)
     - [项目构建](#项目构建)
@@ -37,6 +74,8 @@
     - [Actuator：监控与管理](#Actuator监控与管理)
     - [SpringBoot注解](#SpringBoot注解)
         - [SpringBoot提供的自动配置中使用的条件化注解](#SpringBoot提供的自动配置中使用的条件化注解)
+  - [Spring Security](#SpringSecurity)
+  - [Spring Data JPA](#SpringDataJPA)
 
 - [SpringCloud](#SpringCloud)
     - [Eureka](#Eureka)
@@ -72,12 +111,11 @@
 [返回目录](#目录)
 
 # Spring
-## 为什么使用Spring
 **Spring是一个轻量级的开发框架，旨在降低应用开发的复杂度，具有分层体系结构，可以集成其他框架。**
 
-[返回目录](#目录)
+> [Spring Framework Documentation（5.3.34）](https://docs.spring.io/spring-framework/docs/5.3.34/reference/html/)
 
-## Spring模块
+Spring模块
 - Spring Core：基础,可以说 Spring 其他所有的功能都需要依赖于该类库。主要提供IOC依赖注入功能。
 - Spring Aspects：该模块为与AspectJ的集成提供支持。
 - Spring AOP：提供了面向切面的编程实现。
@@ -89,17 +127,18 @@
 
 ![](../resources/static/images/SpringFrameworkRuntime.png)
 
-[返回目录](#目录)
+---
 
-## IOC
+# Core
+
+## IoC Container
+
 - Inverse of Control:控制反转
 - 应用本身不负责依赖对象的创建和维护，而是由外部容器负责，控制权由应用转移到外部容器。
 
-[返回目录](#目录)
-
 ### 依赖注入
-在运行期间，由外部容器动态的将依赖对象注入到组件中  
-- **Spring依赖注入方式：**  
+在运行期间，由外部容器动态的将依赖对象注入到组件中
+- **Spring依赖注入方式：**
     - 构造函数注入
     - setter注入
     - 注解方式
@@ -116,9 +155,256 @@
 
 [返回目录](#目录)
 
+## Events
+
+## Resources
+
+## i18n
+
+## Validation
+
+## Data Binding
+
+## Type Conversion
+
+## SpEL
+
+> [4. Spring Expression Language (SpEL)](https://docs.spring.io/spring-framework/docs/5.3.34/reference/html/core.html#expressions) 
+---
+> [SpEL表达式](https://www.jianshu.com/p/a8b2d5886129)
+---
+
+表达式语言支持以下功能：
+- 文字表达式
+- 布尔运算符和关系运算符
+- 正则表达式
+- 类表达式
+- 访问属性、数组、列表和映射
+- 方法调用
+- 关系运算符
+- 分配
+- 调用构造函数
+- Bean引用
+- 构造 Array
+- 内嵌 lists
+- 内嵌 maps
+- 三元运算符
+- 变量
+- 用户定义的功能
+- 集合投影
+- 集合筛选
+- 模板化表达式
+
+SpEL 可以操作类和方法：
+- 引用方法：dog.run ()
+- 引用静态方法：T (java.lang.Math).PI
+- 类实例化：使用 new 实例化对象，类名必须是全限定名，java.lang 包内的除外如 Integer、String 等
+- 变量定义及赋值引用
+- 在解析 SpEL 之后，获取表达式结果时，可以指定表达式的上下文对象：EvaluationContext
+- （默认）StandardEvaluationContext：支持全套 SpEL 语言和功能配置选项，功能强大但存在隐患
+- SimpleEvaluationContext：仅支持 SpEL 语法的子集，不包括 Java 类型引用，构造函数和 bean 引用，功能相对简单但是安全
+
+注：SpEL表达式中的关键字是不区分大小写的。
+
+
+**SpEL的应用场景**
+- 动态参数配置：可以通过 SpEL 将应用程序中的各种参数配置化，例如配置文件中的数据库连接信息、业务规则等。通过动态配置，可以在运行时根据不同的环境或需求来进行灵活的参数设置。
+- 运行时注入：使用SpEL，可以在运行时动态注入属性值，而不需要在编码时硬编码。这对于需要根据当前上下文动态调整属性值的场景非常有用。
+- 条件判断与业务逻辑：SpEL支持复杂的条件判断和逻辑计算，可以方便地在运行时根据条件来执行特定的代码逻辑。例如，在权限控制中，可以使用SpEL进行资源和角色的动态授权判断。
+- 表达式模板化：SpEL支持在表达式中使用模板语法，允许将一些常用的表达式作为模板，然后在运行时通过填充不同的值来生成最终的表达式。这使得表达式的复用和动态生成更加方便。
+
+```java
+/**
+ * 验证数字是否大于10 * * @param number 数字 * @return 结果
+ */
+public String spELSample(int number) {
+    // 创建ExpressionParser对象，用于解析SpEL表达式    
+    ExpressionParser parser=new SpelExpressionParser();
+    String expressionStr="#number > 10 ? 'true' : 'false'";
+    Expression expression=parser.parseExpression(expressionStr);
+    // 创建EvaluationContext对象，用于设置参数值    
+    StandardEvaluationContext context=new StandardEvaluationContext();
+    context.setVariable("number",number);
+    // 求解表达式，获取结果    
+    return expression.getValue(context,String.class);
+}
+```
+
+**处理过程分析**
+
+给定一个字符串最终解析成一个值，这中间至少经历：字符串->语法分析->生成表达式对象->添加执行上下文->执行此表达式对象->返回结果。
+
+关于 SpEL 的几个概念：
+- 表达式（“干什么”）：SpEL 的核心，所以表达式语言都是围绕表达式进行的。
+- 解析器（“谁来干”）：用于将字符串表达式解析为表达式对象。
+- 上下文（“在哪干”）：表达式对象执行的环境，该环境可能定义变量、定义自定义函数、提供类型转换等等。
+- Root 根对象及活动上下文对象（“对谁干”）：Root 根对象是默认的活动上下文对象，活动上下文对象表示了当前表达式操作的对象。
+
+处理流程：
+1. 表达式解析：首先，SpEL 对表达式进行解析，将其转换为内部表示形式即抽象语法树（AST）或者其他形式的中间表示。
+2. 上下文设置：在表达式求值之前，需要设置上下文信息。上下文可以是一个对象，它包含了表达式中要引用的变量和方法。通过将上下文对象传递给表达式求值引擎，表达式可以访问并操作上下文中的数据。
+3. 表达式求值：一旦表达式被解析和上下文设置完成，SpEL 开始求值表达式。求值过程遵循 AST 的结构，从根节点开始，逐级向下遍历并对每个节点进行求值。求值过程可能涉及递归操作，直到所有节点都被求值。
+4. 结果返回：表达式求值的结果作为最终结果返回给调用者。返回结果可以是任何类型，包括基本类型、对象、集合等。
+
+
+### SpEL应用实战
+
+1. 配置表设计
+
+维护渠道和其对应参数处理策略的关联关系：
+
+渠道表：
+
+channel_code | inst_code | api_type
+--- | --- | ---
+A***1 | 支付宝 | 资金帐单下载
+W***1 | 微信 | 资金帐单下载
+T***1 | 通联 | 资金帐单下载
+
+渠道API表：
+
+channel_code | field_code | field_expression
+--- | --- | ---
+A***1 | b***e | #toUpperCase("A***Y_"+#substringBefore(#i***o,"@")+"_BUSINESS")
+A***1 | p***l | 4
+W***1 | b***e | "WX_"+i***o
+W***1 | p***l | 3
+T***1 | b***e | "TL_"+i***o
+T***1 | p***l | 5
+
+说明：每新增一个渠道接入时不需要进行代码开发，只需在配置表中维护关联关系。根据 inst_code 匹配对应策略标识 channel_code，根据策略标识找到具体参数处理策略表达式。
+
+2. 实现动态参数处理策略
+
+```java
+// 定义解析工具类
+    @Slf4j
+    @Service
+    @CacheConfig(cacheNames = CacheNames.EXPRESSION)
+    public class ExpressionUtil {
+        private final ExpressionParser expressionParser = new SpelExpressionParser();
+
+        // 创建上下文对象，设置自定义变量、自定义函数
+        public StandardEvaluationContext createContext(String instAccountNo) {
+            StandardEvaluationContext context = new StandardEvaluationContext();
+            context.setVariable("instAccountNo", instAccountNo);
+            // 注册自定义函数
+            this.registryFunction(context);
+            return context;
+        }
+
+        // 注册自定义函数
+        private void registryFunction(StandardEvaluationContext context) {
+            try {
+                context.addPropertyAccessor(new MapAccessor());
+                context.registerFunction("yuanToCent", ExpressionHelper.class.getDeclaredMethod("yuanToCent", String.class));
+                context.registerFunction("substringBefore", StringUtils.class.getDeclaredMethod("substringBefore", String.class, String.class));
+            } catch (Exception e) {
+                log.info("SpEL函数注册失败:", e);
+            }
+        }
+
+        // 开启缓存，使用解析器解析表达式，返回表达式对象
+        @Cacheable(key = "'getExpressionWithCache:'+#cacheKey", unless = "#result == null")
+        public Expression getExpressionWithCache(String cacheKey, String expressionString) {
+            try {
+                return expressionParser.parseExpression(expressionString);
+            } catch (Exception e) {
+                log.error("SpEL表达式解析异常,表达式:[{}]", expressionString, e);
+                throw new BizException(ReturnCode.EXCEPTION.getCode(), String.format("SpEL表达式解析异常:[%s]", expressionString), e);
+            }
+        }
+    }
+
+    // 定义解析类：
+    @Slf4j
+    @Service
+    public class ExpressionService {
+        @Resource
+        private ExpressionUtil expressionUtil;
+
+        public FileBillReqDTO transform(ChannelEntity channel, String instAccountNo) throws Exception {
+            // 获取上下文对象(变量设置、函数设置)
+            StandardEvaluationContext context = expressionUtil.createContext(instAccountNo);
+            // 获取支付请求类对象
+            FileBillReqDTO target = ClassHelper.newInstance(FileBillReqDTO.class);
+            // t_channel_api表配置的api映射表达式
+            for (ChannelApiEntity api : channel.getApis()) {
+                // 通过反射获取FileBillReqDTO类属性名对象
+                Field field = ReflectionUtils.findField(FileBillReqDTO.class, api.getFieldCode());
+                // 表达式
+                String expressionString = api.getFieldExpression();
+                // 开启缓存，使用解析器解析表达式，返回表达式对象
+                Expression expression = expressionUtil.getExpressionWithCache(api.fieldExpressionKey(), expressionString);
+                // 通过表达式对象获取解析后的结果值
+                Object value = expression.getValue(context, FileBillReqDTO.class);
+                // 将结果通过反射赋值给FileBillReqDTO对象中指定属性字段
+                field.setAccessible(true);
+                field.set(target, value);
+            }
+            // 返回解析赋值后的完整对象
+            return target;
+        }
+    }
+
+    // 调用类
+    @Component
+    public class ChannelApplyFileClient {
+        @Resource
+        private CNRegionDataFetcher cnRegionDataFetcher;
+        @Resource
+        private ExpressionService expressionService;
+        @Resource
+        private ChannelRepository channelRepository;
+
+        public String applyFileBill(String instCode, String instAccountNo) {
+            // 根据渠道码查询t_channel、t_channel_api表，返回ChannelEntity对象
+            ChannelEntity channel = channelRepository.findByInstCode(instCode);
+            // 通过SpEL解析t_channel_api表中表达式，并将值赋值给对应属性中，返回完整请求对象
+            FileBillReqDTO channelReq = expressionService.transform(channel, instAccountNo);
+            // 请求支付系统拉取账单文件，同步返回处理中，异步MQ通知下载结果
+            BaseResult<FileBillResDTO> result = cnRegionDataFetcher.applyFileBill(channelReq, "资金账单下载");
+            return "处理中";
+        }
+    }
+```
+
+优点：通过领域能力抽象和 SpEL 的运用，实现参数处理的动态化或可配置化，不再依赖于硬编码的参数处理逻辑，提高代码的可维护性和扩展性，同时降低了开发和部署的工作量，更好地遵循面向对象设计原则和领域驱动设计思想，成为一个具有独立职责的领域模型。
+
+
+#### 其他应用-Excel解析
+
+传统的方式中，解析 Excel 通常需要通过创建实体类来映射 Excel 的结构和数据。每个实体类代表一个 Excel 行或列，需要手动编写代码来将 Excel 数据解析为相应的实体对象。
+
+而使用 SpEL 方式解析 Excel 则具有更加动态和灵活的特性，避免了显式创建和维护大量的实体类。以下是使用 SpEL 方式动态解析 Excel 的一般步骤：
+
+- 使用 Apache POI 等工具读取 Excel 数据表。
+- 根据配置表，将 Excel 中的列与 SpEL 表达式进行关联。
+- 使用 SpEL 解析器，在运行时解析这些 SpEL 表达式。
+- 将解析后的结果做数据清洗后落表，应用于现金流打标业务。
+  
+配置表中维护的关联关系：（表达式中 #source.column 变量表示列与 Excel Sample 列相对应）
+
+![SpEL-导出Excel字段与表达式关系](../resources/static/images/SpEL-导出Excel字段与表达式关系.png)
+
+![SpEL-导出Excel](../resources/static/images/SpEL-导出Excel.png)
+
+
+总结
+
+总的来说，SpEL 表达式语言具备动态性、灵活性、可扩展性等优点。结合具体业务需求和系统设计，其可应用于很多系统场景：
+
+- Excel 解析：SpEL 可以用于解析 Excel 表格中的数据。可以使用 SpEL 表达式来指定需要解析的单元格、行、列等等，提取数据并应用相应的逻辑。这使得解析过程更加灵活和可扩展。
+- 规则引擎：在使用规则引擎时，SpEL 可以用于定义规则条件和执行动作。通过 SpEL 表达式，可以动态地根据特定的条件对数据进行处理和决策。这使得规则引擎可以根据实际情况在运行时进行灵活的判断和决策。
+- 模板引擎：SpEL 可以用于填充模板数据。通过 SpEL 表达式，可以在模板中引用对象的属性、方法或函数。这使得模板引擎可以根据对象的属性动态地生成内容。
+- 配置文件解析：SpEL 可以用于解析配置文件中的动态值。通过 SpEL 表达式，可以在配置文件中引用其他属性或方法的值。这使得配置文件具备动态性，可以根据实际情况进行动态的配置和调整。
+- 验证规则：在数据验证的场景中，SpEL 可以用于定义验证规则。通过 SpEL 表达式，可以对数据进行复杂的验证和处理。这使得验证过程更加灵活和可配置。
+
+
 ## AOP
-- 将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，便于减少系统的重复代码，降低模块间的耦合度，并有利于未来的可拓展性和可维护性。  
-- 使用动态代理的方式在执行方法前后或出现异常之后加入相关逻辑。  
+
+- 将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，便于减少系统的重复代码，降低模块间的耦合度，并有利于未来的可拓展性和可维护性。
+- 使用动态代理的方式在执行方法前后或出现异常之后加入相关逻辑。
 - **用来：**
     - 事务处理
         - Spring提供的`@Transactional`可以声明在Bean上，表示希望在一个数据库事务中被调用：
@@ -209,25 +495,24 @@
 
 [返回目录](#目录)
 
-## SpringMVC
-### SpringMVC流程
-1. 用户发送请求到**`DispatcherServlet`前端控制器**；
-2. `DispatcherServlet`收到请求后调用**`HandlerMapping`处理器映射器**；
-3. 处理器映射器根据请求url找到具体的处理器，生成处理器对象和处理器拦截器(如果有则生成)，一并返回给`DispatcherServlet`；
-4. `DispatcherServlet`之后通过**`HandlerAdapter`处理器适配器**调用、执行**处理器`Controller`(后端控制器)**，执行完后返回**`ModelAndView`**；
-5. `DispatcherServlet`将`ModelAndView`传给**`ViewReslover`视图解析器**进行解析，解析完后返回具体**`View`视图**；
-6. `DispatcherServlet`对解析后的`View`进行渲染(将模型数据填充到视图中)，并返回给用户。
+[返回目录](#目录)
+
+# Testing
+
+## Mock Objects
+
+## TestContext Framework
+
+## Spring MVC Test
+
+## WebTestClient
 
 [返回目录](#目录)
 
-## SpringBean的生命周期
+# Data Access
 
-[Spring 的 Bean 生命周期](https://mp.weixin.qq.com/s/Vb54HLVKmD99KU0gppriUA)
+## Transactions
 
-
-[返回目录](#目录)
-
-## Spring事务
 ### 事务的特性
 - 原子性（Atomicity）：事务是一个原子操作，由一系列动作组成。事务的原子性确保动作要么全部完成，要么完全不起作用。
 - 一致性（Consistency）：一旦事务完成（不管成功还是失败），系统必须确保它所建模的业务处于一致的状态，而不会是部分完成部分失败。在现实中的数据不应该被破坏。
@@ -236,7 +521,7 @@
 
 ### 事务的传播机制
 事务的传播性一般用在事务嵌套的场景，比如一个事务方法里面调用了另外一个事务方法，那么两个方法是各自作为独立的方法提交还是内层的事务合并到外层的事务一起提交，这就是需要事务传播机制的配置来确定怎么样执行。  
-常用的事务传播机制如下：  
+常用的事务传播机制如下：
 - `PROPAGATION_REQUIRED` Spring默认的传播机制，能满足绝大部分业务需求，如果外层有事务，则当前事务加入到外层事务，一块提交，一块回滚。如果外层没有事务，新建一个事务执行
 - `PROPAGATION_REQUIRES_NEW` 该事务传播机制是每次都会新开启一个事务，同时把外层事务挂起，当当前事务执行完毕，恢复上层事务的执行。如果外层没有事务，执行当前新开启的事务即可
 - `PROPAGATION_SUPPORTS` 如果外层有事务，则加入外层事务，如果外层没有事务，则直接使用非事务方式执行。完全依赖外层的事务
@@ -247,7 +532,7 @@
 
 ### 事务的隔离级别
 事务的隔离级别定义一个事务可能受其他并发务活动活动影响的程度，可以把事务的隔离级别想象为这个事务对于事物处理数据的自私程度。  
-在一个典型的应用程序中，多个事务同时运行，经常会为了完成他们的工作而操作同一个数据。并发虽然是必需的，但是会导致以下问题：  
+在一个典型的应用程序中，多个事务同时运行，经常会为了完成他们的工作而操作同一个数据。并发虽然是必需的，但是会导致以下问题：
 - `脏读（Dirty read）` 脏读发生在一个事务读取了被另一个事务改写但尚未提交的数据时。如果这些改变在稍后被回滚了，那么第一个事务读取的数据就会是无效的。
 - `不可重复读（Nonrepeatable read）` 不可重复读发生在一个事务执行相同的查询两次或两次以上，但每次查询结果都不相同时。这通常是由于另一个并发事务在两次查询之间更新了数据。
 - `幻读（Phantom reads）` 幻读和不可重复读相似。当一个事务（T1）读取几行记录后，另一个并发事务（T2）插入了一些记录时，幻读就发生了。在后来的查询中，第一个事务（T1）就会发现一些原来没有的额外记录。
@@ -258,25 +543,28 @@
 - `ISOLATION_READ_COMMITTED`	（Oracle 默认级别）允许从已经提交的并发事务读取。可防止脏读，但幻读和不可重复读仍可能会发生。
 - `ISOLATION_REPEATABLE_READ`	（MYSQL默认级别）对相同字段的多次读取的结果是一致的，除非数据被当前事务本身改变。可防止脏读和不可重复读，但幻读仍可能发生。
 - `ISOLATION_SERIALIZABLE`	完全服从ACID的隔离级别，确保不发生脏读、不可重复读和幻影读。这在所有隔离级别中也是最慢的，因为它通常是通过完全锁定当前事务所涉及的数据表来完成的。
+
 ### 只读
 - 如果一个事务只对数据库执行读操作，那么该数据库就可能利用那个事务的只读特性，采取某些优化措施。通过把一个事务声明为只读，可以给后端数据库一个机会来应用那些它认为合适的优化措施。由于只读的优化措施是在一个事务启动时由后端数据库实施的， 因此，只有对于那些具有可能启动一个新事务的传播行为（PROPAGATION_REQUIRES_NEW、PROPAGATION_REQUIRED、 ROPAGATION_NESTED）的方法来说，将事务声明为只读才有意义。
+
 ### 事务超时
 - 为了使一个应用程序很好地执行，它的事务不能运行太长时间。因此，声明式事务的下一个特性就是它的超时。
 - 假设事务的运行时间变得格外的长，由于事务可能涉及对数据库的锁定，所以长时间运行的事务会不必要地占用数据库资源。这时就可以声明一个事务在特定秒数后自动回滚，不必等它自己结束。
 - 由于超时时钟在一个事务启动的时候开始的，因此，只有对于那些具有可能启动一个新事务的传播行为（PROPAGATION_REQUIRES_NEW、PROPAGATION_REQUIRED、ROPAGATION_NESTED）的方法来说，声明事务超时才有意义。
+
 ### 回滚规则
 - 在默认设置下，事务只在出现运行时异常（runtime exception）时回滚，而在出现受检查异常（checked exception）时不回滚（这一行为和EJB中的回滚行为是一致的）。
 - 不过，可以声明在出现特定受检查异常时像运行时异常一样回滚。同样，也可以声明一个事务在出现特定的异常时不回滚，即使特定的异常是运行时异常。
 
 ### Spring声明式事务配置参考
-事物配置中有哪些属性可以配置?以下只是简单的使用参考  
+事物配置中有哪些属性可以配置?以下只是简单的使用参考
 
 - 事务的传播性：`@Transactional(propagation=Propagation.REQUIRED)`
 - 事务的隔离级别：`@Transactional(isolation = Isolation.READ_UNCOMMITTED)`
-读取未提交数据(会出现脏读, 不可重复读) 基本不使用
+  读取未提交数据(会出现脏读, 不可重复读) 基本不使用
 
 - 只读：`@Transactional(readOnly=true)`
-该属性用于设置当前事务是否为只读事务，设置为true表示只读，false则表示可读写，默认值为false。
+  该属性用于设置当前事务是否为只读事务，设置为true表示只读，false则表示可读写，默认值为false。
 - 事务的超时性：`@Transactional(timeout=30)`
 - 回滚：
     - 指定单一异常类：`@Transactional(rollbackFor=RuntimeException.class)`
@@ -317,14 +605,34 @@
 
 [返回目录](#目录)
 
-## 访问数据库
+## DAO Support
+
+## JDBC
+
+## R2DBC
+
+## O/R Mapping
+
+## XML Marshalling
 
 [返回目录](#目录)
 
-## Web应用开发
-### 使用REST
+# Web Servlet
 
-[返回目录](#目录)
+## Spring MVC
+
+SpringMVC流程
+1. 用户发送请求到**`DispatcherServlet`前端控制器**；
+2. `DispatcherServlet`收到请求后调用**`HandlerMapping`处理器映射器**；
+3. 处理器映射器根据请求url找到具体的处理器，生成处理器对象和处理器拦截器(如果有则生成)，一并返回给`DispatcherServlet`；
+4. `DispatcherServlet`之后通过**`HandlerAdapter`处理器适配器**调用、执行**处理器`Controller`(后端控制器)**，执行完后返回**`ModelAndView`**；
+5. `DispatcherServlet`将`ModelAndView`传给**`ViewReslover`视图解析器**进行解析，解析完后返回具体**`View`视图**；
+6. `DispatcherServlet`对解析后的`View`进行渲染(将模型数据填充到视图中)，并返回给用户。
+
+
+### SpringBean的生命周期
+
+[Spring 的 Bean 生命周期](https://mp.weixin.qq.com/s/Vb54HLVKmD99KU0gppriUA)
 
 
 ### 数据格式化
@@ -343,57 +651,66 @@ public void addFormatters(FormatterRegistry registry) {
 }
 ```
 
-[返回目录](#目录)
-
-## SpringSecurity
-- 添加依赖
-    ```xml
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-security</artifactId>
-        <version>2.3.0.RELEASE</version>
-    </dependency>
-    ```
-- 安全特性
-    - 所有的HTTP请求路径都需要认证；
-    - 不需要特定的角色和权限；
-    - 没有登录页面；
-    - 认证过程是通过HTTP basic认证对话框实现的；
-    - 系统只有一个用户，用户名为user。（密码随机生成，被写入应用日志中，大致为： `Using default security password：xxx`）
-    
-    - **要确保应用的安全性，至少还需要配置如下功能：**  
-        - 通过登录页面来提示用户进行认证，而不是使用HTTP basic认证对话框；
-        - 提供多个用户，并提供一个注册页面，以便新用户注册进来；
-        - 对不同的请求路径，执行不同的安全规则。如：主页和注册页不需要认证。
-
-- 配置Spring Security
-//TODO
-- 基于内存的用户存储
-//TODO
-- 基于JDBC的用户存储
-//TODO
-- 基于LDAP作为后端的用户存储
-//TODO
-- 自定义用户认证
-//TODO
 
 [返回目录](#目录)
 
-## SpringDataJPA
-- 添加依赖
-    ```xml
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-        <version>2.3.0.RELEASE</version>
-    </dependency>
-    ```
-- 将领域对象标注为实体
-//TODO
-- 声明 JPA repository
-//TODO
-- 自定义 JPA repository
-//TODO
+
+
+## WebSocket
+
+## SockJS
+
+## STOMP Messaging
+
+[返回目录](#目录)
+
+# Web Reactive
+
+## Spring WebFlux
+
+## WebClient
+
+## WebSocket(reactive-stack)
+
+## RSocket
+
+[返回目录](#目录)
+
+# Integration
+
+## Remoting
+
+## JMS
+
+## JCA
+
+## JMX
+
+## Email
+
+## Tasks
+
+## Scheduling
+
+## Caching
+
+[返回目录](#目录)
+
+# Languages
+
+## Kotlin
+
+## Groovy
+
+## Dynamic Languages
+
+[返回目录](#目录)
+
+# Appendix
+
+## Spring properties
+
+
 
 [返回目录](#目录)
 
@@ -919,6 +1236,60 @@ HTTP方法 | 路径 | 描述
 @ConditionalOnResource | Classpath里有指定的资源
 @ConditionalOnWebApplication | 这是一个Web应用程序
 @ConditionalOnNotWebApplication | 这不是一个Web应用程序
+
+[返回目录](#目录)
+
+## SpringSecurity
+
+- 添加依赖
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
+        <version>2.3.0.RELEASE</version>
+    </dependency>
+    ```
+- 安全特性
+    - 所有的HTTP请求路径都需要认证；
+    - 不需要特定的角色和权限；
+    - 没有登录页面；
+    - 认证过程是通过HTTP basic认证对话框实现的；
+    - 系统只有一个用户，用户名为user。（密码随机生成，被写入应用日志中，大致为： `Using default security password：xxx`）
+
+    - **要确保应用的安全性，至少还需要配置如下功能：**
+        - 通过登录页面来提示用户进行认证，而不是使用HTTP basic认证对话框；
+        - 提供多个用户，并提供一个注册页面，以便新用户注册进来；
+        - 对不同的请求路径，执行不同的安全规则。如：主页和注册页不需要认证。
+
+- 配置Spring Security
+  //TODO
+- 基于内存的用户存储
+  //TODO
+- 基于JDBC的用户存储
+  //TODO
+- 基于LDAP作为后端的用户存储
+  //TODO
+- 自定义用户认证
+  //TODO
+
+[返回目录](#目录)
+
+## SpringDataJPA
+
+- 添加依赖
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+        <version>2.3.0.RELEASE</version>
+    </dependency>
+    ```
+- 将领域对象标注为实体
+  //TODO
+- 声明 JPA repository
+  //TODO
+- 自定义 JPA repository
+  //TODO
 
 [返回目录](#目录)
 
