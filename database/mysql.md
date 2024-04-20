@@ -1161,6 +1161,8 @@ show profile for query #{id};
 
 > [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)
 
+> [ShardingSphere.md](ShardingSphere.md)
+
 [返回目录](#目录)
 
 # 阿里MySQL规约
