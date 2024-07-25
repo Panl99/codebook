@@ -92,8 +92,9 @@ public class SysUser {
     <result property = "userInfo" column = "user_info" />
     <result property = "headImg" column = "head_img" jdbcType = "BLOB" />
     <result property = "createTime" column = "create_time " jdbcType = "TIMESTAMP" />
+  <!--在关联映射时，一对一单关联是JavaBean对象，可以使用javaType；而一对多集合类型需要用ofType-->
     <collection property = "roleList" columnPrefix = "role_"
-                javaType = "mybatis.simple.model.SysRole">
+                ofType = "mybatis.simple.model.SysRole">
         <id property = "id" column = "id" />
         <result property = "roleName" column = "role_name" />
         <result property = "enabled" column = "enabled" />
