@@ -73,6 +73,7 @@
         - [同步屏障CyclicBarrier](#同步屏障CyclicBarrier)
         - [控制并发线程数的Semaphore](#控制并发线程数的Semaphore)
         - [线程间交换数据的Exchanger](#线程间交换数据的Exchanger)
+        - [ForkJoinPool](#ForkJoinPool)
    
 - [网络](#网络)
     - [OSI七层网络模型](#OSI七层网络模型)
@@ -2296,6 +2297,39 @@ Exchanger（交换者）是一个用于线程间协作的工具类。用于进�
 如果两个线程有一个没有执行exchange()方法，则会一直等待，如果担心有特殊情况发生，避免一直等待，可以使用`exchange(V x, long timeout, TimeUnit unit)`设置最大等待时长。
 
 [Exchanger.java](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/Exchanger.java)
+
+
+### ForkJoinPool
+
+过去我们在线程池解决问题时，通常维护了一个阻塞的任务队列。每个工作线程在任务完成后，就会去任务队列里面寻找任务。这种方式在我们执行数量较多且不互相依赖的任务时非常方便且高效。
+但是当我们需要执行一个很大的任务时，普通的线程池似乎就很难有什么帮助了。
+
+在JDK7中新增了ForkJoinPool。ForkJoinPool采用`fork-join`（分治）+ `work-stealing`（工作窃取）的思想。可以让我们很方便地将一个大任务拆散成小任务，并行地执行，提高CPU的使用率。
+
+**工作窃取**
+
+1. 每个线程都有自己的双端队列（Deque，支持FIFO和LIFO）
+2. 当调用fork方法时，将任务放进队列头部，线程以LIFO顺序，使用push/pop方式处理队列中的任务
+3. 如果自己队列里的任务处理完后，会从其他线程维护的队列尾部使用poll的方式窃取任务，以达到充分利用CPU资源的目的
+4. 从尾部窃取可以减少同原线程的竞争
+5. 当队列中剩最后一个任务时，通过cas解决原线程和窃取线程的竞争
+
+
+**应用场景**
+
+- 递归分解问题，排序、搜索、数值计算
+
+- JDK8中的并行流(parallelStream)功能是基于ForkJoinPool实现的。
+- java.util.concurrent.CompletableFuture异步回调future，内部使用的线程池也是ForkJoinPool。
+
+
+**与`ThreadPoolExecutor`区别**  
+
+- `ForkJoinPool`和`ThreadPoolExecutor`都实现了`Executor`和`ExecutorService`接口，都可以通过构造函数设置线程数，`threadFactory`。
+- `ForkJoinPool`每个线程都有自己的任务队列，`ThreadPoolExecutor`共用一个队列。
+- `ForkJoinPool`适用于计算密集型、非阻塞的任务。
+
+
 
 [返回目录](#目录)
 
