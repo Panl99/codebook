@@ -1,10 +1,12 @@
 > [MySQL 8 Cookbook]()  
 > [mysql8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)  
-> [MySQL必知必会](../resources/static/doc/MySQL必知必会.pdf)  
-> [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)  
+> [MySQL必知必会](../../resources/static/doc/MySQL必知必会.pdf)  
+> [ShardingSphere.pdf](../../resources/static/doc/shardingsphere_docs_cn.pdf)  
 
 # 目录
 - [mysql常用函数](#mysql常用函数)
+    - [删除重复数据只留一条](#删除重复数据只留一条)
+    - [表数据差集（表t1-表t2）](#表数据差集（表t1-表t2）)
 - [mysql使用](#mysql使用)
     - [连接mysql](#连接mysql)
     - [数据定义语言DDL](#数据定义语言DDL)
@@ -59,7 +61,7 @@
 `SELECT RPAD(LPAD('abc',5,'*'),8,'*') FROM DUAL; => **abc***`
 - **去除字符串两端空格[trim]，去除左边[ltrim]，去除右边[rtim]：**  
 `SELECT TRIM(' ABC ') FROM DUAL; => 'ABC' ; `  
-`SELECT TRIM('s' FROM 'strings') FROM DUAL; => tring`  
+`SELECT TRIM('s' FROM 'strings') FROM DUAL; => tring`  
 `SELECT LTRIM(' ABC ') FROM DUAL; => 'ABC ' ; `  
 `SELECT RTRIM(' ABC ') FROM DUAL; => ' ABC' ; `  
 - **获取子字符串[substr]：**  
@@ -84,7 +86,7 @@
 `SELECT SIGN(10),SIGN(-10),SIGN(0) FROM DUAL;  => 1,-1,0`
 - **向上取整[ceil]，向下取整[floor]：**  
 `SELECT CEIL(12.34) FROM DUAL;  => 13`
-`SELECT FLOOR(12.34) FROM DUAL;  => 12`
+`SELECT FLOOR(12.34) FROM DUAL;  => 12`
 - **余数[mod]：**  
 `SELECT MOD(5,2),MOD(5,5),MOD(2,5) FROM DUAL;  => 1,0,2`
 - **返回根[sqrt]：**  
@@ -109,6 +111,8 @@
 `SELECT FORMAT(250500.5634, 2) from dual; => 250,500.56`
 - **排序[order by]：**  
 `SELECT age,height FROM tableName ORDER BY age,height DESC; => age升序height降序`
+- **自定义排序[FIELD(str,str1,str2,str3,...)]：**  
+`SELECT age,height FROM tableName ORDER BY FIELD(age, 20, 15, 30),height DESC; => age按20-15-30排序height降序`
 - **分组[group by]，分组条件[having]：**  
 `SELECT deptno,avg(sal) FROM tableNmae GROUP BY deptno HAVING avg(sal)>1000;  => 查询平均工资大于1000的部门编号和平均工资`
 - **返回指定字符的ASCII值[ascii]，返回指定数字对应字符[char]：**  
@@ -120,7 +124,7 @@
 - **字符串翻转[REVERSE ]：**  
 `SELECT REVERSE('abcdefgd'); =>dgfedcba`
 - **case when:**  
-`SELECT CASE WHEN sex = '1' THEN '男' WHEN sex = '2' THEN '女' ELSE '其他' END from tableName;`
+`SELECT CASE WHEN sex = '1' THEN '男' WHEN sex = '2' THEN '女' ELSE '其他' END from tableName;`
 - **ifnull<=>oracle的nvl:**  
 `SELECT ifnull('a','b') from dual; => a不为null返回a,a为null返回b`
 - **连接:**  
@@ -194,6 +198,29 @@ WHERE
 		) t 
 	)
 ```
+
+## 表数据差集（表t1-表t2）
+```mysql
+select t_tmp_3.k1 from
+    (
+        SELECT DISTINCT concat(t1.a, t1.b) k1
+        FROM
+            t_table_name_1 t1
+        where t1.a = '0'
+    ) t_tmp_3
+        
+    LEFT JOIN
+        
+    (
+        SELECT DISTINCT concat(t2.a, t2.b) k2
+        FROM
+            t_table_name_2 t2
+        where t2.a = '0'
+    ) t_tmp_4
+    on t_tmp_3.k1 = t_tmp_4.k2
+where t_tmp_4.k2 is null
+```
+
 
 [返回目录](#目录)
 
@@ -927,7 +954,7 @@ MASTER_LOG_POS=463;
     - 每个节点存储索引键和数据，其中数据占了大量空间，导致节点(或者磁盘块)能存储的值非常少。
     - 假设每个值1K，键忽略大小，每个节点只能存储四千多条数据。
 
-![BTree](../resources/static/images/BTree.png)
+![BTree](../../resources/static/images/BTree.png)
     
 - B+Trees：
     - 每个非叶子结点只存储索键，数据全部放到叶子结点。
@@ -936,7 +963,7 @@ MASTER_LOG_POS=463;
         - 磁盘存储多少跟索引值的大小相关，跟指针大小无关。（是使用int还是varchar做索引？如果指定的varchar小于4字节，使用varchar类型；大于4字节使用int类型。）
         - 索引值越大表示的存储范围越小，范围越小导致子节点范围越小，导致乘积也就是存储数据变小。为了保证树足够低，索引key要尽可能少的占用空间。
 
-![B+Tree](../resources/static/images/B+Tree.png)
+![B+Tree](../../resources/static/images/B+Tree.png)
 
 #### InnoDB中一棵B+树可以存放多少行数据？
 大约2千万行。
@@ -1159,7 +1186,7 @@ show profile for query #{id};
 - [mycat](https://github.com/MyCATApache/Mycat-Server?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
 - [sharding-jdbc](https://github.com/apache/incubator-shardingsphere?spm=a2c6h.12873639.0.0.5f355986X8wcNE)
 
-> [ShardingSphere.pdf](../resources/static/doc/shardingsphere_docs_cn.pdf)
+> [ShardingSphere.pdf](../../resources/static/doc/shardingsphere_docs_cn.pdf)
 
 > [ShardingSphere.md](ShardingSphere.md)
 
