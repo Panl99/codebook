@@ -603,6 +603,15 @@ T***1 | p***l | 5
 </aop:config>
 ```
 
+### Spring事务的注意事项
+
+- 默认代理模式下，只有public修饰的方法事务才起作用，private、protected 包内可见方法即使用@Transactional声明了事务，不会出错 也不会起作用（可以使用AspectJ代理来解决）。
+- 抛出任何 RuntimeException 时会触发回滚，而抛出检查异常时不会触发回滚。如果想实现抛出检查异常回滚需在`@Transactional`中添加属性 `rollbackFor` 指定需要回滚的异常类， `noRollbackFor` 自定义不回滚异常。
+- 默认的代理模式下，只有被代理拦截的 外部方法的事务才会起作用。**自调用（类内部方法调用本类内部的其他方法）并不会引起事务行为(即使该方法被`@Transactional`注解标记)**。 如果想实现自调用事务，需更换代理模式 使用AspectJ代理来解决。
+- 异常如果被 catch 住了并且没有抛出，事务是不会起作用的。
+
+[https://docs.spring.io/spring-framework/docs/5.3.39/reference/html/data-access.html#transaction-declarative-annotations](https://docs.spring.io/spring-framework/docs/5.3.39/reference/html/data-access.html#transaction-declarative-annotations)
+
 [返回目录](#目录)
 
 ## DAO Support
