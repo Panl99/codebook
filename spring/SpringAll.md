@@ -1504,7 +1504,9 @@ dubbo:
 
 #### Dubbo RPC接口无法返回自定义异常
 
-Dubbo的`ExceptionFilter`会将所有非RpcException 转为 RuntimeException 返回。
+**原因：**
+
+Dubbo的`ExceptionFilter`会将所有继承自`RuntimeException`的非RpcException 转为 RuntimeException 返回。
 
 ![](../resources/static/images/DubboRPC返回自定义异常问题-ExceptionFilter过滤非RpcException.png)
 
@@ -1516,6 +1518,13 @@ Dubbo的`ExceptionFilter`会将所有非RpcException 转为 RuntimeException 返
 - 放到原包目录下
 - 在resource/META-INF/dubbo目录下新建一个Filter文件`org.apache.dubbo.rpc.Filter`，并配置自定义的ExceptionFilter类‌:`exceptionFilter=com.lp.common.dubbo.ExceptionFilter`
 
+#### Dubbo接口传递Hutool的DateTime时间格式会变成当前时间
+
+**原因：**
+[https://gitee.com/dromara/hutool/issues/I1818X](https://gitee.com/dromara/hutool/issues/I1818X)
+
+**解决方式：使用后转JDK Date `DateUtil.offsetDay(new Date(), -1).toJdkDate()`**
+(因兼容性影响，Hutool作者不计划修复改问题)
 
 [目录](#目录)
 
