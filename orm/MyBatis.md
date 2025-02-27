@@ -310,3 +310,151 @@ MyBatis 的二级缓存是和命名空间绑定的，即二级缓存需要配置
 
 # Mybatis源码
 
+
+
+# Mybatis自定义数据返回类型
+
+## 结果返回List<Map<String, String>>
+
+**示例1：在MyBatis中将MySQL返回的数据（例如：161:1;164:1;166:1;315:0）转换为一个List<Map<String, String>>格式。**
+
+分析步骤：
+1. 编写一个MyBatis的自定义类型处理器（TypeHandler），用来将数据库中的字符串转换为List<Map<String, String>>。
+2. 处理这个字符串，将它拆分成key:value的形式，并且将它们转换为Map<String, String>。
+
+实现步骤：
+1. 编写TypeHandler
+```java
+import org.apache.ibatis.type.BaseTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class StringToListMapTypeHandler extends BaseTypeHandler<List<Map<String, String>>> {
+
+    @Override
+    public void setNonNullParameter(PreparedStatement ps, int i, List<Map<String, String>> parameter, JdbcType jdbcType) throws SQLException {
+        // 将 List<Map<String, String>> 转为数据库中的字符串格式，进行存储
+        StringBuilder sb = new StringBuilder();
+        for (Map<String, String> map : parameter) {
+            map.forEach((key, value) -> sb.append(key).append(":").append(value).append(";"));
+        }
+        ps.setString(i, sb.toString());
+    }
+
+    @Override
+    public List<Map<String, String>> getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        return parseResult(rs.getString(columnName));
+    }
+
+    @Override
+    public List<Map<String, String>> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        return parseResult(rs.getString(columnIndex));
+    }
+
+    @Override
+    public List<Map<String, String>> getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+        return parseResult(cs.getString(columnIndex));
+    }
+
+    private List<Map<String, String>> parseResult(String result) {
+        List<Map<String, String>> list = new ArrayList<>();
+        if (result != null && !result.isEmpty()) {
+            String[] items = result.split(";");
+            Map<String, String> map = new HashMap<>();
+            for (String item : items) {
+                String[] keyValue = item.split(":");
+                if (keyValue.length == 2) {
+                    map.put(keyValue[0], keyValue[1]);
+                } else if (keyValue.length == 1) {
+                    map.put(keyValue[0], "");
+                }
+            }
+            list.add(map);
+        }
+        return list;
+    }
+}
+
+```
+
+2. 使用TypeHandler  
+   **全局配置（注意：会影响到全局的sql）：**
+   - 使用 @MapperScan 和 SqlSessionFactory 注册 TypeHandler 
+    ```java
+    import org.apache.ibatis.session.SqlSessionFactory;
+    import org.apache.ibatis.type.TypeHandlerRegistry;
+    import org.springframework.context.annotation.Bean;
+    import org.mybatis.spring.SqlSessionFactoryBean;
+    import org.springframework.context.annotation.Configuration;
+    import xyz.jingxun.common.core.handler.StringToListMapTypeHandler;
+    
+    import javax.sql.DataSource;
+    
+    @Configuration
+    public class MyBatisConfig {
+    
+        @Bean
+        public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+            SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+            factoryBean.setDataSource(dataSource);
+    
+            SqlSessionFactory sqlSessionFactory = factoryBean.getObject();
+            org.apache.ibatis.session.Configuration configuration = sqlSessionFactory.getConfiguration();
+    
+            // 注册自定义的 TypeHandler
+            TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+            typeHandlerRegistry.register(StringToListMapTypeHandler.class);
+    
+            return sqlSessionFactory;
+        }
+    }
+    ```
+   - 通过 application.yml 配置自定义TypeHandler所在的包，启动的时候会扫描到Mybatis中。
+    ```yaml
+    mybatis:
+        type-handlers-package: com.example.handler
+    ```
+   
+   **局部配置（查询语句级别配置，不需要全局注册TypeHandler）：**
+   - 通过 @Mapper 注解注册 TypeHandler
+    ```java
+    import org.apache.ibatis.annotations.Result;
+    import org.apache.ibatis.annotations.Results;
+    import org.apache.ibatis.annotations.Select;
+    import org.apache.ibatis.type.TypeHandler;
+    
+    public interface YourMapper {
+    
+        @Select("SELECT id, value_data FROM your_table WHERE some_condition")
+        @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "valueData", column = "value_data", typeHandler = StringToListMapTypeHandler.class)
+        })
+        List<YourEntity> getYourEntities();
+    }
+    ```
+   - 在 XML 映射文件中局部应用 TypeHandler
+   ```xml
+   <resultMap id="ResultMap" type="YourEntity">
+       <result column="id" property="id"/>
+       <result column="value_data" property="valueData" typeHandler="com.example.handler.StringToListMapTypeHandler"/>
+   </resultMap>
+   ```
+   - @TypeHandler 注解 适用于MyBatis Plus
+   ```java
+   public class YourEntity {
+       private Long id;
+   
+       @TypeHandler(StringToListMapTypeHandler.class)  // 仅此字段使用 TypeHandler
+       private Map<String, String> valueData;
+   }
+   ```
+   
