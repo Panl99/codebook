@@ -289,3 +289,169 @@ deploy | deploy:deploy
 
 
 - 多线程编译: `mvn clean package -T 1C -Dmaven.test.skip=true  -Dmaven.compile.fork=true`
+
+
+# Maven私库搭建
+
+## 下载Nexus
+
+[官网](https://help.sonatype.com/en/orientdb-downloads.html)
+
+## 启动Nexus
+
+- 修改端口号：
+    ```properties
+    # D:\Tools\Nexus\nexus-3.22.1-02\etc\nexus-default.properties
+    
+    application-port=8181 # 修改为一个不常用的端口号
+    ```
+- 启动Nexus：cmd执行`D:\Tools\Nexus\nexus-3.22.1-02\bin>nexus.exe/run`
+  ![](../resources/static/images/Nexus-启动.png)
+
+  ![](../resources/static/images/Nexus-web页面.png)
+
+## 登录Nexus
+
+启动后会在`D:\Tools\Nexus\sonatype-work\nexus3\admin.password`生成密码
+
+![](../resources/static/images/Nexus-登录.png)
+
+登录后按提示修改密码。
+
+## 配置Maven私库
+
+- 因为Nexus里自带的有Maven仓库，所以不需要另外创建，只需要配置下Maven连接私库的地址即可
+
+  ![](../resources/static/images/Nexus-Maven库浏览.png)
+
+- 设置本地Maven settings文件，配置Nexus私库地址。（`D:\Tools\Maven\apache-maven-3.8.1\conf\settings.xml`）
+  ```xml
+  <!-- 1、配置本地仓库访问私服的权限：nexus的登录用户名密码 -->
+  <servers>
+      <server>
+        <id>maven-releases</id>
+        <username>admin</username>
+        <password>Lp123</password>
+      </server>
+      <server>
+        <id>maven-snapshots</id>
+        <username>admin</username>
+        <password>Lp123</password>
+      </server>
+  </servers>
+  
+  <!-- 2、配置Maven私库信息 -->
+  <profiles>
+      <profile>
+          <id>nexus</id>
+          <!--远程仓库列表，它是Maven用来填充构建系统本地仓库所使用的一组远程项目。  -->
+          <repositories>
+              <repository>
+                  <!--用于存储已经发布的Maven依赖包-->
+                  <id>maven-releases</id>
+                  <url>http://localhost:8181/repository/maven-releases/</url>
+                  <!--true或者false表示该仓库是否为下载某种类型构件（发布版，快照版）开启。 -->
+                  <releases>
+                     <enabled>true</enabled>
+                  </releases>
+                  <snapshots>
+                     <enabled>false</enabled>
+                  </snapshots>
+              </repository>
+              <repository>
+                  <!--用于存储开发中的Maven依赖包-->
+                  <id>maven-snapshots</id>
+                  <url>http://localhost:8181/repository/maven-snapshots/</url>
+                  <releases>
+                     <enabled>false</enabled>
+                  </releases>
+                  <snapshots>
+                     <enabled>true</enabled>
+                  </snapshots>
+              </repository>
+          </repositories>
+          <pluginRepositories>
+              <pluginRepository>
+                  <id>maven-public</id>
+                  <url>http://localhost:8181/repository/maven-public</url>
+              </pluginRepository>
+          </pluginRepositories>
+      </profile>
+  </profiles>
+  
+  <!-- 3、激活私库配置 -->
+  <activeProfiles>
+      <!--对应profile下的id-->
+      <activeProfile>nexus</activeProfile>
+  </activeProfiles>
+  
+  ```
+
+## 上传公共组件到Maven私库
+
+- 手动打包上传
+  ![](../resources/static/images/Nexus-手动打包上传Maven私库.png)
+
+  ![](../resources/static/images/Nexus-上传包后查看.png)
+
+- 自动上传：公共组件项目配置pom文件，实现连接私库自动上传
+  ```xml
+  <!-- 分发构件至远程仓库 -->
+  <distributionManagement>
+      <!--正式版本-->
+      <repository>
+          <!-- maven settings.xml中<server>的id-->
+          <id>maven-releases</id>
+          <name>nexus-releases</name>
+          <url>http://localhost:8181/repository/maven-releases/</url>
+      </repository>
+      <!--快照-->
+      <snapshotRepository>
+          <id>maven-snapshots</id>
+          <name>nexus-snapshots</name>
+          <url>http://localhost:8181/repository/maven-snapshots/</url>
+      </snapshotRepository>
+  </distributionManagement>
+  ```
+  执行Maven deploy（快照版版本标签`<version>xxx-SNAPSHOT</version>`）
+  ![](../resources/static/images/Nexus-部署到私库.png)
+
+  ![](../resources/static/images/Nexus-部署到私库后查看.png)
+  - `maven-releases`查看/依赖正式版
+  - `maven-snapshots`查看/依赖快照版
+  - `maven-public`查看/依赖正式版和快照版
+
+## 在项目中引用公共组件
+
+![](../resources/static/images/Nexus-在其它项目中引入私库依赖.png)
+
+
+## 其它
+
+### 项目发布到maven中央仓库
+
+项目用于发布到maven中央仓库的插件：nexus-staging-maven-plugin
+```xml
+  <plugin>
+      <groupId>org.sonatype.plugins</groupId>
+      <artifactId>nexus-staging-maven-plugin</artifactId>
+      <version>1.6.13</version>
+      <extensions>true</extensions>
+      <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+      </configuration>
+  </plugin>
+```
+
+```xml
+<distributionManagement>
+    <snapshotRepository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+</distributionManagement>
+```
+
+[发布Jar包到Maven仓库](https://zhuanlan.zhihu.com/p/102977818)
