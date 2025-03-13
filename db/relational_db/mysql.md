@@ -221,6 +221,24 @@ select t_tmp_3.k1 from
 where t_tmp_4.k2 is null
 ```
 
+## 将A表的a字段更新到B表的b字段上,两个表通过c字段关联
+```mysql
+UPDATE B
+INNER JOIN A ON A.c = B.c
+SET B.b = A.a;
+```
+
+## 从一个表中查出数据并插入到另一个表
+```mysql
+-- 只导入来源表部分字段到目标表
+insert into t_target(字段1, 字段2, 字段3)
+select 字段1, 字段2, 字段3 from t_source;
+
+-- 只导入目标表中不存在的数据
+insert into t_target (字段1, 字段2)  
+select 字段1, 字段2  from t_source  
+where not exists (select * from t_target where t_target.比较字段 = t_source.比较字段);
+```
 
 [返回目录](#目录)
 
