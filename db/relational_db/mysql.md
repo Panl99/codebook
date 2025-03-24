@@ -227,6 +227,16 @@ UPDATE B
 INNER JOIN A ON A.c = B.c
 SET B.b = A.a;
 ```
+```mysql
+UPDATE B
+JOIN (
+    SELECT c, GROUP_CONCAT(a) AS grouped_a
+    FROM A
+    GROUP BY c
+) AS A_grouped
+ON B.c = A_grouped.c
+SET B.b = A_grouped.grouped_a;
+```
 
 ## 从一个表中查出数据并插入到另一个表
 ```mysql
