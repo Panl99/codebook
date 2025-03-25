@@ -29,7 +29,7 @@
 |分布式调度框架|[xxl-job](xxl-job/xxl-job.md)|
 |开发测试|[Test.md](test/Test.md)|
 |规则引擎|[RuleEngine.md](system/RuleEngine.md)|
-|AI|[AI识别：AIRecognition.md](ai/AIRecognition.md) <br/>**大模型：**<br/> [DeepSeek.md](ai/DeepSeek.md)|
+|AI|[AI识别：AIRecognition.md](ai/AIRecognition.md) <br/>**大模型：** [LLM.md](ai/LLM.md) <br/> [DeepSeek.md](ai/DeepSeek.md)|
 
 
 # 项目
