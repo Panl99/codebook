@@ -6,6 +6,31 @@ Java新版本新增特性
 
 [Java.java](Java.java)
 
+
+# Java21(LTS)
+
+- 430: String Templates (Preview) `字符串模板（预览）`
+- 431: Sequenced Collections `顺序集合`
+- 439: Generational ZGC `ZGC世代`
+- 440: Record Patterns `记录模式`
+- 441: Pattern Matching for switch `开关模式匹配`
+- 442: Foreign Function & Memory API (Third Preview) `外部函数和内存API（第三次预览）`
+- 443: Unnamed Patterns and Variables (Preview) `未命名模式和变量（预览）`
+- 444: Virtual Threads `虚拟线程`
+- 445: Unnamed Classes and Instance Main Methods (Preview) `未命名类和实例主方法（预览版）`
+- 446: Scoped Values (Preview) `范围值（预览）`
+- 448: Vector API (Sixth Incubator) `矢量API（第六个培养箱）`
+- 449: Deprecate the Windows 32-bit x86 Port for Removal `弃用Windows 32位x86端口以进行删除`
+- 451: Prepare to Disallow the Dynamic Loading of Agents `准备禁止动态加载代理`
+- 452: Key Encapsulation Mechanism API `密钥封装机制API`
+- 453: Structured Concurrency (Preview) `结构化并发（预览版）`
+
+> [https://openjdk.org/projects/jdk/21/](https://openjdk.org/projects/jdk/21/)
+
+
+注意：
+- 虚拟线程可以提高系统的吞吐量，不能提高运行速度，也不适用于 CPU 计算密集型任务
+
 # Java17(LTS)
 
 - Spring 6 和 Spring Boot 3 依赖 JDK17

@@ -31,6 +31,33 @@ public class Java {
     }
 
     /**
+     * Java21
+     */
+    public static void java21() {
+
+        /**
+         * 虚拟线程
+         * JDK在少数操作系统线程上运行代码，可能只有一个线程。
+         *
+         * 示例，创建 10000个线程，然后都休眠 1 秒钟结束线程，如果使用传统的 Thread 线程，可能会因为线程数量不够而直接异常。
+         * 如果是线程池的方式，会基于线程池的线程数并发，那么剩余线程只能等待；但是使用虚拟线程的方式，可以瞬间完成。
+         */
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            IntStream.range(0, 10_000).forEach(i -> {
+                executor.submit(() -> {
+                    Thread.sleep(Duration.ofSeconds(1));
+                    return i;
+                });
+            });
+        }  // executor.close() 被隐式调用，并等待
+
+        /**
+         * https://www.wdbyte.com/java/java-21/
+         */
+    }
+
+
+    /**
      * Java17
      */
     public static void java17() {
