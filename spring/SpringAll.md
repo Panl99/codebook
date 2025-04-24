@@ -67,6 +67,7 @@
         - [覆盖SpringBoot自动配置-TODO](#覆盖SpringBoot自动配置)
         - [通过属性文件外置配置](#通过属性文件外置配置)
             - [application.yml与bootstrap.yml的区别](#application.yml与bootstrap.yml的区别)
+            - [SpringBoot2.4开始弃用‌bootstrap.yml](#SpringBoot2.4开始弃用‌bootstrap.yml)
             - [自动配置微调](#自动配置微调)
             - [应用程序Bean的配置外置-TODO](#应用程序Bean的配置外置)
             - [使用Profile进行配置](#使用Profile进行配置)
@@ -1001,6 +1002,32 @@ Spring MVC核心入口类
 `bootstrap.yml`优先级高于`application.yml`
 
 [application.yml与bootstrap.yml的区别](https://www.cnblogs.com/cy0628/p/15193872.html)
+
+
+#### SpringBoot2.4开始弃用‌bootstrap.yml
+
+bootstrap.yml在Spring Boot 2.4版本中被弃用‌。
+
+从Spring Boot 2.4版本开始，默认情况下不再自动加载bootstrap.yml或bootstrap.properties文件。
+
+这是Spring Cloud团队为了简化配置管理而做出的决定，逐步减少对bootstrap上下文的支持‌。
+
+
+如果仍需使用‌bootstrap.yml，需要手动开启：
+
+为了在Spring Boot 2.4及更高版本中使用类似的功能，可以通过添加spring-cloud-starter-bootstrap依赖来手动启用bootstrap上下文。这样，bootstrap.yml文件仍然可以使用，但需要显式启用‌。例如：
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-bootstrap</artifactId>
+</dependency>
+```
+
+bootstrap.yml和application.yml的区别：
+- 加载顺序与用途‌：bootstrap.yml在父ApplicationContext中加载，主要用于应用程序的引导阶段，配置与外部系统连接的关键参数（如Spring Cloud Config Server的地址、加密密钥等）。
+  而application.yml在子ApplicationContext中加载，用于应用程序运行时的常规配置（如数据库连接、服务端口、日志级别等）‌。
+- 优先级‌：在Spring Boot 2.4之前，bootstrap.yml的优先级高于application.yml。
+  但从Spring Boot 2.4开始，bootstrap.yml被弃用，其功能整合到application.yml中‌。
 
 [返回目录](#目录)
 
