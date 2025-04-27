@@ -250,6 +250,25 @@ select 字段1, 字段2  from t_source
 where not exists (select * from t_target where t_target.比较字段 = t_source.比较字段);
 ```
 
+## SQL补全权限表parent_id
+```mysql
+UPDATE permission p
+LEFT JOIN permission parent 
+    ON parent.url = LEFT(p.url, LENGTH(p.url) - LOCATE('/', REVERSE(p.url)))
+SET p.parent_id = COALESCE(parent.id, 0)
+where p.type = 2
+;
+-- 提取父路径：使用字符串函数LEFT(p.url, LENGTH(p.url) - LOCATE('/', REVERSE(p.url)))从当前URL中截取父路径。REVERSE反转URL后查找第一个'/'的位置，对应原URL中最后一个'/'的位置，截取该位置之前的部分即为父路径。
+-- 关联父权限：通过LEFT JOIN将当前权限表与自身（作为父权限）关联，匹配条件为当前记录的父路径等于父权限的URL。
+-- 设置parent_id：使用COALESCE函数，若找到对应的父权限，则设置parent_id为父权限的id；若未找到（父路径不存在于表中），则设置为0。
+
+-- id	permission_name	url	        parent_id
+-- 1	信息1	        /b/m	    0
+-- 2	信息2	        /b/m/c	    1
+-- 3	信息3	        /b/m/d	    1
+-- 4	信息4	        /b/m/d/a	3
+```
+
 [返回目录](#目录)
 
 # mysql使用
