@@ -983,7 +983,7 @@ web.hook.encode_payload = base64
 如果业务数据符合上面的条件，比如业务数据属于监控、运维类，或者需要用折线图之类的进行可视化，那么就可以考虑使用时序数据库。
 
 
-**时序数据库** 有InfluxDB、OpenTSDB、TimeScaleDB等。
+**时序数据库** 有[InfluxDB](../db/tsdb/influxdb.md)、[IoTDB](../db/tsdb/iotdb.md)、OpenTSDB、TimeScaleDB等。
 
 时序数据库的一些概念：
 - `Metric`：度量，可以当作关系型数据库中的表（table）。
