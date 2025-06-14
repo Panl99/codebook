@@ -220,6 +220,20 @@ select t_tmp_3.k1 from
     on t_tmp_3.k1 = t_tmp_4.k2
 where t_tmp_4.k2 is null
 ```
+```mysql
+-- 使用子查询短路逻辑更高效
+-- 减少CONCAT运算, 直接字段比较，可利用索引
+SELECT t1.*
+FROM
+    t_table_name_1 t1
+WHERE t1.a = '0'
+  AND NOT EXISTS (
+        SELECT 1
+        FROM t_table_name_2 t2
+        WHERE t2.a = '0'
+          AND t1.b = t2.b AND t1.c = t2.c
+    )
+```
 
 ## 将A表的a字段更新到B表的b字段上,两个表通过c字段关联
 ```mysql
