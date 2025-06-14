@@ -623,6 +623,27 @@ for (Constructor c : constructor) {
 }
 ```
 
+```java
+// 获取对象及其父类所有属性
+private List<Field> getAllDeclaredFields(Class<?> clazz) {
+    List<Field> fieldList = new ArrayList<>();
+    while (clazz != null && clazz != Object.class) {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+            }
+            fieldList.add(field);
+        }
+        clazz = clazz.getSuperclass();
+    }
+    return fieldList;
+}
+
+// Hutool工具类
+Field[] fields = ReflectUtil.getFields(obj.getClass());
+```
+
 ## 创建对象的2种方式
 1. 使用Class对象的newInstance方法创建该Class对象对应类的实例，这种方法要求该Class对象对应的类有默认的空构造器。
     ```java
