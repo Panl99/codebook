@@ -140,6 +140,142 @@ public class SysUser {
 </select>
 ```
 
+## MyBatis的N+1问题
+
+collection 的两种实现方式：
+- `嵌套查询 (Nested Queries / select)`： 在主查询执行完毕后，MyBatis 会为结果集中每一条主记录，根据 collection 标签中指定的 select 属性值（另一个映射语句的 ID），去执行一次子查询来加载关联的集合数据。这就是著名的 N+1 查询问题。
+- `嵌套结果 (Nested Results / resultMap)`： 通过编写一个包含连接（JOIN）的 SQL 语句，一次性将主记录及其关联集合的所有数据查询出来。MyBatis 的结果映射(resultMap)会负责将这一大块结果集拆解、组装成主对象包含子对象集合的结构。
+
+在`嵌套查询(select模式)` 方式下，主查询跟子查询会使用**同一个SqlSession**完成查询，不会为每个子查询关闭然后重新打开一个新的 SqlSession 或创建新的数据库连接。
+
+但sql查询语句本身确实被循环执行了，从而导致的 N+1(1次主查询 + N次子查询) 查询问题影响性能。
+
+解决N+1问题：
+- **使用嵌套结果 (resultMap 方式)：(推荐)**
+   1. 编写一个 SQL 语句，使用 JOIN (如 LEFT JOIN) 将主表（订单）和子表（商品项）连接起来。
+   2. 在 resultMap 中定义主记录的映射，并在其中使用 <collection ... resultMap="itemResultMap"> 或者直接在 <collection> 内定义子对象的列映射。MyBatis 会遍历合并后的结果集，自动根据主键将子记录分组到对应的主记录的集合属性中。
+   - 优点： 只需要 1 次数据库查询。
+   - 缺点： SQL 可能更复杂；结果集可能包含重复的主记录数据（JOIN 的特性），但 MyBatis 能正确处理；如果关联数据量巨大，单次查询结果集本身可能很大。
+- **使用懒加载 (Lazy Loading)：**
+   1. 在 collection 的 select 模式下，配置 fetchType = "lazy"。
+   2. 这样，子查询不会在主查询执行后立即触发。只有在应用程序第一次实际访问主对象的集合属性（如 order.getItems()）时，MyBatis 才会在那个时刻执行子查询。
+   - 优点： 避免了加载不需要的数据，特别是当主记录很多但可能不需要立即查看所有关联数据时。可以缓解（但不能根除）N+1 问题的影响，因为它推迟了子查询的执行，并且可能只在需要时才加载部分主记录的关联数据。
+   - 缺点： 如果最终确实需要访问所有（或很多）主记录的关联数据，N+1 问题依然存在，只是发生的时间点延迟了。可能导致“懒加载异常”（如果访问时原始的 SqlSession 已经关闭了）。
+- **批量加载 (Batch Loading)：**
+   1. MyBatis 3.x 及以上支持全局或局部配置 aggressiveLazyLoading 和 lazyLoadTriggerMethods，但更强大的解决方案是使用 @Options(fetchSize=...) 或特定的执行器（如 BatchExecutor）来尝试将多个延迟加载的子查询合并成一个批量查询。这需要更复杂的配置和对 MyBatis 执行器的理解。
+   - 优点： 可以将多个（比如 M 个）延迟加载的子查询合并成较少的（比如 K 个， K << M）批量查询，显著减少数据库交互次数。
+   - 缺点： 配置相对复杂；不是所有场景都能完美合并。
+
+**示例**:
+```java
+// 实体类结构
+class A {
+    Long id;
+    String name;
+    List<B> bList; // 1:N
+}
+
+class B {
+    Long id;
+    String name;
+    List<C> cList; // 1:N
+}
+
+class C {
+    Long id;
+    String name;
+    List<D> dList; // 1:N
+}
+
+class D {
+    Long id;
+    String name;
+}
+```
+
+使用嵌套结果映射（resultMap）查询多层嵌套( A -> B (1:N), B -> C (1:N), C -> D (1:N) )结果:
+
+1. 编写包含所有层级的 SQL（使用 LEFT JOIN）
+```mysql
+-- A表有字段：id、name
+-- B表有字段：id、name、A.id
+-- C表有字段：id、name、B.id
+-- D表有字段：id、name、C.id
+SELECT
+   a.id        AS a_id,
+   a.name      AS a_name,
+   b.id        AS b_id,
+   b.name      AS b_name,
+   c.id        AS c_id,
+   c.name      AS c_name,
+   d.id        AS d_id,
+   d.name      AS d_name
+FROM A a
+        LEFT JOIN B b ON a.id = b.a_id -- 空集合会自动初始化为空列表（非 null）
+        LEFT JOIN C c ON b.id = c.b_id -- 空集合会自动初始化为空列表（非 null）
+        LEFT JOIN D d ON c.id = d.c_id -- 空集合会自动初始化为空列表（非 null）
+WHERE a.id = 123
+ORDER BY a.id, b.id, c.id  -- 确保结果集分组有序（无序数据可能会导致对象重复创建）
+```
+2. 配置多层嵌套的 resultMap
+```xml
+<resultMap id="aResultMap" type="com.example.A">
+    <id property="id" column="a_id"/>
+    <result property="name" column="a_name"/>
+    <!-- 1:N 映射到 B -->
+    <collection property="bList" ofType="com.example.B" resultMap="bResultMap"/>
+</resultMap>
+
+<resultMap id="bResultMap" type="com.example.B">
+    <id property="id" column="b_id"/>
+    <result property="name" column="b_name"/>
+    <!-- 1:N 映射到 C -->
+    <collection property="cList" ofType="com.example.C" resultMap="cResultMap"/>
+</resultMap>
+
+<resultMap id="cResultMap" type="com.example.C">
+    <id property="id" column="c_id"/>
+    <result property="name" column="c_name"/>
+    <!-- 1:N 映射到 D -->
+    <collection property="dList" ofType="com.example.D">
+        <id property="id" column="d_id"/>
+        <result property="name" column="d_name"/>
+    </collection>
+</resultMap>
+
+<!--3. 在 Mapper 中引用 第1步的SQL语句-->
+<select id="selectAWithBCD" resultMap="aResultMap">
+   SELECT
+       a.id        AS a_id,
+       a.name      AS a_name,
+       b.id        AS b_id,
+       b.name      AS b_name,
+       c.id        AS c_id,
+       c.name      AS c_name,
+       d.id        AS d_id,
+       d.name      AS d_name
+   FROM A a
+   LEFT JOIN B b ON a.id = b.a_id
+   LEFT JOIN C c ON b.id = c.b_id
+   LEFT JOIN D d ON c.id = d.c_id
+   WHERE a.id = 123
+   ORDER BY a.id, b.id, c.id  -- 确保结果集分组有序（无序数据可能会导致对象重复创建）
+</select>
+```
+
+4. 如果数据量极大（如百万级）：
+   1. 分页优先：在主查询添加分页（LIMIT），只加载当前页数据
+   2. 按需加载：
+      ```xml
+      <collection property="bList" fetchType="lazy" ... />
+      ```
+   3. 批量延迟加载（MyBatis 3.4.1+）：
+      ```xml
+      <!-- 全局配置 -->
+      <setting name="aggressiveLazyLoading" value="false"/>
+      <setting name="lazyLoadTriggerMethods" value=""/>
+      ```
+
 
 ## 鉴别器`discriminator`
 角色的属性enable 值为1 的时候表示状态可用， 为0 的时候表示状态不可用。当角色可
