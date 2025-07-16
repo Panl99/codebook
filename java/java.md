@@ -53,8 +53,9 @@
             - [ThreadPoolExecutor](#ThreadPoolExecutor)
             - [定时任务：ScheduledThreadPoolExecutor](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/ScheduledThreadPoolExecutorDemo.java)
         - [5种常用的线程池](#5种常用的线程池)        
-    - [异步编程--TODO](#异步编程)
+    - [异步编程](#异步编程)
         - [CompletableFuture](#CompletableFuture)
+        - [Vert.x](#Vert.x)
     - [ThreadLocal](#ThreadLocal)
         - [ThreadLocal原理](#ThreadLocal原理)
         - [ThreadLocal问题-内存泄漏](#ThreadLocal问题-内存泄漏)
@@ -1796,6 +1797,501 @@ scheduledThreadPool.scheduleAtFixedRate(new Runnable() {
 - [异步非阻塞：CompletableFuture](https://github.com/Panl99/demo/tree/master/demo-action/src/main/java/com/lp/demo/action/java_in_action/CompletableFutureDemo.java)
 
 子线程会跟随主线程任务结束而结束，CompletableFuture.allOf(List<CompletableFuture>).join()阻塞所有线程直到所有线程执行完毕。
+
+#### CompletableFuture示例
+
+使用CompletableFuture也是构建依赖树的过程。一个CompletableFuture的完成会触发另外一系列依赖它的CompletableFuture的执行：
+
+![CompletableFuture示例执行流程](../resources/static/images/CompletableFuture示例执行流程.png)
+
+如上图所示，这里描绘的是一个业务接口的流程，其中包括CF1\CF2\CF3\CF4\CF5共5个步骤，并描绘了这些步骤之间的依赖关系，每个步骤可以是一次RPC调用、一次数据库操作或者是一次本地方法调用等，在使用CompletableFuture进行异步化编程时，图中的每个步骤都会产生一个CompletableFuture对象，最终结果也会用一个CompletableFuture来进行表示。
+
+根据CompletableFuture依赖数量，可以分为以下几类：**`零依赖`、`一元依赖`、`二元依赖`、`多元依赖`**。
+- `零依赖`：**CF1，CF2**不依赖其他CompletableFuture来创建新的CompletableFuture。
+  ```java
+  // 接口接收到请求后，首先发起两个异步调用CF1、CF2，三种方式：  
+  ExecutorService executor = Executors.newFixedThreadPool(5);
+  
+  //1、使用runAsync或supplyAsync发起异步调用
+  CompletableFuture<String> cf1 = CompletableFuture.supplyAsync(() -> {
+      return "result1";
+  }, executor);
+  
+  //2、CompletableFuture.completedFuture()直接创建一个已完成状态的CompletableFuture
+  CompletableFuture<String> cf2 = CompletableFuture.completedFuture("result2");
+  
+  //3、先初始化一个未完成的CompletableFuture，然后通过complete()、completeExceptionally()，完成该CompletableFuture
+  CompletableFuture<String> cf = new CompletableFuture<>();
+  cf.complete("success");
+  ```
+  第三种方式的一个典型使用场景，就是将回调方法转为CompletableFuture，然后再依赖CompletableFuture的能力进行调用编排，示例如下：
+  ```java
+  @FunctionalInterface
+  public interface ThriftAsyncCall {
+      void invoke() throws TException;
+  }
+  
+  /**
+   * 该方法为美团内部rpc注册监听的封装，可以作为其他实现的参照
+   * OctoThriftCallback 为thrift回调方法
+   * ThriftAsyncCall 为自定义函数，用来表示一次thrift调用（定义如上）
+   */
+  public static <T> CompletableFuture<T> toCompletableFuture(final OctoThriftCallback<?,T> callback, ThriftAsyncCall thriftCall) {
+      //新建一个未完成的CompletableFuture
+      CompletableFuture<T> resultFuture = new CompletableFuture<>();
+      //监听回调的完成，并且与CompletableFuture同步状态
+      callback.addObserver(new OctoObserver<T>() {
+          @Override
+          public void onSuccess(T t) {
+              resultFuture.complete(t);
+          }
+          @Override
+          public void onFailure(Throwable throwable) {
+              resultFuture.completeExceptionally(throwable);
+          }
+      });
+      if (thriftCall != null) {
+          try {
+              thriftCall.invoke();
+          } catch (TException e) {
+              resultFuture.completeExceptionally(e);
+          }
+      }
+      return resultFuture;
+  }
+  ```
+- `一元依赖`：**CF3，CF5**分别依赖于CF1和CF2，这种对于单个CompletableFuture的依赖可以通过`thenApply`、`thenAccept`、`thenCompose`等方法来实现
+  ```java
+  CompletableFuture<String> cf3 = cf1.thenApply(result1 -> {
+      //result1为CF1的结果
+      //......
+      return "result3";
+  });
+  CompletableFuture<String> cf5 = cf2.thenApply(result2 -> {
+      //result2为CF2的结果
+      //......
+      return "result5";
+  });
+  ```
+- `二元依赖`：**CF4**同时依赖于两个CF1和CF2，这种二元依赖可以通过`thenCombine`等回调来实现
+  ```java
+  CompletableFuture<String> cf4 = cf1.thenCombine(cf2, (result1, result2) -> {
+      //result1和result2分别为cf1和cf2的结果
+      return "result4";
+  });
+  ```
+- `多元依赖`：整个流程的结束**CF6**依赖于三个步骤CF3、CF4、CF5，这种多元依赖可以通过`allOf`或`anyOf`方法来实现，区别是当需要多个依赖全部完成时使用`allOf`，当多个依赖中的任意一个完成即可时使用`anyOf`
+  ```java
+  CompletableFuture<Void> cf6 = CompletableFuture.allOf(cf3, cf4, cf5);
+  CompletableFuture<String> result = cf6.thenApply(v -> {
+      //这里的join并不会阻塞，因为传给thenApply的函数是在CF3、CF4、CF5全部完成时，才会执行。
+      result3 = cf3.join();
+      result4 = cf4.join();
+      result5 = cf5.join();
+      //根据result3、result4、result5组装最终result;
+      return "result";
+  });
+  ```
+
+**实践总结：**
+
+1. **代码执行在哪个线程上？**  
+   要合理治理线程资源，最基本的前提条件就是要在写代码时，清楚地知道每一行代码都将执行在哪个线程上。下面我们看一下CompletableFuture的执行线程情况。  
+   CompletableFuture实现了CompletionStage接口，通过丰富的回调方法，支持各种组合操作，每种组合场景都有同步和异步两种方法。  
+   - 同步方法（即不带Async后缀的方法）有两种情况。
+     - 如果注册时被依赖的操作已经执行完成，则直接由当前线程执行。
+     - 如果注册时被依赖的操作还未执行完，则由回调线程执行。
+   - 异步方法（即带Async后缀的方法）：可以选择是否传递线程池参数Executor运行在指定线程池中；当不传递Executor时，会使用ForkJoinPool中的共用线程池CommonPool（CommonPool的大小是CPU核数-1，如果是IO密集的应用，线程数可能成为瓶颈）。
+2. **异步回调要强制传线程池，且根据实际情况做线程池隔离（避免核心与非核心业务都竞争同一个池中的线程，减少不同业务之间的相互干扰）。**  
+3. **线程池循环引用会导致死锁**  
+   ```java
+   public Object doGet() {
+       ExecutorService threadPool1 = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(100));
+       CompletableFuture cf1 = CompletableFuture.supplyAsync(() -> {
+           //do sth
+           return CompletableFuture.supplyAsync(() -> {
+               System.out.println("child");
+               return "child";
+           }, threadPool1).join();//子任务
+       }, threadPool1);
+       return cf1.join();
+   }
+   ```
+   如上代码块所示，doGet方法第三行通过supplyAsync向threadPool1请求线程，并且内部子任务又向threadPool1请求线程。threadPool1大小为10，当同一时刻有10个请求到达，则threadPool1被打满，子任务请求线程时进入阻塞队列排队，但是父任务的完成又依赖于子任务，这时由于子任务得不到线程，父任务无法完成。主线程执行cf1.join()进入阻塞状态，并且永远无法恢复。
+    
+   为了修复该问题，需要将父任务与子任务做线程池隔离，两个任务请求不同的线程池，避免循环依赖导致的阻塞。
+4. **异步RPC调用注意不要阻塞IO线程池**  
+   服务异步化后很多步骤都会依赖于异步RPC调用的结果，这时需要特别注意一点，如果是使用基于NIO（比如Netty）的异步RPC，则返回结果是由IO线程负责设置的，即回调方法由IO线程触发，CompletableFuture同步回调（如thenApply、thenAccept等无Async后缀的方法）如果依赖的异步RPC调用的返回结果，那么这些同步回调将运行在IO线程上，而整个服务只有一个IO线程池，这时需要保证同步回调中不能有阻塞等耗时过长的逻辑，否则在这些逻辑执行完成前，IO线程将一直被占用，影响整个服务的响应。
+5. **异常处理**  
+   CompletableFuture提供了异常捕获回调exceptionally，相当于同步调用中的try\catch。  
+   有一点需要注意，CompletableFuture在回调方法中对异常进行了包装。大部分异常会封装成CompletionException后抛出，真正的异常存储在cause属性中，因此如果调用链中经过了回调方法处理那么就需要用Throwable.getCause()方法提取真正的异常。但是，有些情况下会直接返回真正的异常（[Stack Overflow的讨论](https://stackoverflow.com/questions/49230980/does-completionstage-always-wrap-exceptions-in-completionexception) ），最好使用工具类提取异常
+   ```java
+   .exceptionally(err -> {//通过exceptionally 捕获异常，这里的err已经被thenApply包装过，因此需要通过Throwable.getCause()提取异常
+        log.error("WmOrderRemarkService.getCancelTypeAsync Exception orderId={}", orderId, ExceptionUtils.extractRealException(err));
+        return 0;
+   });
+   ```
+   自定义的工具类ExceptionUtils，用于CompletableFuture的异常提取，在使用CompletableFuture做异步编程时，可以直接使用该工具类处理异常。
+   ```java
+   public class ExceptionUtils {
+       public static Throwable extractRealException(Throwable throwable) {
+           //这里判断异常类型是否为CompletionException、ExecutionException，如果是则进行提取，否则直接返回。
+           if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
+               if (throwable.getCause() != null) {
+                    return throwable.getCause();
+               }
+           }
+           return throwable;
+       }
+   }
+   ```
+
+
+**通用的工具方法：**
+
+1. **自定义函数**
+```java
+@FunctionalInterface
+public interface ThriftAsyncCall {
+    void invoke() throws TException ;
+}
+```
+2. **CompletableFuture处理工具类**
+```java
+/**
+ * CompletableFuture封装工具类
+ */
+@Slf4j
+public class FutureUtils {
+    /**
+     * 该方法为美团内部rpc注册监听的封装，可以作为其他实现的参照
+     * OctoThriftCallback 为thrift回调方法
+     * ThriftAsyncCall 为自定义函数，用来表示一次thrift调用（定义如上）
+     */
+    public static <T> CompletableFuture<T> toCompletableFuture(final OctoThriftCallback<?, T> callback, 
+                                                               ThriftAsyncCall thriftCall) {
+        CompletableFuture<T> thriftResultFuture = new CompletableFuture<>();
+        callback.addObserver(new OctoObserver<T>() {
+            @Override
+            public void onSuccess(T t) {
+                thriftResultFuture.complete(t);
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                thriftResultFuture.completeExceptionally(throwable);
+            }
+        });
+        if (thriftCall != null) {
+            try {
+                thriftCall.invoke();
+            } catch (TException e) {
+                thriftResultFuture.completeExceptionally(e);
+            }
+        }
+        return thriftResultFuture;
+    }
+
+    /**
+     * 设置CF状态为失败
+     */
+    public static <T> CompletableFuture<T> failed(Throwable ex) {
+        CompletableFuture<T> completableFuture = new CompletableFuture<>();
+        completableFuture.completeExceptionally(ex);
+        return completableFuture;
+    }
+
+    /**
+     * 设置CF状态为成功
+     */
+    public static <T> CompletableFuture<T> success(T result) {
+        CompletableFuture<T> completableFuture = new CompletableFuture<>();
+        completableFuture.complete(result);
+        return completableFuture;
+    }
+
+    /**
+     * 将List<CompletableFuture<T>> 转为 CompletableFuture<List<T>>
+     */
+    public static <T> CompletableFuture<List<T>> sequence(Collection<CompletableFuture<T>> completableFutures) {
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList())
+                );
+    }
+
+    /**
+     * 将List<CompletableFuture<List<T>>> 转为 CompletableFuture<List<T>>
+     * 多用于分页查询的场景
+     */
+    public static <T> CompletableFuture<List<T>> sequenceList(Collection<CompletableFuture<List<T>>> completableFutures) {
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream()
+                        .flatMap(listFuture -> listFuture.join().stream())
+                        .collect(Collectors.toList()));
+    }
+
+    /**
+     * 将List<CompletableFuture<Map<K, V>>> 转为 CompletableFuture<Map<K, V>>
+     * @param mergeFunction 自定义key冲突时的merge策略
+     */
+    public static <K, V> CompletableFuture<Map<K, V>> sequenceMap(Collection<CompletableFuture<Map<K, V>>> completableFutures, 
+                                                                  BinaryOperator<V> mergeFunction) {
+        return CompletableFuture
+                .allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream().map(CompletableFuture::join)
+                        .flatMap(map -> map.entrySet().stream())
+                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue, mergeFunction)));
+    }
+
+    /**
+     * 将List<CompletableFuture<T>> 转为 CompletableFuture<List<T>>，并过滤调null值
+     */
+    public static <T> CompletableFuture<List<T>> sequenceNonNull(Collection<CompletableFuture<T>> completableFutures) {
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream()
+                        .map(CompletableFuture::join)
+                        .filter(e -> e != null)
+                        .collect(Collectors.toList()));
+    }
+
+    /**
+     * 将List<CompletableFuture<List<T>>> 转为 CompletableFuture<List<T>>，并过滤掉null值
+     * 多用于分页查询的场景
+     */
+    public static <T> CompletableFuture<List<T>> sequenceListNonNull(Collection<CompletableFuture<List<T>>> completableFutures) {
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream()
+                        .flatMap(listFuture -> listFuture.join().stream().filter(e -> e != null))
+                        .collect(Collectors.toList()));
+    }
+
+    /**
+     * 将List<CompletableFuture<Map<K, V>>> 转为 CompletableFuture<Map<K, V>>
+     * @param filterFunction 自定义过滤策略
+     */
+    public static <T> CompletableFuture<List<T>> sequence(Collection<CompletableFuture<T>> completableFutures,
+                                                          Predicate<? super T> filterFunction) {
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream()
+                        .map(CompletableFuture::join)
+                        .filter(filterFunction)
+                        .collect(Collectors.toList()));
+    }
+
+    /**
+     * 将List<CompletableFuture<List<T>>> 转为 CompletableFuture<List<T>>
+     * @param filterFunction 自定义过滤策略
+     */
+    public static <T> CompletableFuture<List<T>> sequenceList(Collection<CompletableFuture<List<T>>> completableFutures,
+                                                              Predicate<? super T> filterFunction) {
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream()
+                        .flatMap(listFuture -> listFuture.join().stream().filter(filterFunction))
+                        .collect(Collectors.toList()));
+    }
+
+    /**
+     * 将CompletableFuture<Map<K,V>>的list转为 CompletableFuture<Map<K,V>>。 多个map合并为一个map。 如果key冲突，采用新的value覆盖。
+     */
+    public static <K, V> CompletableFuture<Map<K, V>> sequenceMap(Collection<CompletableFuture<Map<K, V>>> completableFutures) {
+        return CompletableFuture
+                .allOf(completableFutures.toArray(new CompletableFuture<?>[0]))
+                .thenApply(v -> completableFutures.stream().map(CompletableFuture::join)
+                        .flatMap(map -> map.entrySet().stream())
+                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> b)));
+    }
+}
+```
+3. **异常提取工具类**
+```java
+public class ExceptionUtils {
+    /**
+     * 提取真正的异常
+     */
+    public static Throwable extractRealException(Throwable throwable) {
+        if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
+            if (throwable.getCause() != null) {
+                return throwable.getCause();
+            }
+        }
+        return throwable;
+    }
+}
+```   
+4. **打印日志**
+```java
+@Slf4j
+public abstract class AbstractLogAction<R> {
+    protected final String methodName;
+    protected final Object[] args;
+
+    public AbstractLogAction(String methodName, Object... args) {
+        this.methodName = methodName;
+        this.args = args;
+    }
+
+    protected void logResult(R result, Throwable throwable) {
+        if (throwable != null) {
+            boolean isBusinessError = throwable instanceof TBase || (throwable.getCause() != null && throwable.getCause() instanceof TBase);
+            if (isBusinessError) {
+                logBusinessError(throwable);
+            } else if (throwable instanceof DegradeException || throwable instanceof DegradeRuntimeException) {//这里为内部rpc框架抛出的异常，使用时可以酌情修改
+                if (RhinoSwitch.getBoolean("isPrintDegradeLog", false)) {
+                    log.error("{} degrade exception, param:{} , error:{}", methodName, args, throwable);
+                }
+            } else {
+                log.error("{} unknown error, param:{} , error:{}", methodName, args, ExceptionUtils.extractRealException(throwable));
+            }
+        } else {
+            if (isLogResult()) {
+                log.info("{} param:{} , result:{}", methodName, args, result);
+            } else {
+                log.info("{} param:{}", methodName, args);
+            }
+        }
+    }
+
+    private void logBusinessError(Throwable throwable) {
+        log.error("{} business error, param:{} , error:{}", methodName, args, throwable.toString(), ExceptionUtils.extractRealException(throwable));
+    }
+
+    private boolean isLogResult() {
+        //这里是动态配置开关，用于动态控制日志打印，开源动态配置中心可以使用nacos、apollo等，如果项目没有使用配置中心则可以删除
+        return RhinoSwitch.getBoolean(methodName + "_isLogResult", false);
+    }
+}
+```   
+4.1. **日志处理实现类**
+```java
+/**
+ * 发生异常时，根据是否为业务异常打印日志。
+ * 跟CompletableFuture.whenComplete配合使用，不改变completableFuture的结果（正常OR异常）
+ */
+@Slf4j
+public class LogErrorAction<R> extends AbstractLogAction<R> implements BiConsumer<R, Throwable> {
+    public LogErrorAction(String methodName, Object... args) {
+        super(methodName, args);
+    }
+
+    @Override
+    public void accept(R result, Throwable throwable) {
+        logResult(result, throwable);
+    }
+}
+```
+4.2. **打印日志方式**
+```java
+completableFuture
+    .whenComplete(new LogErrorAction<>("orderService.getOrder", params));
+```   
+5. **异常情况返回默认值**
+```java
+/**
+ * 当发生异常时返回自定义的值
+ */
+public class DefaultValueHandle<R> extends AbstractLogAction<R> implements BiFunction<R, Throwable, R> {
+    private final R defaultValue;
+    /**
+     * 当返回值为空的时候是否替换为默认值
+     */
+    private final boolean isNullToDefault;
+
+    /**
+     * @param methodName      方法名称
+     * @param defaultValue 当异常发生时自定义返回的默认值
+     * @param args            方法入参
+     */
+    public DefaultValueHandle(String methodName, R defaultValue, Object... args) {
+        super(methodName, args);
+        this.defaultValue = defaultValue;
+        this.isNullToDefault = false;
+    }
+
+    /**
+     * @param isNullToDefault
+     * @param defaultValue 当异常发生时自定义返回的默认值
+     * @param methodName      方法名称
+     * @param args            方法入参
+     */
+    public DefaultValueHandle(boolean isNullToDefault, R defaultValue, String methodName, Object... args) {
+        super(methodName, args);
+        this.defaultValue = defaultValue;
+        this.isNullToDefault = isNullToDefault;
+    }
+
+    @Override
+    public R apply(R result, Throwable throwable) {
+        logResult(result, throwable);
+        if (throwable != null) {
+            return defaultValue;
+        }
+        if (result == null && isNullToDefault) {
+            return defaultValue;
+        }
+        return result;
+    }
+
+    public static <R> DefaultValueHandle.DefaultValueHandleBuilder<R> builder() {
+        return new DefaultValueHandle.DefaultValueHandleBuilder<>();
+    }
+
+    public static class DefaultValueHandleBuilder<R> {
+        private boolean isNullToDefault;
+        private R defaultValue;
+        private String methodName;
+        private Object[] args;
+
+        DefaultValueHandleBuilder() {
+        }
+
+        public DefaultValueHandle.DefaultValueHandleBuilder<R> isNullToDefault(final boolean isNullToDefault) {
+            this.isNullToDefault = isNullToDefault;
+            return this;
+        }
+
+        public DefaultValueHandle.DefaultValueHandleBuilder<R> defaultValue(final R defaultValue) {
+            this.defaultValue = defaultValue;
+            return this;
+        }
+
+        public DefaultValueHandle.DefaultValueHandleBuilder<R> methodName(final String methodName) {
+            this.methodName = methodName;
+            return this;
+        }
+
+        public DefaultValueHandle.DefaultValueHandleBuilder<R> args(final Object... args) {
+            this.args = args;
+            return this;
+        }
+
+        public DefaultValueHandle<R> build() {
+            return new DefaultValueHandle<R>(this.isNullToDefault, this.defaultValue, this.methodName, this.args);
+        }
+
+        public String toString() {
+            return "DefaultValueHandle.DefaultValueHandleBuilder(isNullToDefault=" + this.isNullToDefault + ", defaultValue=" + this.defaultValue + ", methodName=" + this.methodName + ", args=" + Arrays.deepToString(this.args) + ")";
+        }
+    }
+}
+```   
+5.1. **默认返回值应用示例**
+```java
+completableFuture
+        .handle(new DefaultValueHandle<>("orderService.getOrder", Collections.emptyMap(), params));
+```
+
+
+其它组件：
+- [Vert.x](#Vert.x)：轻量级事件驱动框架，采用多-reactor线程模型，通过事件循环（Event Loop）处理并发请求，实现了异步非阻塞IO。
+
+
+[美团：CompletableFuture原理与实战](https://mp.weixin.qq.com/s/GQGidprakfticYnbVYVYGQ)
+
+
+
+### Vert.x
 
 [返回目录](#目录)
 
