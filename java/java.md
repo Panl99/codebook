@@ -55,7 +55,6 @@
         - [5种常用的线程池](#5种常用的线程池)        
     - [异步编程](#异步编程)
         - [CompletableFuture](#CompletableFuture)
-        - [Vert.x](#Vert.x)
     - [ThreadLocal](#ThreadLocal)
         - [ThreadLocal原理](#ThreadLocal原理)
         - [ThreadLocal问题-内存泄漏](#ThreadLocal问题-内存泄漏)
@@ -2284,14 +2283,11 @@ completableFuture
 
 
 其它组件：
-- [Vert.x](#Vert.x)：轻量级事件驱动框架，采用多-reactor线程模型，通过事件循环（Event Loop）处理并发请求，实现了异步非阻塞IO。
+- [Vert.x](./Vert.x.md)：轻量级事件驱动框架，采用Multi-reactor线程模型，通过事件循环（Event Loop）处理并发请求，实现了异步非阻塞IO。
 
 
 [美团：CompletableFuture原理与实战](https://mp.weixin.qq.com/s/GQGidprakfticYnbVYVYGQ)
 
-
-
-### Vert.x
 
 [返回目录](#目录)
 
