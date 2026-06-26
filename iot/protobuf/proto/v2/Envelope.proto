@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "v2/MessageType.proto";
+import "v2/Subscribe.proto";
+import "v2/Publish.proto";
+import "v2/SubAck.proto";
+import "v2/PubAck.proto";
+import "v2/Message.proto";
+import "v2/Ping.proto";
+import "v2/Pong.proto";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "EnvelopeProto";
+
+// 通用消息信封
+message Envelope {
+  com.lp.iot.v2.MessageType type = 1;
+  // 根据不同消息类型，使用 oneof 携带不同数据
+  oneof payload {
+    Subscribe subscribe = 2;
+    Publish   publish   = 3;
+    SubAck    sub_ack   = 4;
+    PubAck    pub_ack   = 5;
+    Message   message   = 6;
+    Ping      ping      = 7;
+    Pong      pong      = 8;
+  }
+}

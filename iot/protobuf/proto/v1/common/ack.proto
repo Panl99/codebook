@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package com.lp.iot.v1.common;
+
+import "google/protobuf/timestamp.proto";
+
+// ============================================================================
+// 消息确认响应（ACK/NACK）- 应用层可靠传输机制
+//
+// 设计目的：
+// 1. 端到端确认：弥补传输层（如MQTT QoS）的不足
+// 2. 业务状态反馈：不仅确认收到，还确认业务处理结果
+// 3. 时序同步：服务端时间戳用于客户端时钟校准
+//
+// 使用场景：
+// - Header.need_ack = true 时，接收方必须返回此消息
+// - status_code = 200 表示成功（ACK）
+// - status_code != 200 表示失败（NACK），需携带错误信息
+//
+// 对标标准：
+// - HTTP 状态码：200/400/500 等语义
+// - MQTT PUBACK/PUBREC/PUBCOMP：传输层确认
+// - CoAP ACK：受限应用协议确认机制
+// ============================================================================
+message AckMessage {
+  // 原始消息ID（对应 Header.message_id）
+  // 用途：关联请求和响应，实现异步消息匹配
+  // 示例：原始消息 message_id="msg-001"，响应的 original_message_id="msg-001"
+  string original_message_id = 1;
+
+  // 状态码（借鉴HTTP状态码规范）
+  // 成功：200（OK）、201（Created）
+  // 客户端错误：400（Bad Request）、401（Unauthorized）、404（Not Found）
+  // 服务端错误：500（Internal Error）、503（Service Unavailable）
+  // 业务错误：1000-9999（自定义业务错误码）
+  uint32 status_code = 2;
+
+  // 状态描述信息
+  // 成功时：可为空或 "Success"
+  // 失败时：详细错误原因，便于调试和问题定位
+  // 示例："Device not found"、"Invalid token"、"Database timeout"
+  string status_message = 3;
+
+  // 服务端处理时间戳（UTC时间）
+  // 用途：
+  // 1. 计算消息传输延迟：server_timestamp - client_timestamp
+  // 2. 客户端时钟校准：对比本地时间和服务端时间
+  // 3. 审计日志：记录消息处理的准确时间
+  google.protobuf.Timestamp server_timestamp = 4;
+}

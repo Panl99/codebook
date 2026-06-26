@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package com.lp.iot.v1.common;
+
+import "google/protobuf/timestamp.proto";
+
+// ============================================================================
+// 消息类型枚举 - 定义物联网通信中的所有消息类型
+// 对标行业标准：AWS IoT Device Shadow、Azure IoT Hub 消息路由
+// ============================================================================
+enum MessageType {
+  // 未指定类型（默认值，用于错误检测）
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+
+  // 设备上行消息：传感器数据、事件上报等（设备 → 云）
+  MESSAGE_TYPE_UPLOAD = 1;
+
+  // 云平台下行命令：配置更新、控制指令等（云 → 设备）
+  MESSAGE_TYPE_COMMAND = 2;
+
+  // 确认响应：表示消息已成功接收和处理
+  MESSAGE_TYPE_ACK = 3;
+
+  // 否定响应：表示消息处理失败或拒绝
+  MESSAGE_TYPE_NACK = 4;
+
+  // 心跳消息：用于保持连接活跃和检测设备在线状态
+  MESSAGE_TYPE_HEARTBEAT = 5;
+}
+
+// ============================================================================
+// 服务质量等级（QoS）- 定义消息传输的可靠性保障级别
+// 对标 MQTT QoS 标准：0/1/2 三级质量保证
+// ============================================================================
+enum QoSLevel {
+  // 未指定（默认值）
+  QOS_LEVEL_UNSPECIFIED = 0;
+
+  // QoS 0 - 最多一次（At Most Once）
+  // 特点：不保证送达，可能丢失，但不会重复
+  // 适用场景：高频传感器数据、日志上报等可容忍丢失的数据
+  // 优势：网络开销最小，延迟最低
+  QOS_LEVEL_AT_MOST_ONCE = 1;
+
+  // QoS 1 - 至少一次（At Least Once）
+  // 特点：保证送达，但可能重复
+  // 适用场景：配置更新、命令下发等需要确保到达的场景
+  // 优势：平衡可靠性和性能，需要应用层去重
+  QOS_LEVEL_AT_LEAST_ONCE = 2;
+
+  // QoS 2 - 恰好一次（Exactly Once）
+  // 特点：保证送达且不重复
+  // 适用场景：支付交易、设备激活等关键业务
+  // 优势：最高可靠性，但网络开销最大，延迟最高
+  QOS_LEVEL_EXACTLY_ONCE = 3;
+}
+
+// ============================================================================
+// 通用消息头 - 所有物联网消息的元数据封装
+// 设计目的：
+// 1. 链路追踪：通过 trace_id 实现全链路监控和故障排查
+// 2. 消息路由：通过 type 字段区分不同业务类型
+// 3. 质量保障：通过 qos 和 need_ack 实现可靠传输
+// 4. 时序保证：通过 timestamp 实现消息排序和超时检测
+// 5. 版本管理：通过 version 支持多协议版本共存
+//
+// 对标标准：
+// - AWS IoT: System Properties (messageId, correlationId)
+// - Azure IoT: System Properties (iothub-message-id, iothub-correlation-id)
+// - MQTT 5.0: User Properties + Message Expiry Interval
+// ============================================================================
+message Header {
+  // 消息唯一标识符（UUID格式）
+  // 用途：消息去重、幂等性校验、链路追踪
+  // 示例："msg-550e8400-e29b-41d4-a716-446655440000"
+  string message_id = 1;
+
+  // 协议版本号
+  // 格式："v1.0.0" 或语义化版本
+  // 用途：服务端根据版本号进行消息解析和路由
+  // 注意：向后兼容原则，新版本不应删除旧字段
+  string version = 2;
+
+  // 消息生成时间戳（UTC时间）
+  // 精度：纳秒级（google.protobuf.Timestamp）
+  // 用途：消息时序排序、延迟计算、过期检测
+  google.protobuf.Timestamp timestamp = 3;
+
+  // 链路追踪ID（Trace ID）
+  // 格式：UUID 或分布式追踪系统生成的ID
+  // 用途：跨服务链路追踪、性能分析、故障定位
+  // 示例：配合 Zipkin/Jaeger 等 APM 工具使用
+  string trace_id = 4;
+
+  // 消息类型
+  // 用途：区分上行/下行/心跳等不同业务场景
+  MessageType type = 5;
+
+  // 服务质量等级
+  // 用途：指导消息中间件（如MQTT Broker）的传输策略
+  QoSLevel qos = 6;
+
+  // 是否需要应用层确认
+  // true: 接收方必须返回 ACK/NACK 响应
+  // false: 发送方不等待确认（适用于QoS 0场景）
+  // 注意：即使 qos=1，如果 need_ack=false 也不会触发应用层确认
+  bool need_ack = 7;
+}

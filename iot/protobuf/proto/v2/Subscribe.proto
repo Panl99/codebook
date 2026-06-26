@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "SubscribeProto";
+
+message Subscribe {
+  string topic = 1;      // 要订阅的主题
+}

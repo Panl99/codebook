@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "PubAckProto";
+
+
+message PubAck {
+  string topic = 1;      // 发布确认的主题
+  int32  delivered = 2;  // 转发给了多少个订阅者
+}

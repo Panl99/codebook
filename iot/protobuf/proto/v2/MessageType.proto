@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "MessageTypeProto";
+
+// 消息类型
+enum MessageType {
+  SUBSCRIBE = 0;   // 订阅主题
+  PUBLISH   = 1;   // 发布消息
+  SUBACK    = 2;   // 订阅确认
+  PUBACK    = 3;   // 发布确认
+  MESSAGE   = 4;   // 转发给订阅者的消息
+  PING      = 5;   // 心跳请求
+  PONG      = 6;   // 心跳响应
+}

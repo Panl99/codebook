@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package com.lp.iot.v1.upload;
+
+import "v1/common/header.proto";
+import "v1/common/device_status.proto";
+import "v1/upload/sensor_data.proto";
+import "v1/upload/event_data.proto";
+
+// ============================================================================
+// 设备上行消息顶层结构 - 设备到云平台的所有上行数据统一封装
+//
+// 设计目的：
+// 1. 统一入口：传感器数据、事件上报、心跳包都通过此结构传输
+// 2. 完整上下文：包含消息头、设备状态、业务载荷、认证信息
+// 3. 灵活扩展：oneof payload 支持多种业务类型，新增类型无需修改结构
+//
+// 消息流向：设备 → MQTT Broker/HTTP Server → IoT Platform → 业务系统
+//
+// 对标标准：
+// - AWS IoT: Publish to topic "$aws/things/{thingName}/shadow/update"
+// - Azure IoT: Device-to-Cloud (D2C) messages
+// - 阿里云 IoT: 物模型属性上报 / 事件上报
+// ============================================================================
+message DeviceUpload {
+  // 通用消息头（必填）
+  // 包含：消息ID、时间戳、QoS、追踪ID等元数据
+  // 用途：消息路由、质量保障、链路追踪
+  com.lp.iot.v1.common.Header common_header = 1;
+
+  // 设备状态信息（可选）
+  // 包含：电池电量、信号强度、固件版本等
+  // 用途：设备健康监控、运维管理
+  // 注意：不是每次上报都必须携带，可根据策略定期更新
+  com.lp.iot.v1.common.DeviceStatus status = 2;
+
+  // 业务载荷（三选一）
+  // 使用 oneof 确保每次只传输一种类型的数据，节省带宽
+  oneof payload {
+    // 传感器数据（周期性上报）
+    // 适用场景：环境监测、设备状态采集
+    // 示例：温度、湿度、气压等实时数据
+    SensorData sensor = 3;
+
+    // 事件数据（触发式上报）
+    // 适用场景：异常告警、状态变更、安全事件
+    // 示例：温度超限、设备离线、非法访问
+    EventData event = 4;
+
+    // 批量传感器数据（离线补传/历史同步）
+    // 适用场景：网络恢复后的断点续传、历史数据批量上传
+    // 优势：减少网络开销，提高传输效率
+    BatchSensorData batch_sensor = 5;
+  }
+
+  // 设备认证令牌
+  // 格式：JWT (JSON Web Token) 或自定义Token
+  // 内容：设备ID、过期时间、签名等
+  // 用途：
+  // 1. 设备身份验证（防止非法设备接入）
+  // 2. 权限控制（不同设备有不同的访问权限）
+  // 3. 会话管理（Token过期后需重新认证）
+  // 安全建议：
+  // - Token有效期不宜过长（建议1-24小时）
+  // - 使用HTTPS/TLS加密传输
+  // - 定期轮换密钥和证书
+  string auth_token = 6;
+}

@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package com.lp.iot.v1.command;
+
+import "google/protobuf/timestamp.proto";
+
+// ============================================================================
+// 命令响应 - 设备执行命令后的结果反馈
+//
+// 设计目的：
+// 1. 执行结果：告知云平台命令是否成功执行
+// 2. 状态详情：失败时提供详细错误信息，便于问题排查
+// 3. 结果数据：成功时返回执行结果（如传感器读数、设备状态）
+//
+// 使用场景：
+// - 配置更新响应：确认配置已应用或报告失败原因
+// - 固件升级响应：报告升级进度和最终结果
+// - 控制命令响应：返回执行结果（如当前开关状态）
+//
+// 消息流向：设备 → MQTT Broker/HTTP Server → IoT Platform
+//
+// 对标标准：
+// - AWS IoT Jobs: Job Execution Status Updates
+// - Azure IoT: Direct Method Response（status + payload）
+// - 阿里云 IoT: 服务调用返回值
+// ============================================================================
+message CommandResponse {
+  // 命令ID（对应 DeviceCommand.command_id）
+  // 用途：关联命令和响应，实现异步消息匹配
+  // 示例：命令 command_id="cmd-001"，响应的 command_id="cmd-001"
+  string command_id = 1;
+
+  // 状态码（借鉴HTTP状态码规范）
+  // 成功：200（OK）、201（Created）
+  // 执行中：202（Accepted，适用于异步任务）
+  // 客户端错误：
+  //   400（Bad Request，命令参数错误）
+  //   403（Forbidden，无权限执行）
+  //   404（Not Found，目标设备不存在）
+  //   408（Request Timeout，执行超时）
+  // 服务端错误：
+  //   500（Internal Error，设备内部错误）
+  //   503（Service Unavailable，设备忙或不可用）
+  // 业务错误：1000-9999（自定义业务错误码）
+  uint32 status_code = 2;
+
+  // 状态描述信息
+  // 成功时：可为空或 "Success"、"Command executed successfully"
+  // 失败时：详细错误原因，便于调试和问题定位
+  // 示例：
+  //   "Configuration applied successfully"
+  //   "Failed to download firmware: Connection timeout"
+  //   "Invalid parameter: brightness must be between 0 and 255"
+  //   "Insufficient battery level (10%), upgrade aborted"
+  string status_message = 3;
+
+  // 命令完成时间戳（UTC）
+  // 含义：命令执行完毕的时刻
+  // 用途：
+  // 1. 执行耗时计算：completed_at - 命令接收时间
+  // 2. 审计日志：记录命令执行的准确时间
+  // 3. 超时判定：对比 timeout_seconds 判断是否超时
+  google.protobuf.Timestamp completed_at = 4;
+
+  // 结果数据（键值对映射）
+  // Key: 结果字段名称
+  // Value: 结果值（字符串格式）
+  // 用途：返回命令执行的详细信息
+  // 示例：
+  //   配置更新：{ "applied_config": "report_interval=60", "restart_required": "false" }
+  //   固件升级：{ "old_version": "1.0.0", "new_version": "2.0.0", "download_progress": "100%" }
+  //   控制命令：{ "current_state": "on", "power_consumption": "15.5W" }
+  //   诊断操作：{ "cpu_usage": "45%", "memory_free": "128MB", "uptime": "86400s" }
+  // 注意：
+  // - 复杂数据可使用JSON字符串编码
+  // - 二进制数据可使用Base64编码
+  map<string, string> result_data = 5;
+}

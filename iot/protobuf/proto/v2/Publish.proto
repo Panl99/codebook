@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "PublishProto";
+
+
+message Publish {
+  string topic = 1;      // 发布主题
+  bytes  payload = 2;    // 消息内容（二进制）
+}

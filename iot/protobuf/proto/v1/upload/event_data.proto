@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+
+package com.lp.iot.v1.upload;
+
+import "google/protobuf/timestamp.proto";
+
+// ============================================================================
+// 事件严重等级枚举 - 标准化事件优先级分类
+//
+// 对标标准：
+// - syslog 严重等级（RFC 5424）
+// - ITU-T X.733 告警严重程度
+// - AWS CloudWatch Alarm States
+// ============================================================================
+enum EventSeverity {
+  // 未指定（默认值，用于错误检测）
+  EVENT_SEVERITY_UNSPECIFIED = 0;
+
+  // 信息级别（INFO）
+  // 含义：正常业务事件，无需立即处理
+  // 示例：设备上线、配置更新成功、定时任务完成
+  // 处理策略：记录日志，用于审计和分析
+  EVENT_SEVERITY_INFO = 1;
+
+  // 警告级别（WARNING）
+  // 含义：潜在问题，需要关注但不紧急
+  // 示例：电池电量低于20%、信号强度弱、传感器数据异常
+  // 处理策略：发送通知，建议在下一个维护周期处理
+  EVENT_SEVERITY_WARNING = 2;
+
+  // 严重级别（CRITICAL）
+  // 含义：严重影响业务，需要立即处理
+  // 示例：设备离线超过阈值、传感器故障、温度超限
+  // 处理策略：立即告警（短信/电话），启动应急预案
+  EVENT_SEVERITY_CRITICAL = 3;
+
+  // 灾难级别（DISASTER）
+  // 含义：系统性故障，影响大面积设备或业务中断
+  // 示例：数据中心宕机、网络安全攻击、大规模设备失联
+  // 处理策略：启动灾难恢复预案，全员应急响应
+  EVENT_SEVERITY_DISASTER = 4;
+}
+
+// ============================================================================
+// 设备事件载荷 - 设备异常和重要状态的主动上报
+//
+// 设计目的：
+// 1. 异常告警：设备故障、环境异常、安全威胁的及时通知
+// 2. 状态变更：设备上线/下线、模式切换等重要事件记录
+// 3. 关联数据：通过 related_data 携带事件上下文信息
+//
+// 使用场景：
+// - 故障告警：传感器失效、通信中断、硬件故障
+// - 阈值告警：温度超限、液位过低、电压异常
+// - 安全事件：非法入侵、设备篡改、认证失败
+// - 业务事件：任务完成、配置生效、固件升级成功
+//
+// 对标标准：
+// - AWS IoT Events: Detector Model 中的事件定义
+// - Azure Monitor: Activity Log 和 Alert Schema
+// - 阿里云 IoT Platform: 事件上报（info/warn/error）
+// ============================================================================
+message EventData {
+  // 事件代码（唯一标识事件类型）
+  // 命名规范：<模块>_<事件类型>_<具体事件>
+  // 示例：
+  //   "sensor_temperature_high"（温度过高）
+  //   "network_connection_lost"（网络断开）
+  //   "security_unauthorized_access"（未授权访问）
+  // 用途：事件分类、过滤、统计和自动化处理
+  string event_code = 1;
+
+  // 事件详细描述
+  // 内容：人类可读的事件说明，包含关键参数和建议措施
+  // 示例：
+  //   "Temperature exceeded threshold: 85.5°C > 80.0°C. Suggest checking cooling system."
+  //   "Battery level critically low: 5%. Device will shutdown in 30 minutes."
+  // 注意：建议使用英文，长度控制在500字符以内
+  string description = 2;
+
+  // 事件严重等级
+  // 用途：决定告警策略、通知渠道和响应优先级
+  EventSeverity severity = 3;
+
+  // 事件发生时间戳（UTC）
+  // 精度：纳秒级
+  // 用途：
+  // 1. 事件时序排序
+  // 2. 告警延迟计算（event_timestamp vs 当前时间）
+  // 3. 历史事件回溯和根因分析
+  google.protobuf.Timestamp event_timestamp = 4;
+
+  // 关联数据（键值对映射）
+  // Key: 数据项名称（如 "current_value"、"threshold"、"location"）
+  // Value: 数值型数据（如需字符串，可编码为base64或使用JSON）
+  // 用途：携带事件的上下文信息，便于自动化处理和数据分析
+  // 示例：
+  //   {
+  //     "current_temperature": 85.5,
+  //     "threshold": 80.0,
+  //     "sensor_id": "temp_001",
+  //     "location_lat": 39.9042,
+  //     "location_lng": 116.4074
+  //   }
+  map<string, double> related_data = 5;
+}

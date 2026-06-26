@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "PongProto";
+
+message Pong {
+  string client_id = 1;
+}

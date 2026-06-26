@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.lp.iot.v2;
+
+//option java_package = "com.lp.protobuf.model";
+//option java_outer_classname = "SubAckProto";
+
+
+message SubAck {
+  string topic = 1;      // 订阅成功的主题
+}

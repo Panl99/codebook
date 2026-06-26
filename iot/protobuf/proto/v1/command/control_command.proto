@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package com.lp.iot.v1.command;
+
+// ============================================================================
+// 控制命令 - 云平台实时控制设备动作
+//
+// 设计目的：
+// 1. 远程控制：通过网络远程控制设备执行特定动作
+// 2. 参数化控制：通过parameters传递控制参数，支持复杂操作
+// 3. 目标明确：target_device_id 支持网关设备控制子设备
+//
+// 使用场景：
+// - 开关控制：继电器开关、灯光控制、电机启停
+// - 参数调节：阀门开度、亮度调节、速度设定
+// - 模式切换：工作模式切换（手动/自动/节能）
+// - 诊断操作：重启设备、清除缓存、自检程序
+//
+// 对标标准：
+// - AWS IoT: Direct Invocation of Device Methods
+// - Azure IoT: Direct Methods（直接方法调用）
+// - 阿里云 IoT: 服务调用（同步/异步）
+// ============================================================================
+message ControlCommand {
+  // 目标设备ID
+  // 用途：
+  // 1. 直连设备：与消息头的device_id一致
+  // 2. 网关场景：网关控制子设备时，填写子设备ID
+  // 示例：
+  //   "device-001"（直连设备）
+  //   "sub-device-005"（网关下的子设备）
+  // 注意：设备端应验证是否有权限控制该目标设备
+  string target_device_id = 1;
+
+  // 动作名称（标识要执行的操作）
+  // 命名规范：<对象>.<动作>
+  // 示例：
+  //   "relay.switch"（继电器开关）
+  //   "valve.adjust"（阀门调节）
+  //   "motor.start"（电机启动）
+  //   "led.set_brightness"（LED亮度设置）
+  //   "system.reboot"（系统重启）
+  //   "sensor.calibrate"（传感器校准）
+  // 用途：设备端根据action路由到对应的执行函数
+  string action = 2;
+
+  // 动作参数（键值对映射）
+  // Key: 参数名称
+  // Value: 参数值（字符串格式，需在设备端解析为适当类型）
+  // 示例：
+  //   继电器开关：{ "state": "on" } 或 { "state": "off" }
+  //   阀门调节：{ "opening_percentage": "75" }
+  //   LED调光：{ "brightness": "128", "color": "#FF0000" }
+  //   电机控制：{ "speed": "1500", "direction": "clockwise" }
+  // 注意：
+  // - 数值类型需从字符串转换（如 "75" → 75）
+  // - 布尔类型建议使用 "true"/"false"
+  // - 复杂参数可使用JSON字符串编码
+  map<string, string> parameters = 3;
+}
