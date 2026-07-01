@@ -893,6 +893,8 @@ Spring MVC核心入口类
 # SpringBoot
 **SpringBoot是一个简化Spring开发的框架。可以用来快速构建和监护spring应用开发。**
 
+> [【SpringBoot极简教程】](https://blog.51cto.com/u_8778474/p_1)
+
 ## 项目构建
 - 代码位置：src/main/java
 - 资源位置：src/main/resources
