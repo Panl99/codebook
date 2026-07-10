@@ -37,6 +37,7 @@ public class ProtobufConfig implements WebMvcConfigurer {
             super();
             // 设置支持的媒体类型
             setSupportedMediaTypes(List.of(
+                    MediaType.parseMediaType("application/json"),
                     MediaType.parseMediaType("application/x-protobuf"),
                     MediaType.parseMediaType("application/octet-stream")
             ));
